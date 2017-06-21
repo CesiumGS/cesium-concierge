@@ -18,7 +18,8 @@
     "debug": "^2.6.8",
     "express": "^4.13.4",
     "express-github-webhook": "^1.0.5",
-    "request": "^2.69.0"
+    "request": "^2.69.0",
+    "request-promise": "^4.2.1"
   },
   "scripts": {
     "eslint": "eslint .",
