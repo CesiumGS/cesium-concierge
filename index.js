@@ -11,7 +11,7 @@ var bodyParser = require('body-parser');
 var accessToken = process.env.GITHUB_TOKEN;
 var webhookHandler = githubWebHook({
     path: '/',
-    secret: 'secret'
+    secret: ''
 });
 
 var app = express();
@@ -19,45 +19,60 @@ app.set('port', process.env.PORT || 5000);
 app.use(bodyParser.json());
 app.use(webhookHandler);
 
-/**
- *
- * @param repo
- * @param data
- * @returns Promise
- */
 function handleClosedIssue(repo, data) {
 	// Check if issue is closed
-    //if (data.action !== 'opened') {return;}
+    if (data.action !== 'closed') {
+        return;
+    }
     // GET comments from issue
+    var googleGroupOccurences = [];
     rp.get({
         uri: data.issue.url + '/comments',
         headers: {
             'User-Agent': 'forum-reminder',
             'Authorization': 'token ' + accessToken,
             'Content-Type': 'application/json'
-        }
+        },
+        json: true
     })
     .then(function(comments) {
-        console.log(comments[0].body);
+        var re = /https:\/\/groups\.google\.com[^\s]*/ig;
+        // Foreach comment (GET individual comments? Or GET entire array of comments)
+        //   If keyword found in comment -> Add user to list of users to @mention
+        for (var i = 0; i < comments.length; i++) {
+            var matches = comments[i].body.match(re);
+            if (matches && !googleGroupOccurences.includes(matches[0])) {
+                googleGroupOccurences.push(matches[0]);
+            }
+        }
+        console.log(googleGroupOccurences);
+    })
+    .then(function() {
+        // Create message
+        // POST comment using Github API
+        if (googleGroupOccurences.length === 0) {
+            console.log('No google group links found in comments!');
+            return;
+        }
+        var message = 'Please make sure to update ' + googleGroupOccurences + ' on this closed issue.\n\n__I am a bot BEEEP BOOOP__';
+        var opts = {
+            uri: data.issue.url + '/comments',
+            headers: {
+                'User-Agent': 'forum-reminder',
+                'Authorization': 'token '+ accessToken
+            },
+            body: {
+                'body': message
+            },
+            json: true
+        };
+        return rp.post(opts).then(function(status) {
+            console.log('GitHub API returned with: ' + status);
+        });
+    })
+    .catch(function(e) {
+        console.log('Got an ERROR: ' + e);
     });
-    // // Foreach comment (GET individual comments? Or GET entire array of comments)
-    // //   If keyword found in comment -> Add user to list of users to @mention
-    // // Create message
-    // // POST comment using Github API
-    // var opts = {
-    //     method:'POST',
-    //     uri: data.issue.url + '/labels',
-    //     headers: {
-    //         'User-Agent': 'forum-reminder',
-    //         'Authorization': 'token '+accessToken,
-    //         'Content-Type': 'application/json'
-    //     },
-    //     form: ""
-    // };
-    // request(opts, function(err, results, body){ // request-promise?
-    //     if (err) {console.error(err);}
-    //     debug('[%s] API response %s', chalk.magenta('github'), JSON.stringify(body, null, ' '));
-    // });
 }
 
 webhookHandler.on('issues', handleClosedIssue);
@@ -67,5 +82,5 @@ webhookHandler.on('error', function (err, req, res) {
 });
 
 app.listen(app.get('port'), function () {
-	console.log('Forum reminder listening on port ' + app.get('port'));
+	console.log('Forum-reminder listening on port ' + app.get('port'));
 });
