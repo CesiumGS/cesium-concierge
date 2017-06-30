@@ -81,6 +81,10 @@ webhookHandler.on('error', function (err, req, res) {
 	console.error('an error occurred', err);
 });
 
+app.get('/', function (req, res) {
+    res.send('Hello World');
+});
+
 app.listen(app.get('port'), function () {
 	console.log('Forum-reminder listening on port ' + app.get('port'));
 });
