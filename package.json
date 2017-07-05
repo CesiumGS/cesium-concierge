@@ -10,7 +10,7 @@
   "license": "Apache-2.0",
   "devDependencies": {
     "eslint": "^4.0.0",
-    "eslint-config-cesium": "^1.0.0"
+    "eslint-config-cesium": "^2.0.0"
   },
   "dependencies": {
     "body-parser": "^1.15.0",
