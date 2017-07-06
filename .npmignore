@@ -1,0 +1,10 @@
+/coverage
+/specs
+/.idea
+.eslintrc.json
+.npmignore
+.travis.yml
+gulpfile.js
+*.tgz
+.eslintcache
+.eslintignore
