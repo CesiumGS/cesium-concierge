@@ -44,7 +44,7 @@
     "yargs": "^8.0.2"
   },
   "scripts": {
-    "eslint": "eslint .",
+    "eslint": "eslint . --cache",
     "start": "node index.js",
     "test": "gulp test"
   }
