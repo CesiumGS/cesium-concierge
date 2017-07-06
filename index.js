@@ -37,29 +37,15 @@ app.use(webHookHandler);
 
 var gitHubServer = new GitHubServer('to-be-named', nconf.get('github_token'));
 
-/** Get Issue title + body -> parse for keywords -> post labels + comment
- *
- * @param {Object} data Generic JSON object passed from the GitHub REST API (https://developer.github.com/v3/activity/events/types/)
- */
-function labelOpenedIssue(data) {
-    var issueUrl = data.issue.url;
-
-    return gitHubServer.get(issueUrl)
-    .then(function() {
-        // TODO
-    });
-}
-
 /** Get comments -> regex search -> post comment
  *
  * @param {Object} data Generic JSON object passed from the GitHub REST API (https://developer.github.com/v3/activity/events/types/#issuesevent)
  */
 function commentOnClosedIssue(data) {
-    var commentsUrl = data.issue.url + '/comments';
-
+    var commentsUrl = data._links.comments.href;
     return gitHubServer.get(commentsUrl)
-    .then(function(jsonResponse) {
-        var linkMatches = GitHubServer.findLinksWithRegex(jsonResponse.body);
+    .then(function(commentsJsonResponse) {
+        var linkMatches = GitHubServer.findLinksWithRegex(commentsJsonResponse.body);
         if (linkMatches.length === 0) {
             console.log('No google group links found in comments!');
             return;
@@ -80,14 +66,13 @@ function commentOnClosedIssue(data) {
  *
  * @param {Object} data Generic JSON object passed from the GitHub REST API (https://developer.github.com/v3/activity/events/types/)
  */
-function labelOpenedPullRequest(data) {
-    var pullRequestUrl = data.pull_request.url;
+function labelOpenedIssue(data) {
+    var commentsUrl = data._links.comments.href;
 
-    return gitHubServer.get(pullRequestUrl)
-    .then(function(jsonResponse) { // eslint-disable-line no-unused-vars
+    return gitHubServer.get(commentsUrl)
+    .then(function(commentsJsonResponse) { // eslint-disable-line no-unused-vars
         // https://developer.github.com/v3/activity/events/types/#webhook-payload-example-23
-        // url + '/comments' -> commentsUrl
-        // gitHubServer.get(commentsUrl) -> regex for linked issues -> issuesUrls[]
+        // regex for linked issues -> issuesUrls[]
         // for issuesUrl[]:
         //   get labels +-> availableLabels
         // if availableLabels:
@@ -103,7 +88,7 @@ function labelOpenedPullRequest(data) {
 // Listen to `Issues` Event
 webHookHandler.on('issues', function(repo, data) { //eslint-disable-line no-unused-vars
     if (data.action === 'opened') {
-        labelOpenedIssue(data);
+        labelOpenedIssue(data, data.issue.url);
     } else if (data.action === 'closed') {
         commentOnClosedIssue(data);
     }
@@ -114,7 +99,8 @@ webHookHandler.on('pull_request', function (repo, data) { // eslint-disable-line
     if (data.action !== 'opened') {
         return;
     }
-    labelOpenedPullRequest(data);
+    // Pull requests are issues
+    labelOpenedIssue(data);
 });
 
 webHookHandler.on('error', function (err, req, res) { //eslint-disable-line no-unused-vars
