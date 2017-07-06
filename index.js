@@ -3,26 +3,44 @@ var bodyParser = require('body-parser');
 var express = require('express');
 var GitHubServer = require('./lib/GitHubServer');
 var gitHubWebHook = require('express-github-webhook');
+var nconf = require('nconf');
 
 // Setup
 var app = express();
 module.exports = app;
 
+nconf.argv({
+    'port': {
+        describe: 'Port on which to listen for GitHub WebHooks',
+        type: 'number'
+    },
+    'secret': {
+        alias: 's',
+        describe: 'Repository secret to verify incoming WebHook requests from GitHub',
+        type: 'string'
+    },
+    'github_token': {
+        alias: 'gt',
+        describe: 'Token used to verify outgoing requests to GitHub repository',
+        type: 'string'
+    }
+}).env();
+
 var webHookHandler = gitHubWebHook({
     path: '/',
-    secret: process.env.SECRET || ''
+    secret: nconf.get('secret') || ''
 });
 
-app.set('port', process.env.PORT || 5000);
+app.set('port', nconf.get('port') || 5000);
 app.use(bodyParser.json());
 app.use(webHookHandler);
 
 /** Get comments -> regex search -> post comment
  *
- * @param {Object} data Generic JSON object passed from the GitHub REST API
+ * @param {Object} data Generic JSON object passed from the GitHub REST API (https://developer.github.com/v3/activity/events/types/#issuesevent)
  */
 function handleClosedIssue(data) {
-    var gitHubServer = new GitHubServer('to-be-named', process.env.GITHUB_TOKEN);
+    var gitHubServer = new GitHubServer('to-be-named', nconf.get('github_token'));
     var commentsUrl = data.issue.url + '/comments';
 
     return gitHubServer.getComments(commentsUrl)
