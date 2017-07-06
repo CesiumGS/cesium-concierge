@@ -86,7 +86,7 @@ function labelOpenedIssue(data) {
 }
 
 // Listen to `Issues` Event
-webHookHandler.on('issues', function(repo, data) { //eslint-disable-line no-unused-vars
+webHookHandler.on('issues', function(repo, data) { // eslint-disable-line no-unused-vars
     if (data.action === 'opened') {
         labelOpenedIssue(data, data.issue.url);
     } else if (data.action === 'closed') {
@@ -103,8 +103,14 @@ webHookHandler.on('pull_request', function (repo, data) { // eslint-disable-line
     labelOpenedIssue(data);
 });
 
-webHookHandler.on('error', function (err, req, res) { //eslint-disable-line no-unused-vars
+webHookHandler.on('error', function (err, req, res) { // eslint-disable-line no-unused-vars
 	console.log('An error occurred: ', err);
+});
+
+// Listen for cron job and spool a PR bumper
+app.get('/cron', function(req, res) { // eslint-disable no-unused-vars
+    // check for secret
+    gitHubServer.bumpAllPullRequests();
 });
 
 // Start server on port specified by env.PORT

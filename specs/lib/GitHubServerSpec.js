@@ -2,7 +2,7 @@
 var GitHubServer = require('../../lib/GitHubServer');
 var rp = require('request-promise');
 
-var findLinksWithRegex = GitHubServer.findLinksWithRegex;
+var findGoogleGroupLinksWithRegex = GitHubServer.findGoogleGroupLinksWithRegex;
 
 describe('postComment and get work as expected', function() {
     var server = new GitHubServer('agent', '1234');
@@ -56,7 +56,7 @@ describe('postComment and get work as expected', function() {
     });
 });
 
-describe('Regex work correctly', function() {
+describe('GoogleGroup Regex work correctly', function() {
     var comments = [];
     beforeEach(function() {
         comments = [
@@ -66,20 +66,25 @@ describe('Regex work correctly', function() {
             'http://groups.google.com/',
             'https://groups.google.com/forum/?hl=en#!topic/cesium-dev/x02lygB7hYc',
             'https://groups.google.com/forum/?hl=en#!topic/cesium-dev/x02lygB7hYc',
-            'Reported here: https://groups.google.com/forum/?hl=en#!topic/cesium-dev/fewafjdsk\n\nSeen with Chrome 59.0.3071.102. iOS version: 10.3.2. Perhaps a driver issue?\n'];
+            'Reported here: https://groups.google.com/forum/?hl=en#!topic/cesium-dev/fewafjdsk\n\nSeen with Chrome 59.0.3071.102. iOS version: 10.3.2. Perhaps a driver issue?\n',
+            'https://groups.google.com/forum/?hl=en#!topic/cesium-dev/test1, https://groups.google.com/forum/?hl=en#!topic/cesium-dev/test2'];
     });
 
     it('Finds correct number of unique links', function() {
-        expect(findLinksWithRegex(comments).length).toEqual(4);
+        expect(findGoogleGroupLinksWithRegex(comments).length).toEqual(6);
     });
 
     it('Returns links intact', function() {
-        expect(findLinksWithRegex([comments[2]])).toEqual([comments[2]]);
-        expect(findLinksWithRegex([comments[3]])).toEqual([comments[3]]);
-        expect(findLinksWithRegex([comments[4]])).toEqual([comments[4]]);
+        expect(findGoogleGroupLinksWithRegex([comments[2]])).toEqual([comments[2]]);
+        expect(findGoogleGroupLinksWithRegex([comments[3]])).toEqual([comments[3]]);
+        expect(findGoogleGroupLinksWithRegex([comments[4]])).toEqual([comments[4]]);
     });
 
     it('Finds link when surrounded by text', function() {
-        expect(findLinksWithRegex([comments[6]])).toEqual(['https://groups.google.com/forum/?hl=en#!topic/cesium-dev/fewafjdsk']);
+        expect(findGoogleGroupLinksWithRegex([comments[6]])).toEqual(['https://groups.google.com/forum/?hl=en#!topic/cesium-dev/fewafjdsk']);
     });
+
+    it('Finds two links in the same comment', function() {
+        expect(findGoogleGroupLinksWithRegex([comments[7]])).toEqual(['https://groups.google.com/forum/?hl=en#!topic/cesium-dev/test1', 'https://groups.google.com/forum/?hl=en#!topic/cesium-dev/test2']);
+    })
 });
