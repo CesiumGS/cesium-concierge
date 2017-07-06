@@ -56,9 +56,7 @@ function handleClosedIssue(data) {
     // Return big Promise chain
     return getComments(commentsUrl)
     .then(function(comments) {
-        return findLinksWithRegex(comments, /https:\/\/groups\.google\.com[^\s]*/ig);
-    })
-    .then(function(linkMatches) {
+        var linkMatches = findLinksWithRegex(comments, /https:\/\/groups\.google\.com[^\s]*/ig);
         if (linkMatches.length === 0) {
             console.log('No google group links found in comments!');
             return;
