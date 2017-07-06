@@ -41,7 +41,7 @@ var gitHubServer = new GitHubServer('to-be-named', nconf.get('github_token'));
  *
  * @param {Object} data Generic JSON object passed from the GitHub REST API (https://developer.github.com/v3/activity/events/types/)
  */
-function handleOpenedIssue(data) {
+function labelOpenedIssue(data) {
     var issueUrl = data.issue.url;
 
     return gitHubServer.get(issueUrl)
@@ -54,7 +54,7 @@ function handleOpenedIssue(data) {
  *
  * @param {Object} data Generic JSON object passed from the GitHub REST API (https://developer.github.com/v3/activity/events/types/#issuesevent)
  */
-function handleClosedIssue(data) {
+function commentOnClosedIssue(data) {
     var commentsUrl = data.issue.url + '/comments';
 
     return gitHubServer.get(commentsUrl)
@@ -80,21 +80,32 @@ function handleClosedIssue(data) {
  *
  * @param {Object} data Generic JSON object passed from the GitHub REST API (https://developer.github.com/v3/activity/events/types/)
  */
-function handleOpenedPullRequest(data) {
+function labelOpenedPullRequest(data) {
     var pullRequestUrl = data.pull_request.url;
 
     return gitHubServer.get(pullRequestUrl)
-    .then(function(jsonResponse) {
-        // TODO
+    .then(function(jsonResponse) { // eslint-disable-line no-unused-vars
+        // https://developer.github.com/v3/activity/events/types/#webhook-payload-example-23
+        // url + '/comments' -> commentsUrl
+        // gitHubServer.get(commentsUrl) -> regex for linked issues -> issuesUrls[]
+        // for issuesUrl[]:
+        //   get labels +-> availableLabels
+        // if availableLabels:
+        //   choose 2 most common -> ret[]
+        // else:
+        //   jsonResponse.data.pull_request.head.repo.labels_url -> labelsUrl
+        //   gitHubServer.getLabels(labelsUrl) -> availableLabels[]
+        //   LabelPicker.chooseLabels(availableLabels) -> ret[]
+        // gitHubServer.postLabels(url, ret[])
     });
 }
 
 // Listen to `Issues` Event
 webHookHandler.on('issues', function(repo, data) { //eslint-disable-line no-unused-vars
     if (data.action === 'opened') {
-        handleOpenedIssue(data);
+        labelOpenedIssue(data);
     } else if (data.action === 'closed') {
-        handleClosedIssue(data);
+        commentOnClosedIssue(data);
     }
 });
 
@@ -103,7 +114,7 @@ webHookHandler.on('pull_request', function (repo, data) { // eslint-disable-line
     if (data.action !== 'opened') {
         return;
     }
-    handleOpenedPullRequest(data);
+    labelOpenedPullRequest(data);
 });
 
 webHookHandler.on('error', function (err, req, res) { //eslint-disable-line no-unused-vars
