@@ -8,7 +8,7 @@ var headers = {
     'User-Agent': 'forum-reminder',
     'Authorization': 'token ' + process.env.GITHUB_TOKEN
 };
-
+var googleGroupRegex = /https:\/\/groups\.google\.com[^\s]*/ig;
 var webHookHandler = gitHubWebHook({
     path: '/',
     secret: process.env.SECRET || ''
@@ -16,6 +16,8 @@ var webHookHandler = gitHubWebHook({
 
 // Setup
 var app = express();
+module.exports = app;
+
 app.set('port', process.env.PORT || 5000);
 app.use(bodyParser.json());
 app.use(webHookHandler);
@@ -56,7 +58,7 @@ function handleClosedIssue(data) {
     // Return big Promise chain
     return getComments(commentsUrl)
     .then(function(comments) {
-        var linkMatches = findLinksWithRegex(comments, /https:\/\/groups\.google\.com[^\s]*/ig);
+        var linkMatches = findLinksWithRegex(comments, googleGroupRegex);
         if (linkMatches.length === 0) {
             console.log('No google group links found in comments!');
             return;
