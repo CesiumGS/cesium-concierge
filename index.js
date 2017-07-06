@@ -4,25 +4,27 @@ var express = require('express');
 var GitHubServer = require('./lib/GitHubServer');
 var gitHubWebHook = require('express-github-webhook');
 
-var gitHubServer = new GitHubServer('to-be-named', process.env.GITHUB_TOKEN);
+// Setup
+var app = express();
+module.exports = app;
 
 var webHookHandler = gitHubWebHook({
     path: '/',
     secret: process.env.SECRET || ''
 });
 
-// Setup
-var app = express();
-module.exports = app;
-
 app.set('port', process.env.PORT || 5000);
 app.use(bodyParser.json());
 app.use(webHookHandler);
 
+/** Get comments -> regex search -> post comment
+ *
+ * @param {Object} data Generic JSON object passed from the GitHub REST API
+ */
 function handleClosedIssue(data) {
+    var gitHubServer = new GitHubServer('to-be-named', process.env.GITHUB_TOKEN);
     var commentsUrl = data.issue.url + '/comments';
 
-    // Return big Promise chain
     return gitHubServer.getComments(commentsUrl)
     .then(function(comments) {
         var linkMatches = GitHubServer.findLinksWithRegex(comments);
@@ -54,7 +56,7 @@ webHookHandler.on('error', function (err, req, res) { //eslint-disable-line no-u
 	console.log('An error occurred: ', err);
 });
 
-// Listen to port specified by env.PORT
+// Start server on port specified by env.PORT
 app.listen(app.get('port'), function () {
 	console.log('Forum-reminder listening on port ' + app.get('port'));
 });

@@ -1,5 +1,6 @@
 'use strict';
 var GitHubServer = require('../../lib/GitHubServer');
+var rp = require('request-promise');
 
 var findLinksWithRegex = GitHubServer.findLinksWithRegex;
 
@@ -13,6 +14,45 @@ describe('postComment and getComments work as expected', function() {
 
     it('postComment returns undefined if `url` or `message` is undefined', function() {
         expect(server.postComment()).toBe(undefined);
+        expect(server.postComment('url')).toBe(undefined);
+    });
+
+    it('getComments returns undefined if `url` is undefined', function() {
+        expect(server.getComments()).toBe(undefined);
+    });
+
+    it('request-promise receives well-formated POST for `postComment`', function() {
+        var fakeUrl = 'http://test';
+        var fakeMessage = 'hello';
+        var expected = {
+            uri: fakeUrl,
+            headers: server.headers,
+            body: {
+                'body': fakeMessage
+            },
+            json: true
+        };
+
+        spyOn(rp, 'post').and.callFake(function(postJson) {
+            expect(postJson).toEqual(expected);
+        });
+
+        server.postComment('http://test', 'hello');
+    });
+
+    it('request-promise receives well-formated GET for `getComments`', function() {
+        var fakeUrl = 'http://test';
+        var expected = {
+            uri: fakeUrl,
+            headers: server.headers,
+            json: true
+        };
+
+        spyOn(rp, 'get').and.callFake(function(getJson) {
+            expect(getJson).toEqual(expected);
+        });
+
+        server.getComments('http://test');
     });
 });
 
