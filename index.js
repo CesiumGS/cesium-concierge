@@ -23,6 +23,10 @@ nconf.argv({
         alias: 'gt',
         describe: 'Token used to verify outgoing requests to GitHub repository',
         type: 'string'
+    },
+    'repo': {
+        describe: 'Repository to scan for outdated pull requests and bump them',
+        type: 'string'
     }
 }).env();
 
@@ -108,9 +112,9 @@ webHookHandler.on('error', function (err, req, res) { // eslint-disable-line no-
 });
 
 // Listen for cron job and spool a PR bumper
-app.get('/cron', function(req, res) { // eslint-disable no-unused-vars
+app.get('/cron', function(req, res) { // eslint-disable-line no-unused-vars
     // check for secret
-    gitHubServer.bumpAllPullRequests();
+    gitHubServer.bumpAllPullRequests(nconf.get('repo'));
 });
 
 // Start server on port specified by env.PORT

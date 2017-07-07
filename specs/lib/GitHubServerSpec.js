@@ -86,5 +86,11 @@ describe('GoogleGroup Regex work correctly', function() {
 
     it('Finds two links in the same comment', function() {
         expect(findGoogleGroupLinksWithRegex([comments[7]])).toEqual(['https://groups.google.com/forum/?hl=en#!topic/cesium-dev/test1', 'https://groups.google.com/forum/?hl=en#!topic/cesium-dev/test2']);
-    })
+    });
+});
+
+describe('BumpAllPullRequests', function() {
+    xit('works', function() {
+
+    });
 });
