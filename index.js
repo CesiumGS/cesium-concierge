@@ -65,9 +65,9 @@ function commentOnClosedIssue(data) {
  *
  * @param {Object} data Generic JSON object passed from the GitHub REST API (https://developer.github.com/v3/activity/events/types/)
  */
-function labelOpenedIssue(data, commentsUrl) {
+function labelOpenedIssue(data, commentsUrl) { // eslint-disable-line no-unused-vars
     return gitHubServer.get(commentsUrl)
-    .then(function(commentsJsonResponse) { // eslint-disable-line no-unused-vars
+    .then(function(commentsJsonResponse) {
         // https://developer.github.com/v3/activity/events/types/#webhook-payload-example-23
         var linkMatches = RegexTools.findGitHubIssueLinksWithRegex(commentsJsonResponse.body);
         if (linkMatches.length === 0) {

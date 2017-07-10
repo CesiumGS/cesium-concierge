@@ -1,6 +1,6 @@
-# <NAME>
+# cesium-concierge
 
-To-be-named GitHub bot for Cesium
+GitHub bot for Cesium
 
 ## Building
 
