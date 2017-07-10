@@ -41,12 +41,14 @@
     "gulp": "^3.9.1",
     "jasmine": "^2.6.0",
     "jasmine-spec-reporter": "^4.1.1",
+    "nyc": "^11.0.3",
     "open": "0.0.5",
     "yargs": "^8.0.2"
   },
   "scripts": {
     "eslint": "eslint . --cache",
     "start": "node index.js",
+    "coverage": "nyc gulp test",
     "test": "gulp test"
   }
 }

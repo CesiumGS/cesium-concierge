@@ -11,3 +11,7 @@ npm-debug.log
 coverage
 *.tgz
 *.zip
+.nyc_output
+
+# Config files
+config.json

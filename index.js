@@ -11,37 +11,25 @@ var app = express();
 module.exports = app;
 
 // CLI/Env Arguments
-nconf.argv({
-    'port': {
-        describe: 'Port on which to listen for GitHub WebHooks',
-        type: 'number'
-    },
-    'secret': {
-        alias: 's',
-        describe: 'Repository secret to verify incoming WebHook requests from GitHub',
-        type: 'string'
-    },
-    'github_token': {
-        alias: 'gt',
-        describe: 'Token used to verify outgoing requests to GitHub repository',
-        type: 'string'
-    },
-    'repo': {
-        describe: 'Repository to scan for outdated pull requests and bump them',
-        type: 'string'
-    },
-    'path': {
-        describe: 'Path on which to listen for incoming requests. Default is "/"',
-        type: 'string'
-    }
-}).env();
+nconf.env('__')
+    .file({
+        file: 'config.json'
+    });
 
-var webHookHandler = gitHubWebHook({
-    path: nconf.get('path') || '/',
-    secret: nconf.get('secret') || ''
+nconf.defaults({
+    port: 5000,
+    secret: '', // Repository secret to verify incoming WebHook requests from GitHub
+    githubToken: '', // Token used to verify outgoing requests to GitHub repository
+    repository: '', // Repository to scan for outdated pull requests and bump them
+    listenPath: '/' // Path on which to listen for incoming requests
 });
 
-app.set('port', nconf.get('port') || 5000);
+var webHookHandler = gitHubWebHook({
+    path: nconf.get('path'),
+    secret: nconf.get('secret')
+});
+
+app.set('port', nconf.get('port'));
 app.use(bodyParser.json());
 app.use(webHookHandler);
 

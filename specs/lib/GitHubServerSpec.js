@@ -55,7 +55,5 @@ describe('postComment and get work as expected', function() {
 });
 
 describe('BumpAllPullRequests', function() {
-    xit('works', function() {
 
-    });
 });
