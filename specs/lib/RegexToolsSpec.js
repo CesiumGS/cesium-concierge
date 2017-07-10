@@ -1,8 +1,8 @@
 'use strict';
 var RegexTools = require('../../lib/RegexTools');
 
-var findGoogleGroupLinksWithRegex = RegexTools.findGoogleGroupLinksWithRegex;
-var findGitHubIssueLinksWithRegex = RegexTools.findGitHubIssueLinksWithRegex;
+var getGoogleGroupLinks = RegexTools.getGoogleGroupLinks;
+var getGitHubIssueLinks = RegexTools.getGitHubIssueLinks;
 
 describe('GoogleGroup Regex work correctly', function() {
     var comments = [];
@@ -19,25 +19,25 @@ describe('GoogleGroup Regex work correctly', function() {
     });
 
     it('Returns undefined when comments is undefined', function() {
-        expect(findGoogleGroupLinksWithRegex()).toEqual(undefined);
+        expect(getGoogleGroupLinks()).toEqual(undefined);
     });
 
     it('Finds correct number of unique links', function() {
-        expect(findGoogleGroupLinksWithRegex(comments).length).toEqual(6);
+        expect(getGoogleGroupLinks(comments).length).toEqual(6);
     });
 
     it('Returns links intact', function() {
-        expect(findGoogleGroupLinksWithRegex([comments[2]])).toEqual([comments[2]]);
-        expect(findGoogleGroupLinksWithRegex([comments[3]])).toEqual([comments[3]]);
-        expect(findGoogleGroupLinksWithRegex([comments[4]])).toEqual([comments[4]]);
+        expect(getGoogleGroupLinks([comments[2]])).toEqual([comments[2]]);
+        expect(getGoogleGroupLinks([comments[3]])).toEqual([comments[3]]);
+        expect(getGoogleGroupLinks([comments[4]])).toEqual([comments[4]]);
     });
 
     it('Finds link when surrounded by text', function() {
-        expect(findGoogleGroupLinksWithRegex([comments[6]])).toEqual(['https://groups.google.com/forum/?hl=en#!topic/cesium-dev/fewafjdsk']);
+        expect(getGoogleGroupLinks([comments[6]])).toEqual(['https://groups.google.com/forum/?hl=en#!topic/cesium-dev/fewafjdsk']);
     });
 
     it('Finds two links in the same comment', function() {
-        expect(findGoogleGroupLinksWithRegex([comments[7]])).toEqual(['https://groups.google.com/forum/?hl=en#!topic/cesium-dev/test1', 'https://groups.google.com/forum/?hl=en#!topic/cesium-dev/test2']);
+        expect(getGoogleGroupLinks([comments[7]])).toEqual(['https://groups.google.com/forum/?hl=en#!topic/cesium-dev/test1', 'https://groups.google.com/forum/?hl=en#!topic/cesium-dev/test2']);
     });
 });
 
@@ -55,11 +55,11 @@ describe('GitHub regex works correctly', function() {
     });
 
     it('Returns undefined when comments is undefined', function() {
-        expect(findGitHubIssueLinksWithRegex()).toEqual(undefined);
+        expect(getGitHubIssueLinks()).toEqual(undefined);
     });
 
     it('Finds correct number of unique links', function() {
-        expect(findGitHubIssueLinksWithRegex(comments).length).toEqual(4);
+        expect(getGitHubIssueLinks(comments).length).toEqual(4);
     });
     // TODO - More tests
 });
