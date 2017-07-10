@@ -4,11 +4,13 @@ var express = require('express');
 var GitHubServer = require('./lib/GitHubServer');
 var gitHubWebHook = require('express-github-webhook');
 var nconf = require('nconf');
+var RegexTools = require('./lib/RegexTools');
 
 // Setup
 var app = express();
 module.exports = app;
 
+// CLI/Env Arguments
 nconf.argv({
     'port': {
         describe: 'Port on which to listen for GitHub WebHooks',
@@ -27,11 +29,15 @@ nconf.argv({
     'repo': {
         describe: 'Repository to scan for outdated pull requests and bump them',
         type: 'string'
+    },
+    'path': {
+        describe: 'Path on which to listen for incoming requests. Default is "/"',
+        type: 'string'
     }
 }).env();
 
 var webHookHandler = gitHubWebHook({
-    path: '/',
+    path: nconf.get('path') || '/',
     secret: nconf.get('secret') || ''
 });
 
@@ -39,17 +45,18 @@ app.set('port', nconf.get('port') || 5000);
 app.use(bodyParser.json());
 app.use(webHookHandler);
 
-var gitHubServer = new GitHubServer('to-be-named', nconf.get('github_token'));
+var gitHubServer = new GitHubServer('cesium-concierge', nconf.get('github_token'));
 
 /** Get comments -> regex search -> post comment
  *
  * @param {Object} data Generic JSON object passed from the GitHub REST API (https://developer.github.com/v3/activity/events/types/#issuesevent)
  */
 function commentOnClosedIssue(data) {
-    var commentsUrl = data._links.comments.href;
+    var commentsUrl = data.issue.comments_url;
+
     return gitHubServer.get(commentsUrl)
     .then(function(commentsJsonResponse) {
-        var linkMatches = GitHubServer.findLinksWithRegex(commentsJsonResponse.body);
+        var linkMatches = RegexTools.findGoogleGroupLinksWithRegex(commentsJsonResponse.body);
         if (linkMatches.length === 0) {
             console.log('No google group links found in comments!');
             return;
@@ -70,13 +77,23 @@ function commentOnClosedIssue(data) {
  *
  * @param {Object} data Generic JSON object passed from the GitHub REST API (https://developer.github.com/v3/activity/events/types/)
  */
-function labelOpenedIssue(data) {
-    var commentsUrl = data._links.comments.href;
-
+function labelOpenedIssue(data, commentsUrl) {
     return gitHubServer.get(commentsUrl)
     .then(function(commentsJsonResponse) { // eslint-disable-line no-unused-vars
         // https://developer.github.com/v3/activity/events/types/#webhook-payload-example-23
-        // regex for linked issues -> issuesUrls[]
+        var linkMatches = RegexTools.findGitHubIssueLinksWithRegex(commentsJsonResponse.body);
+        if (linkMatches.length === 0) {
+            console.log('No GitHub issue links found in comments!');
+            return;
+        }
+        console.log('Found these links in the comments: ', linkMatches);
+        var potentialLablels = [];
+        linkMatches.forEach(function(link) {
+            potentialLablels.push(
+                link // TODO - Incomplete
+            );
+        });
+        // TODO
         // for issuesUrl[]:
         //   get labels +-> availableLabels
         // if availableLabels:
@@ -91,33 +108,36 @@ function labelOpenedIssue(data) {
 
 // Listen to `Issues` Event
 webHookHandler.on('issues', function(repo, data) { // eslint-disable-line no-unused-vars
-    if (data.action === 'opened') {
-        labelOpenedIssue(data, data.issue.url);
-    } else if (data.action === 'closed') {
-        commentOnClosedIssue(data);
+    switch (data.action) {
+        case 'opened':
+            labelOpenedIssue(data, data.pull_request._links.comments);
+            break;
+        case 'closed':
+            commentOnClosedIssue(data);
+            break;
+        default:
     }
 });
 
 // Listen to `PullRequests` Event
 webHookHandler.on('pull_request', function (repo, data) { // eslint-disable-line no-unused-vars
-    if (data.action !== 'opened') {
-        return;
+    if (data.action === 'opened') {
+        // Pull requests are issues
+        labelOpenedIssue(data, data.issue.comments_url);
     }
-    // Pull requests are issues
-    labelOpenedIssue(data);
 });
 
 webHookHandler.on('error', function (err, req, res) { // eslint-disable-line no-unused-vars
-	console.log('An error occurred: ', err);
+	console.log('WebHookHandler got error: ', err);
 });
 
 // Listen for cron job and spool a PR bumper
 app.get('/cron', function(req, res) { // eslint-disable-line no-unused-vars
-    // check for secret
+    // TODO - check for secret
     gitHubServer.bumpAllPullRequests(nconf.get('repo'));
 });
 
 // Start server on port specified by env.PORT
 app.listen(app.get('port'), function () {
-	console.log('~to-be-named~ listening on port ' + app.get('port'));
+	console.log('cesium-concierge listening on port ' + app.get('port'));
 });
