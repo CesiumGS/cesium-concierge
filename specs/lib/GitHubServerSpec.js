@@ -54,6 +54,16 @@ describe('postComment and get work as expected', function() {
     });
 });
 
+describe('Static helper functions format GitHub JSON responses', function() {
+    it('getCommentsFromResponse returns [] if parameter is undefined', function() {
+        expect(GitHubServer.getCommentsFromResponse()).toEqual([]);
+    });
+
+    xit('getCommentsFromResponse returns array of strings', function() {
+        // TODO
+    });
+});
+
 describe('BumpAllPullRequests', function() {
 
 });

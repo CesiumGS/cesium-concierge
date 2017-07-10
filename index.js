@@ -42,16 +42,14 @@ var gitHubServer = new GitHubServer('cesium-concierge', nconf.get('github_token'
 function commentOnClosedIssue(commentsUrl) {
     return gitHubServer.get(commentsUrl)
     .then(function(commentsJsonResponse) {
-        var comments = commentsJsonResponse.map(function(commentJson) {
-            return commentJson.body;
-        });
+        var comments = GitHubServer.getCommentsFromResponse(commentsJsonResponse);
         var linkMatches = RegexTools.getGoogleGroupLinks(comments);
-        if (linkMatches.length === 0) {
+        if (linkMatches === []) {
             return Promise.reject('No google group links found in comments!');
         }
         console.log('Found these links in the comments: ', linkMatches);
-        var message = 'Please make sure to update ' + linkMatches + ' on this closed issue.\n\n__I am a bot BEEEP BOOOP__';
-        return gitHubServer.postComment(commentsUrl, message);
+        return gitHubServer.postComment(commentsUrl,
+            'Please make sure to update ' + linkMatches + ' on this closed issue.\n\n__I am a bot BEEEP BOOOP__');
     })
     .then(function(status) {
         console.log('GitHub API returned with:', status);
@@ -66,21 +64,19 @@ function labelOpenedIssue(commentsUrl) {
     return gitHubServer.get(commentsUrl)
     .then(function(commentsJsonResponse) {
         // https://developer.github.com/v3/activity/events/types/#webhook-payload-example-23
-        var comments = commentsJsonResponse.map(function(commentJson) {
-            return commentJson.body;
-        });
+        var comments = GitHubServer.getCommentsFromResponse(commentsJsonResponse);
         var linkMatches = RegexTools.getGitHubIssueLinks(comments);
-        if (linkMatches.length === 0) {
+        if (linkMatches === []) {
             return Promise.reject('No GitHub issue links found in comments!');
         }
         console.log('Found these links in the comments: ', linkMatches);
 
-        var potentialLablels = [];
+        var potentialLabels = [];
         linkMatches.forEach(function(link) { // eslint-disable-line no-unused-vars
             // /repos/:owner/:repo/issues/:number/labels
-            potentialLablels.push();
+            potentialLabels.push();
         });
-        return Promise.all(potentialLablels);
+        return Promise.all(potentialLabels);
         // TODO
         // for issuesUrl[]:
         //   get labels +-> availableLabels
@@ -94,11 +90,11 @@ function labelOpenedIssue(commentsUrl) {
     });
 }
 
-webHookHandler.on('issues', function(repo, responseData) { // eslint-disable-line no-unused-vars
-    var commentsUrl = responseData.issue.comments_url;
-    switch (responseData.action) {
+webHookHandler.on('issues', function(repo, jsonResponse) { // eslint-disable-line no-unused-vars
+    var commentsUrl = GitHubServer.issue.getCommentsUrl(jsonResponse);
+    switch (jsonResponse.action) {
         case 'opened':
-            labelOpenedIssue(responseData, commentsUrl).catch(function (e) {
+            labelOpenedIssue(jsonResponse, commentsUrl).catch(function (e) {
                 console.log('labelOpenedIssue got an error:', e);
             });
             break;
@@ -114,7 +110,8 @@ webHookHandler.on('issues', function(repo, responseData) { // eslint-disable-lin
 webHookHandler.on('pull_request', function (repo, responseData) { // eslint-disable-line no-unused-vars
     if (responseData.action === 'opened') {
         // Pull requests are issues
-        labelOpenedIssue(responseData.pull_request._links.comments).catch(function (e) {
+        labelOpenedIssue(GitHubServer.pull_request.getCommentsUrl(responseData))
+        .catch(function (e) {
             console.log('labelOpenedIssue got an error:', e);
         });
     }
