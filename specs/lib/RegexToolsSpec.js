@@ -18,8 +18,8 @@ describe('GoogleGroup Regex work correctly', function() {
             'https://groups.google.com/forum/?hl=en#!topic/cesium-dev/test1, https://groups.google.com/forum/?hl=en#!topic/cesium-dev/test2'];
     });
 
-    it('Returns undefined when comments is undefined', function() {
-        expect(getGoogleGroupLinks()).toEqual(undefined);
+    it('Returns [] when comments is undefined', function() {
+        expect(getGoogleGroupLinks()).toEqual([]);
     });
 
     it('Finds correct number of unique links', function() {
@@ -54,8 +54,8 @@ describe('GitHub regex works correctly', function() {
         ];
     });
 
-    it('Returns undefined when comments is undefined', function() {
-        expect(getGitHubIssueLinks()).toEqual(undefined);
+    it('Returns [] when comments is undefined', function() {
+        expect(getGitHubIssueLinks()).toEqual([]);
     });
 
     it('Finds correct number of unique links', function() {

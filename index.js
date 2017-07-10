@@ -37,11 +37,9 @@ var gitHubServer = new GitHubServer('cesium-concierge', nconf.get('github_token'
 
 /** Get comments -> regex search -> post comment
  *
- * @param {Object} data Generic JSON object passed from the GitHub REST API (https://developer.github.com/v3/activity/events/types/#issuesevent)
+ * @param {String} commentsUrl URL to set/get comments on issue (https://developer.github.com/v3/activity/events/types/#issuesevent)
  */
-function commentOnClosedIssue(data) {
-    var commentsUrl = data.issue.comments_url;
-
+function commentOnClosedIssue(commentsUrl) {
     return gitHubServer.get(commentsUrl)
     .then(function(commentsJsonResponse) {
         var comments = commentsJsonResponse.map(function(commentJson) {
@@ -49,8 +47,7 @@ function commentOnClosedIssue(data) {
         });
         var linkMatches = RegexTools.getGoogleGroupLinks(comments);
         if (linkMatches.length === 0) {
-            console.log('No google group links found in comments!');
-            return;
+            return Promise.reject('No google group links found in comments!');
         }
         console.log('Found these links in the comments: ', linkMatches);
         var message = 'Please make sure to update ' + linkMatches + ' on this closed issue.\n\n__I am a bot BEEEP BOOOP__';
@@ -58,17 +55,14 @@ function commentOnClosedIssue(data) {
     })
     .then(function(status) {
         console.log('GitHub API returned with:', status);
-    })
-    .catch(function(e) {
-        console.log('commentOnClosedIssue got an error:', e);
     });
 }
 
 /** Get PR title + body -> parse for keywords -> post labels + comment
  *
- * @param {Object} data Generic JSON object passed from the GitHub REST API (https://developer.github.com/v3/activity/events/types/)
+ * @param {String} commentsUrl
  */
-function labelOpenedIssue(data, commentsUrl) { // eslint-disable-line no-unused-vars
+function labelOpenedIssue(commentsUrl) {
     return gitHubServer.get(commentsUrl)
     .then(function(commentsJsonResponse) {
         // https://developer.github.com/v3/activity/events/types/#webhook-payload-example-23
@@ -77,8 +71,7 @@ function labelOpenedIssue(data, commentsUrl) { // eslint-disable-line no-unused-
         });
         var linkMatches = RegexTools.getGitHubIssueLinks(comments);
         if (linkMatches.length === 0) {
-            console.log('No GitHub issue links found in comments!');
-            return;
+            return Promise.reject('No GitHub issue links found in comments!');
         }
         console.log('Found these links in the comments: ', linkMatches);
 
@@ -98,30 +91,32 @@ function labelOpenedIssue(data, commentsUrl) { // eslint-disable-line no-unused-
         //   gitHubServer.getLabels(labelsUrl) -> availableLabels[]
         //   LabelPicker.chooseLabels(availableLabels) -> ret[]
         // gitHubServer.postLabels(url, ret[])
-    })
-    .catch(function (e) {
-        console.log('labelOpenedIssue got an error:', e);
     });
 }
 
-// Listen to `Issues` Event
-webHookHandler.on('issues', function(repo, data) { // eslint-disable-line no-unused-vars
-    switch (data.action) {
+webHookHandler.on('issues', function(repo, responseData) { // eslint-disable-line no-unused-vars
+    var commentsUrl = responseData.issue.comments_url;
+    switch (responseData.action) {
         case 'opened':
-            labelOpenedIssue(data, data.pull_request._links.comments);
+            labelOpenedIssue(responseData, commentsUrl).catch(function (e) {
+                console.log('labelOpenedIssue got an error:', e);
+            });
             break;
         case 'closed':
-            commentOnClosedIssue(data);
+            commentOnClosedIssue(commentsUrl).catch(function(e) {
+                console.log('commentOnClosedIssue got an error:', e);
+            });
             break;
         default:
     }
 });
 
-// Listen to `PullRequests` Event
-webHookHandler.on('pull_request', function (repo, data) { // eslint-disable-line no-unused-vars
-    if (data.action === 'opened') {
+webHookHandler.on('pull_request', function (repo, responseData) { // eslint-disable-line no-unused-vars
+    if (responseData.action === 'opened') {
         // Pull requests are issues
-        labelOpenedIssue(data, data.issue.comments_url);
+        labelOpenedIssue(responseData.pull_request._links.comments).catch(function (e) {
+            console.log('labelOpenedIssue got an error:', e);
+        });
     }
 });
 
