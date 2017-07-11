@@ -10,13 +10,25 @@ describe('postComment and get work as expected', function() {
         expect(server.headers.Authorization).toEqual('token 1234');
     });
 
-    it('postComment returns undefined if `url` or `message` is undefined', function() {
-        expect(server.postComment()).toBe(undefined);
-        expect(server.postComment('url')).toBe(undefined);
+    it('postComment returns rejected Promise if `url` or `message` is undefined', function(done) {
+        server.postComment().then(function() {
+            done(new Error('Promise should not be resolved'));
+        }, function() {
+            done();
+        });
+        server.postComment('url').then(function() {
+            done(new Error('Promise should not be resolved'));
+        }, function() {
+            done();
+        });
     });
 
-    it('get returns undefined if `url` is undefined', function() {
-        expect(server.get()).toBe(undefined);
+    it('get returns undefined if `url` is undefined', function(done) {
+        server.get().then(function() {
+            done(new Error('Promise should not be resolved'));
+        }, function () {
+            done();
+        });
     });
 
     it('request-promise receives well-formated POST for `postComment`', function() {
