@@ -50,8 +50,12 @@ function commentOnClosedIssue(commentsUrl) {
             return Promise.reject('No google group links found in comments!');
         }
         console.log('Found these links in the comments: ', linkMatches);
-        return gitHubServer.postComment(commentsUrl,
-            'Please make sure to update ' + linkMatches + ' on this closed issue.\n\n__I am a bot BEEEP BOOOP__');
+        var message = 'Please make sure to update:\n';
+        linkMatches.forEach(function(match) {
+            message += '- ' + match + '\n';
+        });
+        message += 'on this closed issue.\n\n__I am a bot__ Have a wonderful day!';
+        return gitHubServer.postComment(commentsUrl, message);
     });
 }
 
