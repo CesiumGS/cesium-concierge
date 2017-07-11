@@ -76,7 +76,7 @@ function labelOpenedIssue(commentsUrl) {
         console.log('Found these GitHub links in the comments: ', linkMatches);
 
         linkMatches.forEach(function(link) {
-            issueLabels = GitHubServer.getLabels(GitHubServer.issue.htmlUrlToApi(link));
+            issueLabels = GitHubServer.getLabels(GitHubServer.issue.htmlUrlToApi(link) + '/labels');
             potentialLabels.push(issueLabels);
         });
         return Promise.all(potentialLabels);
