@@ -3,39 +3,32 @@ var fsExtra = require('fs-extra');
 var GitHubServer = require('../../lib/GitHubServer');
 var rp = require('request-promise');
 
-describe('postComment and get work as expected', function() {
-    var server;
-    beforeEach(function() {
-        server = new GitHubServer('agent', '1234');
-    });
-
-    it('sets User-Agent and token correctly', function() {
+var server;
+beforeEach(function () {
+    server = new GitHubServer('agent', '1234');
+});
+describe('GitHubServer constructor', function() {
+    it('sets User-Agent and token correctly', function () {
         expect(server.headers['User-Agent']).toEqual('agent');
         expect(server.headers.Authorization).toEqual('token 1234');
     });
+});
 
-    it('postComment returns rejected Promise if `url` or `message` is undefined', function(done) {
-        server.postComment().then(function() {
+describe('GitHubServer.postComment', function() {
+    it('returns rejected Promise if `url` or `message` is undefined', function (done) {
+        server.postComment().then(function () {
             done(new Error('Promise should not be resolved'));
-        }, function() {
+        }, function () {
             done();
         });
-        server.postComment('url').then(function() {
-            done(new Error('Promise should not be resolved'));
-        }, function() {
-            done();
-        });
-    });
-
-    it('get returns undefined if `url` is undefined', function(done) {
-        server.get().then(function() {
+        server.postComment('url').then(function () {
             done(new Error('Promise should not be resolved'));
         }, function () {
             done();
         });
     });
 
-    it('request-promise receives well-formated POST for `postComment`', function() {
+    it('sends request-promise a well-formated POST', function () {
         var fakeUrl = 'http://test';
         var fakeMessage = 'hello';
         var expected = {
@@ -47,14 +40,24 @@ describe('postComment and get work as expected', function() {
             json: true
         };
 
-        spyOn(rp, 'post').and.callFake(function(postJson) {
+        spyOn(rp, 'post').and.callFake(function (postJson) {
             expect(postJson).toEqual(expected);
         });
 
         server.postComment('http://test', 'hello');
     });
+});
 
-    it('request-promise receives well-formated GET for `get`', function() {
+describe('GitHubServer.get', function() {
+    it('returns rejected Promise if `url` is undefined', function(done) {
+        server.get().then(function() {
+            done(new Error('Promise should not be resolved'));
+        }, function () {
+            done();
+        });
+    });
+
+    it('sends request-promise a well-formated GET request', function() {
         var fakeUrl = 'http://test';
         var expected = {
             uri: fakeUrl,
@@ -70,18 +73,37 @@ describe('postComment and get work as expected', function() {
     });
 });
 
-describe('Static helper functions', function() {
-    it('getCommentsFromResponse returns [] if parameter is undefined', function() {
+describe('GitHubServer.getCommentsFromResponse', function() {
+    it('returns [] if parameter is undefined', function() {
         expect(GitHubServer.getCommentsFromResponse()).toEqual([]);
     });
 
-    it('getCommentsFromResponse returns array of strings', function() {
-        var issueJson = fsExtra.readJsonSync('./specs/issueComments.json');
+    it('returns array of strings', function() {
+        var issueJson = fsExtra.readJsonSync('./specs/data/issueComments.json');
         expect(GitHubServer.getCommentsFromResponse(issueJson)).toEqual(['Me too']);
+    });
+
+    it('returns array of undefined if pass malformed JSON', function() {
+        var issueJson = fsExtra.readJsonSync('./specs/data/issueComments.bad.json');
+        expect(GitHubServer.getCommentsFromResponse(issueJson)).toEqual([undefined, undefined]);
     });
 });
 
-describe('issue.htmlUrlToApi', function() {
+describe('GitHubServer.issue.getCommentsUrl', function() {
+    it('returns correct URL', function() {
+        var issueJson = fsExtra.readJsonSync('./specs/data/issueResponse.json');
+        expect(GitHubServer.issue.getCommentsUrl(issueJson)).toEqual('https://api.github.com/repos/baxterthehacker/public-repo/issues/2/comments');
+    });
+});
+
+describe('GitHubServer.pullRequest.getCommentsUrl', function() {
+    it('returns correct URL', function() {
+        var pullRequestJson = fsExtra.readJsonSync('./specs/data/pullRequestResponse.json');
+        expect(GitHubServer.pullRequest.getCommentsUrl(pullRequestJson)).toEqual('https://api.github.com/repos/baxterthehacker/public-repo/issues/1/comments');
+    });
+});
+
+describe('GitHubServer.issue.htmlUrlToApi', function() {
     it('returns undefined when url is undefined', function() {
         expect(GitHubServer.issue.htmlUrlToApi()).toEqual(undefined);
     });
@@ -97,6 +119,6 @@ describe('issue.htmlUrlToApi', function() {
     });
 });
 
-describe('BumpAllPullRequests', function() {
+describe('GitHubServer.BumpAllPullRequests', function() {
 
 });
