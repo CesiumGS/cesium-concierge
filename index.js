@@ -11,6 +11,11 @@ var app = express();
 module.exports = app;
 
 nconf.env('__')
+    .argv({
+        'remindForum': {
+            describe: 'Enable forum-reminding ability'
+        }
+    })
     .file({
         file: 'config.json'
     });
@@ -112,11 +117,13 @@ webHookHandler.on('issues', function(repo, jsonResponse) { // eslint-disable-lin
             });
             break;
         case 'closed':
-            commentOnClosedIssue(commentsUrl).then(function(status) {
-                console.log('GitHub API returned with:', status);
-            }).catch(function(e) {
-                console.log('commentOnClosedIssue got an error:', e);
-            });
+            if (nconf.get('remindForum')) {
+                commentOnClosedIssue(commentsUrl).then(function(status) {
+                    console.log('GitHub API returned with:', status);
+                }).catch(function(e) {
+                    console.log('commentOnClosedIssue got an error:', e);
+                });
+            }
             break;
         default:
     }
