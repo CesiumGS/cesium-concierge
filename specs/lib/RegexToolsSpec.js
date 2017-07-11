@@ -4,11 +4,28 @@ var RegexTools = require('../../lib/RegexTools');
 var getGoogleGroupLinks = RegexTools.getGoogleGroupLinks;
 var getGitHubIssueLinks = RegexTools.getGitHubIssueLinks;
 
-describe('getUnique', function() {
+describe('RegexTools._getUniqueMatch', function() {
+    var t1 = ['a', 'b', 'c', 'd'];
+    var t2 = ['a', 'a', 'b', 'bb', 'c', 'aaa', 'cab', 'c'];
 
+    it('returns [] when parameters are undefined', function() {
+        expect(RegexTools._getUniqueMatch()).toEqual([]);
+        expect(RegexTools._getUniqueMatch(['array'])).toEqual([]);
+    });
+
+    it('throws error if not passed an array', function() {
+        expect(function() {
+            RegexTools._getUniqueMatch('not array', /a/);
+        }).toThrowError(TypeError);
+    });
+
+    it('finds unique matches', function() {
+        expect(RegexTools._getUniqueMatch(t1, /[a-z]/g)).toEqual(t1);
+        expect(RegexTools._getUniqueMatch(t2, /[a-z]/g)).toEqual(['a', 'b', 'c']);
+    });
 });
 
-describe('GoogleGroup Regex work correctly', function() {
+describe('RegexTools.getGoogleGroupLinks', function() {
     var comments = [];
     beforeEach(function() {
         comments = [
@@ -45,7 +62,7 @@ describe('GoogleGroup Regex work correctly', function() {
     });
 });
 
-describe('GitHub regex works correctly', function() {
+describe('RegexTools.getGitHubIssueLinks', function() {
     var comments = [];
     var uniqueComments = [];
     beforeEach(function() {
