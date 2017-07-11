@@ -70,7 +70,7 @@ describe('postComment and get work as expected', function() {
     });
 });
 
-describe('Static helper functions format GitHub JSON responses', function() {
+describe('Static helper functions', function() {
     it('getCommentsFromResponse returns [] if parameter is undefined', function() {
         expect(GitHubServer.getCommentsFromResponse()).toEqual([]);
     });
@@ -78,6 +78,22 @@ describe('Static helper functions format GitHub JSON responses', function() {
     it('getCommentsFromResponse returns array of strings', function() {
         var issueJson = fsExtra.readJsonSync('./specs/issueComments.json');
         expect(GitHubServer.getCommentsFromResponse(issueJson)).toEqual(['Me too']);
+    });
+});
+
+describe('issue.htmlUrlToApi', function() {
+    it('returns undefined when url is undefined', function() {
+        expect(GitHubServer.issue.htmlUrlToApi()).toEqual(undefined);
+    });
+
+    xit('formats basic links to issues', function() {
+        expect(GitHubServer.issue.htmlUrlToApi('https://github.com/AnalyticalGraphicsInc/cesium/issues/5608')).toEqual('https://api.github.com/repos/AnalyticalGraphicsInc/cesium/issues/5608/comments');
+        expect(GitHubServer.issue.htmlUrlToApi('https://github.com/AnalyticalGraphicsInc/cesium/issues/5503')).toEqual('https://api.github.com/repos/AnalyticalGraphicsInc/cesium/issues/5503/comments');
+    });
+
+    xit('formats links with queries', function() {
+        expect(GitHubServer.issue.htmlUrlToApi('https://github.com/AnalyticalGraphicsInc/cesium/issues/5608?this=is&a=test')).toEqual('https://api.github.com/repos/AnalyticalGraphicsInc/cesium/issues/5608/comments');
+        expect(GitHubServer.issue.htmlUrlToApi('https://github.com/AnalyticalGraphicsInc/cesium/issues/5503?m=34343&f=232')).toEqual('https://api.github.com/repos/AnalyticalGraphicsInc/cesium/issues/5503/comments');
     });
 });
 

@@ -64,22 +64,32 @@ function labelOpenedIssue(commentsUrl) {
     var comments = [];
     var linkMatches = [];
     var potentialLabels = [];
+    var issueLabels;
 
     return gitHubServer.get(commentsUrl)
     .then(function(commentsJsonResponse) {
-        // https://developer.github.com/v3/activity/events/types/#webhook-payload-example-23
         comments = GitHubServer.getCommentsFromResponse(commentsJsonResponse);
         linkMatches = RegexTools.getGitHubIssueLinks(comments);
         if (linkMatches === []) {
             return Promise.reject('No GitHub issue links found in comments!');
         }
-        console.log('Found these links in the comments: ', linkMatches);
+        console.log('Found these GitHub links in the comments: ', linkMatches);
 
-        linkMatches.forEach(function(link) { // eslint-disable-line no-unused-vars
-            // /repos/:owner/:repo/issues/:number/labels
-            potentialLabels.push();
+        linkMatches.forEach(function(link) {
+            issueLabels = GitHubServer.getLabels(GitHubServer.issue.htmlUrlToApi(link));
+            potentialLabels.push(issueLabels);
         });
         return Promise.all(potentialLabels);
+    })
+    .then(function(labels) {
+        var flattenedLabels = Array.prototype.concat.apply([], labels);
+        if (flattenedLabels.length > 0) {
+            flattenedLabels.forEach(function(label) {
+                if (!potentialLabels.contains(label)) {
+                    potentialLabels.push(label);
+                }
+            });
+        }
         // TODO
         // for issuesUrl[]:
         //   get labels +-> availableLabels
@@ -94,7 +104,7 @@ function labelOpenedIssue(commentsUrl) {
 }
 
 webHookHandler.on('issues', function(repo, jsonResponse) { // eslint-disable-line no-unused-vars
-    var commentsUrl = GitHubServer.getIssueCommentsUrl(jsonResponse);
+    var commentsUrl = GitHubServer.issue.getCommentsUrl(jsonResponse);
     switch (jsonResponse.action) {
         case 'opened':
             labelOpenedIssue(commentsUrl).catch(function (e) {
@@ -115,7 +125,7 @@ webHookHandler.on('issues', function(repo, jsonResponse) { // eslint-disable-lin
 webHookHandler.on('pull_request', function (repo, responseData) { // eslint-disable-line no-unused-vars
     if (responseData.action === 'opened') {
         // Pull requests are issues
-        labelOpenedIssue(GitHubServer.getPullRequestCommentsUrl(responseData))
+        labelOpenedIssue(GitHubServer.pullRequest.getCommentsUrl(responseData))
         .catch(function (e) {
             console.log('labelOpenedIssue got an error:', e);
         });

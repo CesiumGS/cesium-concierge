@@ -47,13 +47,23 @@ describe('GoogleGroup Regex work correctly', function() {
 
 describe('GitHub regex works correctly', function() {
     var comments = [];
+    var uniqueComments = [];
     beforeEach(function() {
+        uniqueComments = [
+            'this has no github link',
+            'https://github.com/AnalyticalGraphicsInc/agi-cesium-people/issues/156', // 1
+            'https://github.com/AnalyticalGraphicsInc/agi-cesium-people/issues/4920?fdsf=fdsf&2323=2', // 2
+            'https://github.com/AnalyticalGraphicsInc/agi-cesium-people/issues/',
+            'blah blah https://github.com/AnalyticalGraphicsInc/agi-cesium-people/issues/232 blah blah blah', // 3
+            'https://github.com/AnalyticalGraphicsInc/agi-cesium-people/issues/3, https://github.com/AnalyticalGraphicsInc/agi-cesium-people/issues/156' // 4 (contains duplicate)
+        ];
         comments = [
             '',
             'this has no github link',
             'https://github.com/AnalyticalGraphicsInc/agi-cesium-people/issues/156',
             'https://github.com/AnalyticalGraphicsInc/agi-cesium-people/issues/4920?fdsf=fdsf',
             'https://github.com/AnalyticalGraphicsInc/agi-cesium-people/issues/',
+            'blah blah https://github.com/AnalyticalGraphicsInc/agi-cesium-people/issues/232 blah blah blah',
             'https://github.com/AnalyticalGraphicsInc/agi-cesium-people/issues/3, https://github.com/AnalyticalGraphicsInc/agi-cesium-people/issues/156120'
         ];
     });
@@ -63,7 +73,15 @@ describe('GitHub regex works correctly', function() {
     });
 
     it('Finds correct number of unique links', function() {
-        expect(getGitHubIssueLinks(comments).length).toEqual(4);
+        expect(getGitHubIssueLinks(uniqueComments).length).toEqual(4);
     });
-    // TODO - More tests
+
+    it('Returns links intact', function() {
+        expect(getGitHubIssueLinks([comments[2]])).toEqual([comments[2]]);
+        expect(getGitHubIssueLinks([comments[3]])).toEqual([comments[3]]);
+    });
+
+    it('Finds link when surrounded by text', function() {
+        expect(getGitHubIssueLinks([comments[5]])).toEqual(['https://github.com/AnalyticalGraphicsInc/agi-cesium-people/issues/232']);
+    });
 });
