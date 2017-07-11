@@ -1,9 +1,13 @@
 'use strict';
+var fsExtra = require('fs-extra');
 var GitHubServer = require('../../lib/GitHubServer');
 var rp = require('request-promise');
 
 describe('postComment and get work as expected', function() {
-    var server = new GitHubServer('agent', '1234');
+    var server;
+    beforeEach(function() {
+        server = new GitHubServer('agent', '1234');
+    });
 
     it('sets User-Agent and token correctly', function() {
         expect(server.headers['User-Agent']).toEqual('agent');
@@ -71,8 +75,9 @@ describe('Static helper functions format GitHub JSON responses', function() {
         expect(GitHubServer.getCommentsFromResponse()).toEqual([]);
     });
 
-    xit('getCommentsFromResponse returns array of strings', function() {
-        // TODO
+    it('getCommentsFromResponse returns array of strings', function() {
+        var issueJson = fsExtra.readJsonSync('./specs/issueComments.json');
+        expect(GitHubServer.getCommentsFromResponse(issueJson)).toEqual(['Me too']);
     });
 });
 

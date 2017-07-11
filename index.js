@@ -7,11 +7,9 @@ var nconf = require('nconf');
 var Promise = require('bluebird');
 var RegexTools = require('./lib/RegexTools');
 
-// Setup
 var app = express();
 module.exports = app;
 
-// CLI/Env Arguments
 nconf.env('__')
     .file({
         file: 'config.json'
@@ -26,14 +24,14 @@ nconf.defaults({
 });
 
 var webHookHandler = gitHubWebHook({
-    path: nconf.get('path'),
+    path: nconf.get('listenPath'),
     secret: nconf.get('secret')
 });
 
 app.use(bodyParser.json());
 app.use(webHookHandler);
 
-var gitHubServer = new GitHubServer('cesium-concierge', nconf.get('github_token'));
+var gitHubServer = new GitHubServer('cesium-concierge', nconf.get('githubToken'));
 
 /** Get comments -> regex search -> post comment
  *
@@ -41,10 +39,13 @@ var gitHubServer = new GitHubServer('cesium-concierge', nconf.get('github_token'
  * @return {Promise<http.IncomingMessage>} Response
  */
 function commentOnClosedIssue(commentsUrl) {
+    var comments = [];
+    var linkMatches = [];
+
     return gitHubServer.get(commentsUrl)
     .then(function(commentsJsonResponse) {
-        var comments = GitHubServer.getCommentsFromResponse(commentsJsonResponse);
-        var linkMatches = RegexTools.getGoogleGroupLinks(comments);
+        comments = GitHubServer.getCommentsFromResponse(commentsJsonResponse);
+        linkMatches = RegexTools.getGoogleGroupLinks(comments);
         if (linkMatches === []) {
             return Promise.reject('No google group links found in comments!');
         }
@@ -60,17 +61,20 @@ function commentOnClosedIssue(commentsUrl) {
  * @return {Promise<http.IncomingMessage>} Response
  */
 function labelOpenedIssue(commentsUrl) {
+    var comments = [];
+    var linkMatches = [];
+    var potentialLabels = [];
+
     return gitHubServer.get(commentsUrl)
     .then(function(commentsJsonResponse) {
         // https://developer.github.com/v3/activity/events/types/#webhook-payload-example-23
-        var comments = GitHubServer.getCommentsFromResponse(commentsJsonResponse);
-        var linkMatches = RegexTools.getGitHubIssueLinks(comments);
+        comments = GitHubServer.getCommentsFromResponse(commentsJsonResponse);
+        linkMatches = RegexTools.getGitHubIssueLinks(comments);
         if (linkMatches === []) {
             return Promise.reject('No GitHub issue links found in comments!');
         }
         console.log('Found these links in the comments: ', linkMatches);
 
-        var potentialLabels = [];
         linkMatches.forEach(function(link) { // eslint-disable-line no-unused-vars
             // /repos/:owner/:repo/issues/:number/labels
             potentialLabels.push();
@@ -90,7 +94,7 @@ function labelOpenedIssue(commentsUrl) {
 }
 
 webHookHandler.on('issues', function(repo, jsonResponse) { // eslint-disable-line no-unused-vars
-    var commentsUrl = GitHubServer.issue.getCommentsUrl(jsonResponse);
+    var commentsUrl = GitHubServer.getIssueCommentsUrl(jsonResponse);
     switch (jsonResponse.action) {
         case 'opened':
             labelOpenedIssue(commentsUrl).catch(function (e) {
@@ -111,7 +115,7 @@ webHookHandler.on('issues', function(repo, jsonResponse) { // eslint-disable-lin
 webHookHandler.on('pull_request', function (repo, responseData) { // eslint-disable-line no-unused-vars
     if (responseData.action === 'opened') {
         // Pull requests are issues
-        labelOpenedIssue(GitHubServer.pull_request.getCommentsUrl(responseData))
+        labelOpenedIssue(GitHubServer.getPullRequestCommentsUrl(responseData))
         .catch(function (e) {
             console.log('labelOpenedIssue got an error:', e);
         });
@@ -125,7 +129,7 @@ webHookHandler.on('error', function (err, req, res) { // eslint-disable-line no-
 // Listen for cron job and spool a PR bumper
 app.get('/cron', function(req, res) { // eslint-disable-line no-unused-vars
     // TODO - check for secret
-    gitHubServer.bumpAllPullRequests(nconf.get('repo'));
+    gitHubServer.bumpAllPullRequests(nconf.get('repository'));
 });
 
 // Start server on port specified by env.PORT
