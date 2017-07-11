@@ -89,6 +89,20 @@ describe('GitHubServer.getCommentsFromResponse', function() {
     });
 });
 
+describe('GitHubServer.issue.getCommentsUrl', function() {
+    it('returns correct URL', function() {
+        var issueJson = fsExtra.readJsonSync('./specs/data/issueResponse.json');
+        expect(GitHubServer.issue.getCommentsUrl(issueJson)).toEqual('https://api.github.com/repos/baxterthehacker/public-repo/issues/2/comments');
+    });
+});
+
+describe('GitHubServer.pullRequest.getCommentsUrl', function() {
+    it('returns correct URL', function() {
+        var pullRequestJson = fsExtra.readJsonSync('./specs/data/pullRequestResponse.json');
+        expect(GitHubServer.pullRequest.getCommentsUrl(pullRequestJson)).toEqual('https://api.github.com/repos/baxterthehacker/public-repo/issues/1/comments');
+    });
+});
+
 describe('GitHubServer.issue.htmlUrlToApi', function() {
     it('returns undefined when url is undefined', function() {
         expect(GitHubServer.issue.htmlUrlToApi()).toEqual(undefined);
