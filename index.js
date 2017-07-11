@@ -38,6 +38,7 @@ var gitHubServer = new GitHubServer('cesium-concierge', nconf.get('github_token'
 /** Get comments -> regex search -> post comment
  *
  * @param {String} commentsUrl URL to set/get comments on issue (https://developer.github.com/v3/activity/events/types/#issuesevent)
+ * @return {Promise<http.IncomingMessage>} Response
  */
 function commentOnClosedIssue(commentsUrl) {
     return gitHubServer.get(commentsUrl)
@@ -50,15 +51,13 @@ function commentOnClosedIssue(commentsUrl) {
         console.log('Found these links in the comments: ', linkMatches);
         return gitHubServer.postComment(commentsUrl,
             'Please make sure to update ' + linkMatches + ' on this closed issue.\n\n__I am a bot BEEEP BOOOP__');
-    })
-    .then(function(status) {
-        console.log('GitHub API returned with:', status);
     });
 }
 
 /** Get PR title + body -> parse for keywords -> post labels + comment
  *
- * @param {String} commentsUrl
+ * @param {String} commentsUrl URL to GitHub GET/POST comments URL, /repos/:owner/:repo/issues/:number/comments
+ * @return {Promise<http.IncomingMessage>} Response
  */
 function labelOpenedIssue(commentsUrl) {
     return gitHubServer.get(commentsUrl)
@@ -94,12 +93,14 @@ webHookHandler.on('issues', function(repo, jsonResponse) { // eslint-disable-lin
     var commentsUrl = GitHubServer.issue.getCommentsUrl(jsonResponse);
     switch (jsonResponse.action) {
         case 'opened':
-            labelOpenedIssue(jsonResponse, commentsUrl).catch(function (e) {
+            labelOpenedIssue(commentsUrl).catch(function (e) {
                 console.log('labelOpenedIssue got an error:', e);
             });
             break;
         case 'closed':
-            commentOnClosedIssue(commentsUrl).catch(function(e) {
+            commentOnClosedIssue(commentsUrl).then(function(status) {
+                console.log('GitHub API returned with:', status);
+            }).catch(function(e) {
                 console.log('commentOnClosedIssue got an error:', e);
             });
             break;

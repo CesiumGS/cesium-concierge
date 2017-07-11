@@ -4,6 +4,10 @@ var RegexTools = require('../../lib/RegexTools');
 var getGoogleGroupLinks = RegexTools.getGoogleGroupLinks;
 var getGitHubIssueLinks = RegexTools.getGitHubIssueLinks;
 
+describe('getUnique', function() {
+
+});
+
 describe('GoogleGroup Regex work correctly', function() {
     var comments = [];
     beforeEach(function() {
