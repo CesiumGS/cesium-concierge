@@ -1,0 +1,54 @@
+{
+  "name": "cesium-concierge",
+  "version": "0.0.1",
+  "license": "Apache-2.0",
+  "description": "The Cesium concierge partially automates maintenance of GitHub repositories with it's friendly demeanor and refined tastes.",
+  "author": {
+    "name": "Analytical Graphics, Inc.",
+    "url": "https://www.agi.com"
+  },
+  "keywords": [
+    "GitHub",
+    "bot",
+    "Cesium"
+  ],
+  "homepage": "https://cesiumjs.org",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/AnalyticalGraphicsInc/cesium-concierge/"
+  },
+  "bugs": {
+    "url": "https://github.com/AnalyticalGraphicsInc/cesium-concierge/issues"
+  },
+  "main": "index.js",
+  "engines": {
+    "node": ">=6.0.0"
+  },
+  "dependencies": {
+    "bluebird": "^3.0.0",
+    "body-parser": "^1.0.0",
+    "cesium": "^1.35.1",
+    "express": "^4.0.0",
+    "express-github-webhook": "^1.0.6",
+    "fs-extra": "^3.0.0",
+    "nconf": "^0.8.4",
+    "request": "^2.81.0",
+    "request-promise": "^4.2.1"
+  },
+  "devDependencies": {
+    "eslint": "^4.0.0",
+    "eslint-config-cesium": "^2.0.0",
+    "gulp": "^3.9.1",
+    "jasmine": "^2.6.0",
+    "jasmine-spec-reporter": "^4.1.1",
+    "nyc": "^11.0.3",
+    "open": "^0.0.5",
+    "yargs": "^8.0.2"
+  },
+  "scripts": {
+    "eslint": "eslint . --cache",
+    "start": "node index.js",
+    "coverage": "gulp coverage",
+    "test": "gulp test"
+  }
+}
