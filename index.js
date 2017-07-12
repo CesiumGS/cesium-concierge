@@ -18,7 +18,7 @@ nconf.env('__')
 nconf.defaults({
     port: 5000,
     secret: '', // Repository secret to verify incoming WebHook requests from GitHub
-    githubToken: '', // Token used to verify outgoing requests to GitHub repository
+    gitHubToken: '', // Token used to verify outgoing requests to GitHub repository
     repository: '', // Repository to scan for outdated pull requests and bump them
     listenPath: '/' // Path on which to listen for incoming requests
 });
@@ -31,7 +31,7 @@ var webHookHandler = gitHubWebHook({
 app.use(bodyParser.json());
 app.use(webHookHandler);
 
-var gitHubServer = new GitHubServer('cesium-concierge', nconf.get('githubToken'));
+var gitHubServer = new GitHubServer('cesium-concierge', nconf.get('gitHubToken'));
 
 /** Get comments -> regex search -> post comment
  *
