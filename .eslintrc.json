@@ -1,0 +1,6 @@
+{
+  "extends": "cesium/node",
+  "rules": {
+    "valid-jsdoc": "error"
+  }
+}

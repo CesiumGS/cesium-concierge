@@ -1,0 +1,17 @@
+# NPM
+node_modules
+npm-debug.log
+
+# WebStorm user-specific
+.idea/workspace.xml
+.idea/tasks.xml
+
+# Generated files
+.eslintcache
+coverage
+*.tgz
+*.zip
+.nyc_output
+
+# Config files
+config.json
