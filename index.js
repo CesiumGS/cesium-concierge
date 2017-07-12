@@ -1,11 +1,12 @@
 'use strict';
 var bodyParser = require('body-parser');
 var express = require('express');
-var GitHubServer = require('./lib/GitHubServer');
 var gitHubWebHook = require('express-github-webhook');
 var nconf = require('nconf');
 var Promise = require('bluebird');
-var RegexTools = require('./lib/RegexTools');
+
+var GitHubServer = require('./lib/GitHubServer');
+var getGoogleGroupLinks = require('./lib/getGoogleGroupLinks');
 
 var app = express();
 module.exports = app;
@@ -45,7 +46,7 @@ function commentOnClosedIssue(commentsUrl) {
     return gitHubServer.get(commentsUrl)
     .then(function(commentsJsonResponse) {
         comments = GitHubServer.getCommentsFromResponse(commentsJsonResponse);
-        linkMatches = RegexTools.getGoogleGroupLinks(comments);
+        linkMatches = getGoogleGroupLinks(comments);
         if (linkMatches === []) {
             return Promise.reject('No google group links found in comments!');
         }
