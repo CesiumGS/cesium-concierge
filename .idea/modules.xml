@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/github-bot.iml" filepath="$PROJECT_DIR$/.idea/github-bot.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/cesium-concierge.iml" filepath="$PROJECT_DIR$/.idea/cesium-concierge.iml" />
     </modules>
   </component>
 </project>
