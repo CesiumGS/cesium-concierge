@@ -48,7 +48,7 @@
   "scripts": {
     "eslint": "eslint . --cache",
     "start": "node index.js",
-    "coverage": "nyc gulp test",
+    "coverage": "gulp coverage",
     "test": "gulp test"
   }
 }
