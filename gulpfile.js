@@ -30,7 +30,6 @@ gulp.task('coverage', function() {
     child_process.execSync('nyc' +
         ' --all' +
         ' --report-dir coverage/' +
-        ' -x "index.js"' +
         ' -x "specs/**"' +
         ' -x "coverage/**"' +
         ' -x "gulpfile.js"' +
