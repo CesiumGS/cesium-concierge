@@ -24,7 +24,7 @@ gulp.task('test', function (done) {
     });
 });
 
-gulp.task('coverage', function() {
+gulp.task('coverage', function () {
     fsExtra.removeSync('coverage');
 
     child_process.execSync('nyc' +
