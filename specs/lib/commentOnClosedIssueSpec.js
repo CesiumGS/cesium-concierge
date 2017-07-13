@@ -30,11 +30,10 @@ describe('commentOnClosedIssue', function() {
 describe('commentOnClosedIssue._implementation', function() {
     var commentsJson = fsExtra.readJsonSync('./specs/data/issueComments.json');
     var responseJson = fsExtra.readJsonSync('./specs/data/issueResponse.json');
-    var postSpy;
 
     beforeEach(function() {
         spyOn(requestPromise, 'get').and.returnValue(Promise.resolve(commentsJson));
-        postSpy = spyOn(requestPromise, 'post');
+        spyOn(requestPromise, 'post');
     });
 
     it('gets the list of comments', function(done) {
@@ -59,15 +58,14 @@ describe('commentOnClosedIssue._implementation', function() {
 
     it('calls requestPromise.post with correct values', function(done) {
         spyOn(getUniqueMatch, '_implementation').and.returnValue(['https://example.com']);
-        postSpy.and.callFake(function(obj) {
+        commentOnClosedIssue(responseJson, { test: true }).then(function() {
+            var obj = requestPromise.post.calls.argsFor(0)[0];
             expect(obj.uri).toEqual('https://api.github.com/repos/baxterthehacker/public-repo/issues/2/comments');
             expect(obj.headers).toEqual({ test: true });
             expect(obj.json).toEqual(true);
-        });
-        commentOnClosedIssue(responseJson, { test: true }).then(function() {
             done();
-        }).catch(function() {
-            done.fail();
+        }).catch(function(err) {
+            done.fail(err);
         });
     });
 });
