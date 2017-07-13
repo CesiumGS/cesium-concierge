@@ -9,7 +9,8 @@ var Settings = require('./lib/Settings');
 var app = express();
 module.exports = app;
 
-Settings.loadRepositoriesSettings().then(function() {
+Settings.loadRepositoriesSettings()
+.then(function () {
     var webHookHandler = gitHubWebHook({
         path: Settings.listenPath,
         secret: Settings.secret
@@ -18,7 +19,7 @@ Settings.loadRepositoriesSettings().then(function() {
     app.use(bodyParser.json());
     app.use(webHookHandler);
 
-    Settings.repositories.forEach(function(repositoryName) {
+    Settings.repositories.forEach(function (repositoryName) {
         webHookHandler.on(repositoryName, function (event, jsonResponse) {
             if (Settings.get(repositoryName, 'remindForum') && event === 'issues' && jsonResponse.data === 'closed') {
                 commentOnClosedIssue(jsonResponse, {
@@ -41,7 +42,8 @@ Settings.loadRepositoriesSettings().then(function() {
     app.listen(Settings.port, function () {
         console.log('cesium-concierge listening on port', Settings.port);
     });
-}).catch(function(err) {
+})
+.catch(function (err) {
     console.log('Could not parse `repository`.json:', err);
     process.exit(1);
 });
