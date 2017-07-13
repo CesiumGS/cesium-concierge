@@ -6,11 +6,10 @@ var gitHubWebHook = require('express-github-webhook');
 var commentOnClosedIssue = require('./lib/commentOnClosedIssue');
 var Settings = require('./lib/Settings');
 
-var app = express();
-module.exports = app;
-
 Settings.loadRepositoriesSettings()
 .then(function () {
+    var app = express();
+
     var webHookHandler = gitHubWebHook({
         path: Settings.listenPath,
         secret: Settings.secret
