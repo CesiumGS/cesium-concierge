@@ -15,3 +15,4 @@ coverage
 
 # Config files
 config.json
+repositories.json
