@@ -52,6 +52,7 @@ describe('loadRepositoriesSettings', function () {
                 expect(Settings.port).toEqual(10);
                 expect(Settings.listenPath).toEqual('/foo');
                 expect(Settings.repositories).toEqual(['one', 'two']);
+                expect(Settings.secret).toEqual('foo');
                 done();
             })
             .catch(function (err) {
