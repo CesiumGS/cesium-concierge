@@ -7,7 +7,7 @@ var commentOnClosedIssue = require('./lib/commentOnClosedIssue');
 var Settings = require('./lib/Settings');
 
 Settings.loadRepositoriesSettings('./config.json')
-.then(function () {
+.then(function (repositoryNames) {
     var webHookHandler = gitHubWebHook({
         path: Settings.listenPath,
         secret: Settings.secret
@@ -17,7 +17,7 @@ Settings.loadRepositoriesSettings('./config.json')
     app.use(bodyParser.json());
     app.use(webHookHandler);
 
-    Settings.repositories.forEach(function (repositoryName) {
+    repositoryNames.forEach(function (repositoryName) {
         webHookHandler.on(repositoryName, function (event, jsonResponse) {
             if (Settings.get(repositoryName, 'remindForum') && event === 'issues' && jsonResponse.data === 'closed') {
                 commentOnClosedIssue(jsonResponse, {

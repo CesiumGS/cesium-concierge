@@ -43,7 +43,9 @@ describe('loadRepositoriesSettings', function () {
 
     it('correctly loads values', function (done) {
         Settings.loadRepositoriesSettings('./specs/data/config_noError.json')
-            .then(function () {
+            .then(function (repositoryNames) {
+                expect(repositoryNames).toEqual(['one', 'two']);
+
                 expect(Settings.get('one', 'gitHubToken')).toEqual('bar');
                 expect(Settings.get('one', 'someVal')).toBe(true);
                 expect(Settings.get('two', 'gitHubToken')).toEqual('bar2');
@@ -51,7 +53,6 @@ describe('loadRepositoriesSettings', function () {
 
                 expect(Settings.port).toEqual(10);
                 expect(Settings.listenPath).toEqual('/foo');
-                expect(Settings.repositories).toEqual(['one', 'two']);
                 expect(Settings.secret).toEqual('foo');
                 done();
             })
