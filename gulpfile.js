@@ -24,13 +24,12 @@ gulp.task('test', function (done) {
     });
 });
 
-gulp.task('coverage', function() {
+gulp.task('coverage', function () {
     fsExtra.removeSync('coverage');
 
     child_process.execSync('nyc' +
         ' --all' +
         ' --report-dir coverage/' +
-        ' -x "index.js"' +
         ' -x "specs/**"' +
         ' -x "coverage/**"' +
         ' -x "gulpfile.js"' +
