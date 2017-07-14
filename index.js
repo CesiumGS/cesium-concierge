@@ -6,7 +6,7 @@ var gitHubWebHook = require('express-github-webhook');
 var commentOnClosedIssue = require('./lib/commentOnClosedIssue');
 var Settings = require('./lib/Settings');
 
-Settings.loadRepositoriesSettings()
+Settings.loadRepositoriesSettings('./config.json')
 .then(function () {
     var app = express();
 
