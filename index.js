@@ -44,6 +44,6 @@ Settings.loadRepositoriesSettings('./config.json')
     });
 })
 .catch(function (err) {
-    console.log('Could not parse environment settings', err);
+    console.log('Could not parse environment settings:', err);
     process.exit(1);
 });
