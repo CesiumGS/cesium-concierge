@@ -25,7 +25,7 @@ Settings.loadRepositoriesSettings('./config.json')
             console.log('jsonResponse:', jsonResponse);
             //var repository = Settings.repositories[repositoryName];
             if (event === 'issues' &&
-                jsonResponse.data === 'closed') {
+                jsonResponse.action === 'closed') {
                 commentOnClosedIssue(jsonResponse, {
                     'User-Agent': 'cesium-concierge',
                     Authorization: 'token ' + Settings.get(repositoryName, 'gitHubToken')
