@@ -18,33 +18,33 @@ Settings.loadRepositoriesSettings('./config.json')
     app.use(webHookHandler);
 
     repositoryNames.forEach(function (repositoryName) {
-        console.log('Listening to', repositoryName);
+        console.log(new Date(Date.now()).toISOString() + ' Listening to', repositoryName);
         webHookHandler.on(repositoryName, function (event, jsonResponse) {
-            console.log('Received event to repository:', repositoryName);
-            console.log('event:', event);
-            console.log('jsonResponse:', jsonResponse);
+            console.log(new Date(Date.now()).toISOString() + ' Received event to repository:', repositoryName);
+            console.log(new Date(Date.now()).toISOString() + ' event:', event);
+            console.log(new Date(Date.now()).toISOString() + ' jsonResponse:', jsonResponse);
             //var repository = Settings.repositories[repositoryName];
             if (event === 'issues' &&
                 jsonResponse.action === 'closed') {
                 commentOnClosedIssue(jsonResponse, {
                     'User-Agent': 'cesium-concierge',
-                    Authorization: 'token ' + Settings.get(repositoryName, 'gitHubToken')
+                    Authorization: 'token ' + Settings.repositories[repositoryName].gitHubToken
                 }).then(function (status) {
-                    console.log('GitHub API returned with:', status);
+                    console.log(new Date(Date.now()).toISOString() + ' GitHub API returned with:', status);
                 }).catch(function (e) {
-                    console.log('commentOnClosedIssue got an error:', e);
+                    console.log(new Date(Date.now()).toISOString() + ' commentOnClosedIssue got an error:', e);
                 });
             }
         });
     });
 
     webHookHandler.on('error', function (err, req, res) { // eslint-disable-line no-unused-vars
-        console.log('WebHookHandler got error:', err);
+        console.log(new Date(Date.now()).toISOString() + ' WebHookHandler got error:', err);
     });
 
     // Start server on port specified by env.PORT
     app.listen(Settings.port, function () {
-        console.log('cesium-concierge listening on port', Settings.port);
+        console.log(new Date(Date.now()).toISOString() + ' cesium-concierge listening on port', Settings.port);
     });
 })
 .catch(function (err) {
