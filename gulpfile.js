@@ -12,8 +12,6 @@ var JasmineSpecReporter = require('jasmine-spec-reporter');
 var open = require('open');
 var yargs = require('yargs');
 
-var packageJson = require('./package.json');
-
 var defined = Cesium.defined;
 var argv = yargs.argv;
 
@@ -68,17 +66,12 @@ gulp.task('create-zip', function () {
             base: '.'
         });
 
-    //We don't run post install in production.
-    packageJson.version = packageJson.version + '-' + hash + '.0';
-    fsExtra.outputJsonSync('build/package.json', packageJson);
-
     child_process.execSync('npm shrinkwrap');
-    fsExtra.renameSync('npm-shrinkwrap.json', 'build/npm-shrinkwrap.json');
 
-    var packageFile = gulp.src('build/package.json');
-    var shrinkWrapFile = gulp.src('build/npm-shrinkwrap.json');
+    var packageJson = gulp.src('./package.json');
+    var shrinkWrapFile = gulp.src('npm-shrinkwrap.json');
 
-    return eventStream.merge(serverFiles, packageFile, shrinkWrapFile)
+    return eventStream.merge(serverFiles, packageJson, shrinkWrapFile)
         .pipe(gulpTap(function (file) {
             // Work around an issue with gulp-zip where archives generated on Windows do
             // not properly have their directory executable mode set.
