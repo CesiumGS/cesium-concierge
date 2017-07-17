@@ -21,6 +21,8 @@ Settings.loadRepositoriesSettings('./config.json')
         console.log('Listening to', repositoryName);
         webHookHandler.on(repositoryName, function (event, jsonResponse) {
             console.log('Received event to repository:', repositoryName);
+            console.log('event:', event);
+            console.log('jsonResponse:', jsonResponse);
             //var repository = Settings.repositories[repositoryName];
             if (event === 'issues' &&
                 jsonResponse.data === 'closed') {
