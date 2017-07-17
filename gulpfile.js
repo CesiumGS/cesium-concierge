@@ -61,6 +61,7 @@ gulp.task('create-zip', function () {
 
     var serverFiles = gulp.src([
             'lib/**',
+            'Dockerfile',
             'index.js'],
         {
             base: '.'
