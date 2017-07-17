@@ -46,10 +46,10 @@ describe('loadRepositoriesSettings', function () {
             .then(function (repositoryNames) {
                 expect(repositoryNames).toEqual(['one', 'two']);
 
-                expect(Settings.get('one', 'gitHubToken')).toEqual('bar');
-                expect(Settings.get('one', 'someVal')).toBe(true);
-                expect(Settings.get('two', 'gitHubToken')).toEqual('bar2');
-                expect(Settings.get('two', 'someVal')).toEqual(false);
+                expect(Settings.repositories.one.gitHubToken).toEqual('bar');
+                expect(Settings.repositories.one.someVal).toBe(true);
+                expect(Settings.repositories.two.gitHubToken).toEqual('bar2');
+                expect(Settings.repositories.two.someVal).toEqual(false);
 
                 expect(Settings.port).toEqual(10);
                 expect(Settings.listenPath).toEqual('/foo');

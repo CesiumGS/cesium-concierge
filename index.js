@@ -19,7 +19,9 @@ Settings.loadRepositoriesSettings('./config.json')
 
     repositoryNames.forEach(function (repositoryName) {
         webHookHandler.on(repositoryName, function (event, jsonResponse) {
-            if (Settings.get(repositoryName, 'remindForum') && event === 'issues' && jsonResponse.data === 'closed') {
+            if (Settings.repositories.repositoryName.remindForum &&
+                event === 'issues' &&
+                jsonResponse.data === 'closed') {
                 commentOnClosedIssue(jsonResponse, {
                     'User-Agent': 'cesium-concierge',
                     Authorization: 'token ' + Settings.get(repositoryName, 'gitHubToken')
