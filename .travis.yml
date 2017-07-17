@@ -6,3 +6,4 @@ dist: trusty
 script:
   - npm run eslint
   - npm run test
+  - npm run create-zip

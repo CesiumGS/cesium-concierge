@@ -30,7 +30,6 @@
     "cesium": "^1.35.1",
     "express": "^4.0.0",
     "express-github-webhook": "^1.0.6",
-    "fs-extra": "^3.0.0",
     "nconf": "^0.8.4",
     "request": "^2.81.0",
     "request-promise": "^4.2.1"
@@ -38,7 +37,11 @@
   "devDependencies": {
     "eslint": "^4.0.0",
     "eslint-config-cesium": "^2.0.0",
+    "event-stream": "^3.3.4",
+    "fs-extra": "^3.0.0",
     "gulp": "^3.9.1",
+    "gulp-tap": "1.0.1",
+    "gulp-zip": "^4.0.0",
     "jasmine": "^2.6.0",
     "jasmine-spec-reporter": "^4.1.1",
     "nyc": "^11.0.3",
@@ -46,6 +49,7 @@
     "yargs": "^8.0.2"
   },
   "scripts": {
+    "create-zip": "gulp create-zip",
     "eslint": "eslint . --cache",
     "start": "node index.js",
     "coverage": "gulp coverage",
