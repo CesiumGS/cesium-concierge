@@ -18,10 +18,11 @@ Settings.loadRepositoriesSettings('./config.json')
     app.use(webHookHandler);
 
     repositoryNames.forEach(function (repositoryName) {
+        console.log('Listening to', repositoryName);
         webHookHandler.on(repositoryName, function (event, jsonResponse) {
-            var repository = Settings.repositories[repositoryName];
-            if (repository.remindForum &&
-                event === 'issues' &&
+            console.log('Received event to repository:', repositoryName);
+            //var repository = Settings.repositories[repositoryName];
+            if (event === 'issues' &&
                 jsonResponse.data === 'closed') {
                 commentOnClosedIssue(jsonResponse, {
                     'User-Agent': 'cesium-concierge',
