@@ -19,7 +19,8 @@ Settings.loadRepositoriesSettings('./config.json')
 
     repositoryNames.forEach(function (repositoryName) {
         webHookHandler.on(repositoryName, function (event, jsonResponse) {
-            if (Settings.repositories.repositoryName.remindForum &&
+            var repository = Settings.repositories[repositoryName];
+            if (repository.remindForum &&
                 event === 'issues' &&
                 jsonResponse.data === 'closed') {
                 commentOnClosedIssue(jsonResponse, {
