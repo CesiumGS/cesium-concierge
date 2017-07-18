@@ -8,11 +8,12 @@ var Promise = require('bluebird');
 var defined = Cesium.defined;
 
 var commentOnClosedIssue = require('./lib/commentOnClosedIssue');
+var dateLog = require('./lib/dateLog');
 var Settings = require('./lib/Settings');
 
 Settings.loadRepositoriesSettings('./config.json')
 .then(function (repositoryNames) {
-    console.log(new Date(Date.now()).toISOString() + ' Loaded settings successfully');
+    dateLog('Loaded settings successfully');
     var webHookHandler = gitHubWebHook({
         path: Settings.listenPath,
         secret: Settings.secret
@@ -23,11 +24,11 @@ Settings.loadRepositoriesSettings('./config.json')
     app.use(webHookHandler);
 
     repositoryNames.forEach(function (repositoryName) {
-        console.log(new Date(Date.now()).toISOString() + ' Listening to', repositoryName);
+        dateLog('Listening to ' + repositoryName);
         webHookHandler.on(repositoryName, function (event, jsonResponse) {
-            console.log(new Date(Date.now()).toISOString() + ' Received event to repository:', repositoryName);
-            console.log(new Date(Date.now()).toISOString() + ' event:', event);
-            console.log(new Date(Date.now()).toISOString() + ' jsonResponse:', jsonResponse);
+            dateLog('Received event to repository: ' + repositoryName);
+            dateLog('event: ' + event);
+            dateLog('jsonResponse: ' + jsonResponse);
 
             var promise = Promise.resolve();
             if (event === 'issues' && jsonResponse.action === 'closed') {
@@ -40,27 +41,27 @@ Settings.loadRepositoriesSettings('./config.json')
             }
             promise.then(function (res) {
                 if (!defined(res)) {
-                    console.log(new Date(Date.now()).toISOString() + ' GitHub request did not match any events the server is listening for');
+                    dateLog('GitHub request did not match any events the server is listening for');
                     return;
                 }
-                console.log(new Date(Date.now()).toISOString() + ' GitHub API returned with statusCode:', res.statusCode);
-                console.log(new Date(Date.now()).toISOString() + ' GitHub API returned with statusMessage:', res.statusMessage);
+                dateLog('GitHub API returned with statusCode: ' + res.statusCode);
+                dateLog('GitHub API returned with statusMessage: ' + res.statusMessage);
             }).catch(function (e) {
-                console.log(new Date(Date.now()).toISOString() + ' commentOnClosedIssue got an error:', e);
+                dateLog('commentOnClosedIssue got an error: '+ e);
             });
         });
     });
 
     webHookHandler.on('error', function (err, req, res) { // eslint-disable-line no-unused-vars
-        console.log(new Date(Date.now()).toISOString() + ' WebHookHandler got error:', err);
+        dateLog('WebHookHandler got error: ' + err);
     });
 
     // Start server on port specified by env.PORT
     app.listen(Settings.port, function () {
-        console.log(new Date(Date.now()).toISOString() + ' cesium-concierge listening on port', Settings.port);
+        dateLog('cesium-concierge listening on port ' +  Settings.port);
     });
 })
 .catch(function (err) {
-    console.log(new Date(Date.now()).toISOString() + ' Could not parse environment settings:', err);
+    dateLog('Could not parse environment settings: ' + err);
     process.exit(1);
 });
