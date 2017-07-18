@@ -9,16 +9,24 @@ nconf.file({
 var Settings = require('../../lib/Settings');
 
 describe('loadRepositoriesSettings', function () {
-    it('throws when config does not have `secret`', function () {
-        expect(function () {
-            Settings.loadRepositoriesSettings('./specs/data/config_noSecret.json');
-        }).toThrowError();
+    it('throws when config does not have `secret`', function (done) {
+        Settings.loadRepositoriesSettings('./specs/data/config_noSecret.json')
+            .then(function () {
+                done.fail();
+            })
+            .catch(function () {
+                done();
+            });
     });
 
-    it('throws when config does not have `repositories`', function () {
-        expect(function () {
-            Settings.loadRepositoriesSettings('./specs/data/config_noRepositories.json');
-        }).toThrowError();
+    it('throws when config does not have `repositories`', function (done) {
+        Settings.loadRepositoriesSettings('./specs/data/config_noRepositories.json')
+            .then(function () {
+                done.fail();
+            })
+            .catch(function () {
+                done();
+            });
     });
 
     it('returns rejected Promise when `repositories` do not have names', function (done) {

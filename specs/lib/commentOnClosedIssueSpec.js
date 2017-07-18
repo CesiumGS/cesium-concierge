@@ -20,26 +20,33 @@ describe('commentOnClosedIssue', function () {
         }).toThrowError();
     });
 
-    it('passes correct commentsUrl to _implementation', function () {
+    it('passes correct issueUrl and commentsUrl to _implementation', function () {
         spyOn(commentOnClosedIssue, '_implementation');
-        commentOnClosedIssue(fsExtra.readJsonSync('./specs/data/issueResponse.json'), {test: true});
-        expect(commentOnClosedIssue._implementation).toHaveBeenCalledWith('https://api.github.com/repos/baxterthehacker/public-repo/issues/2/comments', {test: true});
+        commentOnClosedIssue(fsExtra.readJsonSync('./specs/data/issueEvent.json'), {test: true});
+        expect(commentOnClosedIssue._implementation).toHaveBeenCalledWith('https://api.github.com/repos/baxterthehacker/public-repo/issues/2',
+            'https://api.github.com/repos/baxterthehacker/public-repo/issues/2/comments', {test: true});
     });
 });
 
 describe('commentOnClosedIssue._implementation', function () {
     var commentsJson = fsExtra.readJsonSync('./specs/data/issueComments.json');
-    var responseJson = fsExtra.readJsonSync('./specs/data/issueResponse.json');
+    var issueJson = fsExtra.readJsonSync('./specs/data/issueResponse.json');
+    var issueEventJson = fsExtra.readJsonSync('./specs/data/issueEvent.json');
 
     beforeEach(function () {
-        spyOn(requestPromise, 'get').and.returnValue(Promise.resolve(commentsJson));
+        spyOn(commentOnClosedIssue, 'get').and.callFake(function (url) {
+            if (/\/comments/.test(url)) {
+                return Promise.resolve(commentsJson);
+            }
+            return Promise.resolve(issueJson);
+        });
         spyOn(requestPromise, 'post');
     });
 
     it('gets the list of comments', function (done) {
         spyOn(getUniqueMatch, '_implementation').and.callThrough();
-        commentOnClosedIssue(responseJson, {}).then(function () {
-            expect(getUniqueMatch._implementation).toHaveBeenCalledWith(['Sup.', 'Hi.', 'Howdy.'], commentOnClosedIssue._googleLinkRegex);
+        commentOnClosedIssue(issueEventJson, {}).then(function () {
+            expect(getUniqueMatch._implementation).toHaveBeenCalledWith(['I\'m having a problem with this.', 'Sup.', 'Hi.', 'Howdy.'], commentOnClosedIssue._googleLinkRegex);
             done();
         }).catch(function () {
             done.fail();
@@ -48,7 +55,7 @@ describe('commentOnClosedIssue._implementation', function () {
 
     it('returns Promise and does not call requestPromise.post if no linkMatches', function (done) {
         spyOn(getUniqueMatch, '_implementation').and.returnValue([]);
-        commentOnClosedIssue(responseJson, {}).then(function () {
+        commentOnClosedIssue(issueEventJson, {}).then(function () {
             expect(requestPromise.post).not.toHaveBeenCalled();
             done();
         }).catch(function () {
@@ -58,7 +65,7 @@ describe('commentOnClosedIssue._implementation', function () {
 
     it('calls requestPromise.post with correct values', function (done) {
         spyOn(getUniqueMatch, '_implementation').and.returnValue(['https://example.com']);
-        commentOnClosedIssue(responseJson, {test: true})
+        commentOnClosedIssue(issueEventJson, {test: true})
             .then(function () {
                 var obj = requestPromise.post.calls.argsFor(0)[0];
                 expect(obj.uri).toEqual('https://api.github.com/repos/baxterthehacker/public-repo/issues/2/comments');
