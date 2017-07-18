@@ -45,9 +45,9 @@ Settings.loadRepositoriesSettings('./config.json')
                     return;
                 }
                 dateLog('GitHub API returned with statusCode: ' + res.statusCode);
-                dateLog('GitHub API returned with statusMessage: ' + res.statusMessage);
+                dateLog('and statusMessage: ' + res.statusMessage);
             }).catch(function (e) {
-                dateLog('commentOnClosedIssue got an error: '+ e);
+                dateLog('commentOnClosedIssue got an error: ' + e);
             });
         });
     });
