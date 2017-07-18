@@ -41,6 +41,7 @@ Settings.loadRepositoriesSettings('./config.json')
             promise.then(function (res) {
                 if (!defined(res)) {
                     console.log(new Date(Date.now()).toISOString() + ' GitHub request did not match any events the server is listening for');
+                    return;
                 }
                 console.log(new Date(Date.now()).toISOString() + ' GitHub API returned with statusCode:', res.statusCode);
                 console.log(new Date(Date.now()).toISOString() + ' GitHub API returned with statusMessage:', res.statusMessage);
