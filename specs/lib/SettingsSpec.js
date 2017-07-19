@@ -9,7 +9,11 @@ nconf.file({
 var Settings = require('../../lib/Settings');
 
 describe('loadRepositoriesSettings', function () {
-    it('throws when config does not have `secret`', function (done) {
+    beforeEach(function () {
+        spyOn(nconf, 'env').and.returnValue(nconf);
+    });
+
+    it('returns rejected Promise when config does not have `secret`', function (done) {
         Settings.loadRepositoriesSettings('./specs/data/config_noSecret.json')
             .then(function () {
                 done.fail();
@@ -19,7 +23,7 @@ describe('loadRepositoriesSettings', function () {
             });
     });
 
-    it('throws when config does not have `repositories`', function (done) {
+    it('returns rejected Promise when config does not have `repositories`', function (done) {
         Settings.loadRepositoriesSettings('./specs/data/config_noRepositories.json')
             .then(function () {
                 done.fail();

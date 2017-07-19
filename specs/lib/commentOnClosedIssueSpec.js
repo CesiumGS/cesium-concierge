@@ -7,6 +7,9 @@ var requestPromise = require('request-promise');
 var commentOnClosedIssue = require('../../lib/commentOnClosedIssue');
 var getUniqueMatch = require('../../lib/getUniqueMatch');
 
+var issueEventJson = fsExtra.readJsonSync('./specs/data/issueEvent.json');
+var issueJson = fsExtra.readJsonSync('./specs/data/issueResponse.json');
+
 describe('commentOnClosedIssue', function () {
     it('throws if `jsonResponse` is undefined', function () {
         expect(function () {
@@ -30,8 +33,6 @@ describe('commentOnClosedIssue', function () {
 
 describe('commentOnClosedIssue._implementation', function () {
     var commentsJson = fsExtra.readJsonSync('./specs/data/issueComments.json');
-    var issueJson = fsExtra.readJsonSync('./specs/data/issueResponse.json');
-    var issueEventJson = fsExtra.readJsonSync('./specs/data/issueEvent.json');
 
     beforeEach(function () {
         spyOn(commentOnClosedIssue, 'get').and.callFake(function (url) {
@@ -76,5 +77,52 @@ describe('commentOnClosedIssue._implementation', function () {
             .catch(function (err) {
                 done.fail(err);
             });
+    });
+});
+
+describe('commentOnClosedIssue._implementation detects bad statusCodes', function () {
+    var issueJson404 = fsExtra.readJsonSync('./specs/data/issueResponse_404.json');
+    var commentsJson404 = fsExtra.readJsonSync('./specs/data/issueComments_404.json');
+
+    it('returns rejected Promise if statusCode for issue !== 200', function (done) {
+        spyOn(requestPromise, 'post');
+        spyOn(commentOnClosedIssue, 'get').and.returnValue(Promise.resolve(issueJson404));
+        commentOnClosedIssue(issueEventJson, {test: true})
+        .then(function () {
+            done.fail();
+        })
+        .catch(function () {
+            done();
+        });
+    });
+
+    it('returns rejected Promise if statusCode for issue comments !== 200', function (done) {
+        spyOn(requestPromise, 'post');
+        spyOn(commentOnClosedIssue, 'get').and.callFake(function (url) {
+            if (/\/comments/.test(url)) {
+                return Promise.resolve(commentsJson404);
+            }
+            return Promise.resolve(issueJson);
+        });
+        commentOnClosedIssue(issueEventJson, {test: true})
+            .then(function () {
+                done.fail();
+            })
+            .catch(function () {
+                done();
+            });
+    });
+});
+
+describe('commentOnClosedIssue.get', function () {
+    it('calls request-promise.get with correct parameters', function () {
+        spyOn(requestPromise, 'get');
+        commentOnClosedIssue.get('www.example.com', { test: true });
+        expect(requestPromise.get).toHaveBeenCalledWith({
+            uri: 'www.example.com',
+            headers: { test: true },
+            json: true,
+            resolveWithFullResponse: true
+        });
     });
 });
