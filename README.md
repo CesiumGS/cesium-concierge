@@ -1,6 +1,8 @@
 # cesium-concierge
 
-GitHub bot for [Cesium](https://github.com/AnalyticalGraphicsInc/cesium).
+__Hello! I'm Cesium Conierge, a GitHub bot for [Cesium](https://github.com/AnalyticalGraphicsInc/cesium). I automate
+common certain GitHub tasks, and can currently:__
+- Post a reminder comment to closed issues that have Google Group links in them
 
 ## Building
 
@@ -21,26 +23,26 @@ $ npm start
 ## Setup
 `cesium-concierge` requires a few settings before working. These can be set in three ways:
 - As environment variables
-- As arguments (`npm start -- --port 5000`)
 - As keys in `./config.json`
 
 > Note: These settings take effect hierarchically, with environment variables > arguments > `config.json`
 
 The possible settings are:
 
-| Name | Default | Description |
-| --- | --- | --- |
-| `port` | `5000` | Port on which to listen to incoming requests |
-| `secret` | `""` | Repository secret to verify __incoming__ WebHook requests from GitHub |
-| `gitHubToken` | `""` | Token used to verify __outgoing__ requests to GitHub repository |
-| `repository` | `""` | Repository to scan for outdated pull requests and bump them |
-| `listenPath` | `"/"` | Path on which to listen for incoming requests |
+| Name | Type | Description | Required? |
+| --- | --- | --- | --- |
+| `secret` | `string` | Repository secret to verify __incoming__ WebHook requests from GitHub | ✓
+| `repositories:{name}` | `object` | Settings specific to the repository `{name}`. | ✓
+| `repositories:{name}:gitHubToken` | `string` | Token used to verify __outgoing__ requests to GitHub repository | ✓
+| `repositories:{name}:remindForum` | `boolean` | Enables the functionality to post a reminder message to a closed issue if it contains links to a Google Group forum. | X
+| `port` | `number: default 5000` | Port on which to listen to incoming requests | X
+| `listenPath` | `string: default"/"` | Path on which to listen for incoming requests | X
 
-`secret` and `gitHubToken` are the important settings; they verify that the communication between your server and
+`secret` and `repositories:{name}:gitHubToken` are the important settings; they verify that the communication between your server and
 GitHub is safe.
 
 ### Setting `secret`
-Setup a [GitHub WebHook](https://developer.github.com/webhooks/creating/) on a repository, making sure to create a secret.
+Enable a [GitHub WebHook](https://developer.github.com/webhooks/creating/) on a repository, making sure to create a secret.
 The secret verifies that all incoming requests to your server are from GitHub and not something else.
 
 ### Setting `gitHubToken`
