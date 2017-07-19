@@ -31,7 +31,7 @@ Settings.loadRepositoriesSettings('./config.json')
             dateLog('jsonResponse: ' + jsonResponse);
 
             var promise = Promise.resolve();
-            if (event === 'issues' && jsonResponse.action === 'closed') {
+            if ((event === 'issues' || event === 'pull_request') && jsonResponse.action === 'closed') {
                 promise = promise.then(function () {
                     return commentOnClosedIssue(jsonResponse, {
                         'User-Agent': 'cesium-concierge',
@@ -47,7 +47,7 @@ Settings.loadRepositoriesSettings('./config.json')
                 dateLog('GitHub API returned with statusCode: ' + res.statusCode);
                 dateLog('and statusMessage: ' + res.statusMessage);
             }).catch(function (e) {
-                dateLog('commentOnClosedIssue got an error: ' + e);
+                dateLog('Got an error: ' + e);
             });
         });
     });
