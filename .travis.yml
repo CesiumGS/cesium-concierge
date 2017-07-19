@@ -5,5 +5,5 @@ sudo: false
 dist: trusty
 script:
   - npm run eslint
-  - npm run test
+  - npm run test -- --failTaskOnError
   - npm run create-zip
