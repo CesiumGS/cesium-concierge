@@ -29,6 +29,13 @@ describe('commentOnClosedIssue', function () {
         expect(commentOnClosedIssue._implementation).toHaveBeenCalledWith('https://api.github.com/repos/baxterthehacker/public-repo/issues/2',
             'https://api.github.com/repos/baxterthehacker/public-repo/issues/2/comments', {test: true});
     });
+
+    it('passes correct pull request url and commentsUrl to _implementation', function () {
+        spyOn(commentOnClosedIssue, '_implementation');
+        commentOnClosedIssue(fsExtra.readJsonSync('./specs/data/pullRequestEvent.json'), {test: true});
+        expect(commentOnClosedIssue._implementation).toHaveBeenCalledWith('https://api.github.com/repos/baxterthehacker/public-repo/pulls/1',
+            'https://api.github.com/repos/baxterthehacker/public-repo/issues/1/comments', {test: true});
+    });
 });
 
 describe('commentOnClosedIssue._implementation', function () {
