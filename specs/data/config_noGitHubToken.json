@@ -1,0 +1,11 @@
+{
+  "secret": "foo",
+  "repositories": {
+    "one": {
+
+    },
+    "two": {
+
+    }
+  }
+}
