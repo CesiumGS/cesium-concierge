@@ -53,6 +53,17 @@ describe('loadRepositoriesSettings', function () {
             });
     });
 
+    it('removes `/` from `thirdPartyFolders` that begin with `/`', function (done) {
+        Settings.loadRepositoriesSettings('./specs/data/config/slashWithThirdPartyFolders.json')
+            .then(function () {
+                expect(Settings.repositories['one'].thirdPartyFolders).toEqual(['ThirdParty/']);
+                done();
+            })
+            .catch(function (err) {
+                done.fail(err);
+            });
+    });
+
     it('correctly loads values', function (done) {
         Settings.loadRepositoriesSettings('./specs/data/config/noError.json')
             .then(function (repositoryNames) {

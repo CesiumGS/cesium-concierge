@@ -90,7 +90,7 @@ describe('commentOnOpenedPullRequest._implementation', function () {
 
     it('Posts Third Party signature', function (done) {
         okPullRequest();
-        commentOnOpenedPullRequest._implementation('', '', {}, ['/specs/data/'])
+        commentOnOpenedPullRequest._implementation('', '', {}, ['specs/data/'])
             .then(function () {
                 var obj = requestPromise.post.calls.argsFor(0)[0];
                 console.log(obj);
@@ -143,7 +143,8 @@ describe('commentOnOpenedPullRequest._didUpdateChanges', function () {
 });
 
 describe('commentOnOpenedPullRequest._didUpdateThirdParty', function () {
-    it('returns false when thirdPartyFolders is []', function () {
+    it('returns false when thirdPartyFolders is [] or undefined', function () {
+        expect(commentOnOpenedPullRequest._didUpdateThirdParty(['file.txt'], undefined)).toBe(false);
         expect(commentOnOpenedPullRequest._didUpdateThirdParty(['file.txt'], [])).toBe(false);
     });
 
@@ -157,9 +158,9 @@ describe('commentOnOpenedPullRequest._didUpdateThirdParty', function () {
     });
 
     it('matches multiple files with list of folders', function () {
-        expect(commentOnOpenedPullRequest._didUpdateThirdParty(['a/b/file.txt', ''], ['/some/folder/', '/a/b/'])).toBe(true);
-        expect(commentOnOpenedPullRequest._didUpdateThirdParty(['/file.txt'], ['/', '/a/b/'])).toBe(true);
-        expect(commentOnOpenedPullRequest._didUpdateThirdParty(['./b/file.txt'], ['/some/folder/', './b/'])).toBe(true);
+        expect(commentOnOpenedPullRequest._didUpdateThirdParty(['a/b/file.txt', ''], ['some/folder/', 'a/b/'])).toBe(true);
+        expect(commentOnOpenedPullRequest._didUpdateThirdParty(['file.txt'], ['', 'a/b/'])).toBe(true);
+        expect(commentOnOpenedPullRequest._didUpdateThirdParty(['b/file.txt'], ['some/folder/', 'b/'])).toBe(true);
     });
 
     it('does not confuse files with folders', function () {

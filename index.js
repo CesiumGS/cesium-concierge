@@ -33,19 +33,19 @@ Settings.loadRepositoriesSettings('./config.json')
             dateLog('jsonResponse: ' + jsonResponse);
 
             var promise = Promise.resolve();
+            var repositorySettings = Settings.repositories[repositoryName];
             var headers = {
                 'User-Agent': 'cesium-concierge',
-                Authorization: 'token ' + Settings.repositories[repositoryName].gitHubToken
+                Authorization: 'token ' + repositorySettings.gitHubToken
             };
 
             if ((event === 'issues' || event === 'pull_request') && jsonResponse.action === 'closed') {
                 promise = promise.then(function () {
                     return commentOnClosedIssue(jsonResponse, headers);
                 });
-            }
-            if (event === 'pull_request' && jsonResponse.action === 'opened') {
+            } else if (event === 'pull_request' && jsonResponse.action === 'opened') {
                 promise = promise.then(function () {
-                    return commentOnOpenedPullRequest(jsonResponse, headers, ['ThirdParty/']);
+                    return commentOnOpenedPullRequest(jsonResponse, headers, repositorySettings.thirdPartyFolders);
                 });
             }
 
