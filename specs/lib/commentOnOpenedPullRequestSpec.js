@@ -65,7 +65,7 @@ describe('commentOnOpenedPullRequest._implementation', function () {
                 done.fail();
             })
             .catch(function (err) {
-                if (/status code/.test(err)) {
+                if (/status code/i.test(err)) {
                     return done();
                 }
                 done.fail();
