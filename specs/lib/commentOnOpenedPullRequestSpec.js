@@ -19,30 +19,23 @@ describe('commentOnOpenedPullRequest', function () {
         }).toThrowError();
     });
 
-    it('returns rejected promise if json is not a pull request event', function (done) {
+    it('throws if json is not a pull request event', function () {
         var issueJson = fsExtra.readJsonSync('./specs/data/events/issue.json');
-        commentOnOpenedPullRequest(issueJson, {})
-            .then(function () {
-                done.fail();
-            })
-            .catch(function (err) {
-                if (/pull_request/.test(err)) {
-                    return done();
-                }
-                done.fail();
-            });
+        expect(function () {
+            commentOnOpenedPullRequest(issueJson, {});
+        }).toThrowError();
     });
 
     it('gets correct URLs from JSON response', function () {
         spyOn(commentOnOpenedPullRequest, '_implementation');
         var pullRequestJson = fsExtra.readJsonSync('./specs/data/events/pullRequest.json');
-        commentOnOpenedPullRequest(pullRequestJson, {});
+        commentOnOpenedPullRequest(pullRequestJson, {}, []);
         expect(commentOnOpenedPullRequest._implementation).toHaveBeenCalledWith('https://api.github.com/repos/baxterthehacker/public-repo/pulls/1/files',
-            'https://api.github.com/repos/baxterthehacker/public-repo/issues/1/comments', {}, undefined, undefined, undefined);
+            'https://api.github.com/repos/baxterthehacker/public-repo/issues/1/comments', {}, []);
 
-        commentOnOpenedPullRequest(pullRequestJson, {}, 'a', 'b', ['c']);
+        commentOnOpenedPullRequest(pullRequestJson, {}, ['c']);
         expect(commentOnOpenedPullRequest._implementation).toHaveBeenCalledWith('https://api.github.com/repos/baxterthehacker/public-repo/pulls/1/files',
-            'https://api.github.com/repos/baxterthehacker/public-repo/issues/1/comments', {}, 'a', 'b', ['c']);
+            'https://api.github.com/repos/baxterthehacker/public-repo/issues/1/comments', {}, ['c']);
     });
 });
 
@@ -97,11 +90,11 @@ describe('commentOnOpenedPullRequest._implementation', function () {
 
     it('Posts Third Party signature', function (done) {
         okPullRequest();
-        commentOnOpenedPullRequest._implementation('', '', {}, 'CHANGES_SIGNATURE', 'THIRD_PARTY_SIGNATURE', ['/specs/data/'])
+        commentOnOpenedPullRequest._implementation('', '', {}, ['/specs/data/'])
             .then(function () {
                 var obj = requestPromise.post.calls.argsFor(0)[0];
                 console.log(obj);
-                expect(/THIRD_PARTY/.test(obj.body.body)).toBe(true);
+                expect(/Third-party/i.test(obj.body.body)).toBe(true);
                 expect(/CHANGES/.test(obj.body.body)).toBe(false);
                 done();
             })
@@ -112,7 +105,7 @@ describe('commentOnOpenedPullRequest._implementation', function () {
 
     it('Posts CHANGES signature', function (done) {
         spyOn(requestPromise, 'get').and.returnValue(Promise.resolve(pullRequestFilesWithChanges));
-        commentOnOpenedPullRequest._implementation('', '', {}, 'CHANGES_SIGNATURE', 'THIRD_PARTY_SIGNATURE', ['/some/folder'])
+        commentOnOpenedPullRequest._implementation('', '', {}, ['/some/folder'])
             .then(function () {
                 var obj = requestPromise.post.calls.argsFor(0)[0];
                 console.log(obj);
@@ -134,7 +127,6 @@ describe('commentOnOpenedPullRequest._didUpdateChanges', function () {
     it('returns true for CHANGES.md at top level', function () {
         expect(commentOnOpenedPullRequest._didUpdateChanges(['CHANGES.md'])).toBe(true);
         expect(commentOnOpenedPullRequest._didUpdateChanges(['/test/test.txt', '/a/b/c', 'CHANGES.md'])).toBe(true);
-        expect(commentOnOpenedPullRequest._didUpdateChanges(['/a', './CHANGES.md', 'b'])).toBe(true);
     });
 
     it('returns false for closely-named CHANGES.md files', function () {
