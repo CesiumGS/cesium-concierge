@@ -14,7 +14,7 @@ describe('loadRepositoriesSettings', function () {
     });
 
     it('returns rejected Promise when config does not have `secret`', function (done) {
-        Settings.loadRepositoriesSettings('./specs/data/config_noSecret.json')
+        Settings.loadRepositoriesSettings('./specs/data/config/noSecret.json')
             .then(function () {
                 done.fail();
             })
@@ -24,7 +24,7 @@ describe('loadRepositoriesSettings', function () {
     });
 
     it('returns rejected Promise when config does not have `repositories`', function (done) {
-        Settings.loadRepositoriesSettings('./specs/data/config_noRepositories.json')
+        Settings.loadRepositoriesSettings('./specs/data/config/noRepositories.json')
             .then(function () {
                 done.fail();
             })
@@ -34,7 +34,7 @@ describe('loadRepositoriesSettings', function () {
     });
 
     it('returns rejected Promise when `repositories` do not have names', function (done) {
-        Settings.loadRepositoriesSettings('./specs/data/config_noRepositoryNames.json')
+        Settings.loadRepositoriesSettings('./specs/data/config/noRepositoryNames.json')
             .then(function () {
                 done.fail();
             })
@@ -44,7 +44,7 @@ describe('loadRepositoriesSettings', function () {
     });
 
     it('returns rejected Promise when `repositories` do not have `gitHubToken`s', function (done) {
-        Settings.loadRepositoriesSettings('./specs/data/config_noGitHubToken.json')
+        Settings.loadRepositoriesSettings('./specs/data/config/noGitHubToken.json')
             .then(function () {
                 done.fail();
             })
@@ -53,8 +53,19 @@ describe('loadRepositoriesSettings', function () {
             });
     });
 
+    it('removes `/` from `thirdPartyFolders` that begin with `/`', function (done) {
+        Settings.loadRepositoriesSettings('./specs/data/config/slashWithThirdPartyFolders.json')
+            .then(function () {
+                expect(Settings.repositories['one'].thirdPartyFolders).toEqual(['ThirdParty/']);
+                done();
+            })
+            .catch(function (err) {
+                done.fail(err);
+            });
+    });
+
     it('correctly loads values', function (done) {
-        Settings.loadRepositoriesSettings('./specs/data/config_noError.json')
+        Settings.loadRepositoriesSettings('./specs/data/config/noError.json')
             .then(function (repositoryNames) {
                 expect(repositoryNames).toEqual(['one', 'two']);
 

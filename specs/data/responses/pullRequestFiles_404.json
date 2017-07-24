@@ -1,0 +1,137 @@
+{
+  "statusCode": 404,
+  "body": [
+    {
+      "sha": "1f1bbfa3408c963249947a1d2e3ae494453c96b6",
+      "filename": ".gitignore",
+      "status": "modified",
+      "additions": 1,
+      "deletions": 1,
+      "changes": 2,
+      "blob_url": "https://github.com/AnalyticalGraphicsInc/cesium-concierge/blob/929fa41e3ffcaf79cbdaf27553007806bef96054/.gitignore",
+      "raw_url": "https://github.com/AnalyticalGraphicsInc/cesium-concierge/raw/929fa41e3ffcaf79cbdaf27553007806bef96054/.gitignore",
+      "contents_url": "https://api.github.com/repos/AnalyticalGraphicsInc/cesium-concierge/contents/.gitignore?ref=929fa41e3ffcaf79cbdaf27553007806bef96054",
+      "patch": "@@ -14,4 +14,4 @@ coverage\n .nyc_output\n \n # Config files\n-config.json\n\\ No newline at end of file\n+config.json"
+    },
+    {
+      "sha": "af2827949ff51200901d3159f7c48001f5a9ccd7",
+      "filename": "index.js",
+      "status": "modified",
+      "additions": 37,
+      "deletions": 43,
+      "changes": 80,
+      "blob_url": "https://github.com/AnalyticalGraphicsInc/cesium-concierge/blob/929fa41e3ffcaf79cbdaf27553007806bef96054/index.js",
+      "raw_url": "https://github.com/AnalyticalGraphicsInc/cesium-concierge/raw/929fa41e3ffcaf79cbdaf27553007806bef96054/index.js",
+      "contents_url": "https://api.github.com/repos/AnalyticalGraphicsInc/cesium-concierge/contents/index.js?ref=929fa41e3ffcaf79cbdaf27553007806bef96054",
+      "patch": "@@ -2,54 +2,48 @@\n var bodyParser = require('body-parser');\n var express = require('express');\n var gitHubWebHook = require('express-github-webhook');\n-var nconf = require('nconf');\n \n var commentOnClosedIssue = require('./lib/commentOnClosedIssue');\n+var Settings = require('./lib/Settings');\n \n-var app = express();\n-module.exports = app;\n-\n-nconf.env('__')\n-    .file({\n-        file: 'config.json'\n+Settings.loadRepositoriesSettings('./config.json')\n+.then(function (repositoryNames) {\n+    var webHookHandler = gitHubWebHook({\n+        path: Settings.listenPath,\n+        secret: Settings.secret\n     });\n \n-nconf.defaults({\n-    port: 5000,\n-    secret: '', // Repository secret to verify incoming WebHook requests from GitHub\n-    gitHubToken: '', // Token used to verify outgoing requests to GitHub repository\n-    listenPath: '/' // Path on which to listen for incoming requests\n-});\n-\n-var webHookHandler = gitHubWebHook({\n-    path: nconf.get('listenPath'),\n-    secret: nconf.get('secret')\n-});\n-\n-app.use(bodyParser.json());\n-app.use(webHookHandler);\n-\n-webHookHandler.on('issues', function (repo, jsonResponse) { // eslint-disable-line no-unused-vars\n-    switch (jsonResponse.action) {\n-        case 'closed':\n-            commentOnClosedIssue(jsonResponse, {\n-                'User-Agent': 'cesium-concierge',\n-                Authorization: 'token ' + nconf.get('gitHubToken')\n-            }).then(function (status) {\n-                console.log('GitHub API returned with:', status);\n-            }).catch(function (e) {\n-                console.log('commentOnClosedIssue got an error:', e);\n-            });\n-            break;\n-        default:\n-    }\n-});\n+    var app = express();\n+    app.use(bodyParser.json());\n+    app.use(webHookHandler);\n+\n+    repositoryNames.forEach(function (repositoryName) {\n+        webHookHandler.on(repositoryName, function (event, jsonResponse) {\n+            if (Settings.repositories.repositoryName.remindForum &&\n+                event === 'issues' &&\n+                jsonResponse.data === 'closed') {\n+                commentOnClosedIssue(jsonResponse, {\n+                    'User-Agent': 'cesium-concierge',\n+                    Authorization: 'token ' + Settings.get(repositoryName, 'gitHubToken')\n+                }).then(function (status) {\n+                    console.log('GitHub API returned with:', status);\n+                }).catch(function (e) {\n+                    console.log('commentOnClosedIssue got an error:', e);\n+                });\n+            }\n+        });\n+    });\n \n-webHookHandler.on('error', function (err, req, res) { // eslint-disable-line no-unused-vars\n-    console.log('WebHookHandler got error:', err);\n-});\n+    webHookHandler.on('error', function (err, req, res) { // eslint-disable-line no-unused-vars\n+        console.log('WebHookHandler got error:', err);\n+    });\n \n-// Start server on port specified by env.PORT\n-app.listen(nconf.get('port'), function () {\n-    console.log('cesium-concierge listening on port', nconf.get('port'));\n+    // Start server on port specified by env.PORT\n+    app.listen(Settings.port, function () {\n+        console.log('cesium-concierge listening on port', Settings.port);\n+    });\n+})\n+.catch(function (err) {\n+    console.log('Could not parse `repository`.json:', err);\n+    process.exit(1);\n });"
+    },
+    {
+      "sha": "6e7809221d9f509ecbde5fc1abd15c5562b71572",
+      "filename": "lib/Settings.js",
+      "status": "added",
+      "additions": 83,
+      "deletions": 0,
+      "changes": 83,
+      "blob_url": "https://github.com/AnalyticalGraphicsInc/cesium-concierge/blob/929fa41e3ffcaf79cbdaf27553007806bef96054/lib/Settings.js",
+      "raw_url": "https://github.com/AnalyticalGraphicsInc/cesium-concierge/raw/929fa41e3ffcaf79cbdaf27553007806bef96054/lib/Settings.js",
+      "contents_url": "https://api.github.com/repos/AnalyticalGraphicsInc/cesium-concierge/contents/lib/Settings.js?ref=929fa41e3ffcaf79cbdaf27553007806bef96054",
+      "patch": "@@ -0,0 +1,83 @@\n+'use strict';\n+\n+var Cesium = require('cesium');\n+var nconf = require('nconf');\n+var Promise = require('bluebird');\n+\n+var defined = Cesium.defined;\n+\n+var Settings = {};\n+/** Check for necessary settings in `configPath` file and initialize `nconf`\n+ *\n+ * @param {String} configPath Path to configuration file (usually `./config.json`)\n+ * @return {Promise<String[] | String>} Repository names or Error message if Promise fails\n+ */\n+Settings.loadRepositoriesSettings = function (configPath) {\n+    nconf.env('__')\n+        .file({\n+            file: configPath\n+        })\n+        .defaults({\n+            port: 5000,\n+            listenPath: '/'\n+        })\n+        .required([\n+            'secret',\n+            'repositories'\n+        ]);\n+\n+    var repositoryNames;\n+    var name;\n+    var configJson = nconf.stores.file.store;\n+    repositoryNames = Object.keys(configJson['repositories']);\n+    if (repositoryNames.length === 0) {\n+        return Promise.reject(configPath + ' requires `repositories` be non-empty');\n+    }\n+    for (var i = 0; i < repositoryNames.length; i++) {\n+        name = repositoryNames[i];\n+        if (!defined(configJson['repositories'][name]['gitHubToken'])) {\n+            return Promise.reject('Repository ' + name + ' must have a `gitHubToken`');\n+        }\n+    }\n+    return Promise.resolve(repositoryNames);\n+};\n+\n+Object.defineProperties(Settings, {\n+    /** Path to listen on for incoming GitHub requests\n+     * @memberOf Settings\n+     * @type {String}\n+     */\n+    listenPath: {\n+        get: function () {\n+            return nconf.get('listenPath');\n+        }\n+    },\n+    /** Port to listen on for incoming GitHub requests\n+     * @memberOf Settings\n+     * @type {Number}\n+     */\n+    port: {\n+        get: function () {\n+            return parseInt(nconf.get('port'));\n+        }\n+    },\n+    /**\n+     *\n+     */\n+    repositories: {\n+        get: function () {\n+            return nconf.get('repositories');\n+        }\n+    },\n+    /** Shared secret to verify incoming GitHub requests\n+     * @memberOf Settings\n+     * @type {String}\n+     */\n+    secret: {\n+        get: function () {\n+            return nconf.get('secret');\n+        }\n+    }\n+});\n+\n+module.exports = Settings;"
+    },
+    {
+      "sha": "30a6d2398c8b4373ee332d8af112df80a1fe6cc8",
+      "filename": "lib/commentOnClosedIssue.js",
+      "status": "modified",
+      "additions": 3,
+      "deletions": 1,
+      "changes": 4,
+      "blob_url": "https://github.com/AnalyticalGraphicsInc/cesium-concierge/blob/929fa41e3ffcaf79cbdaf27553007806bef96054/lib/commentOnClosedIssue.js",
+      "raw_url": "https://github.com/AnalyticalGraphicsInc/cesium-concierge/raw/929fa41e3ffcaf79cbdaf27553007806bef96054/lib/commentOnClosedIssue.js",
+      "contents_url": "https://api.github.com/repos/AnalyticalGraphicsInc/cesium-concierge/contents/lib/commentOnClosedIssue.js?ref=929fa41e3ffcaf79cbdaf27553007806bef96054",
+      "patch": "@@ -15,6 +15,7 @@ module.exports = commentOnClosedIssue;\n  * @param {Object} jsonResponse GitHub Response (https://developer.github.com/v3/activity/events/types/#issuesevent)\n  * @param {Object} headers Request headers\n  * @return {Promise<http.IncomingMessage>} Response\n+ * @throws {DeveloperError} If `jsonResponse` or `headers` are not defined objects\n  */\n function commentOnClosedIssue(jsonResponse, headers) {\n     Check.typeOf.object('jsonResponse', jsonResponse);\n@@ -31,7 +32,8 @@ commentOnClosedIssue._implementation = function (commentsUrl, headers) {\n         uri: commentsUrl,\n         headers: headers,\n         json: true\n-    }).then(function (commentsJsonResponse) {\n+    })\n+    .then(function (commentsJsonResponse) {\n         comments = commentsJsonResponse.map(function (commentJson) {\n             return commentJson.body;\n         });"
+    },
+    {
+      "sha": "42f1dc1e2b6277b50a0bb63e4c6624bfd6553b5f",
+      "filename": "lib/getUniqueMatch.js",
+      "status": "modified",
+      "additions": 0,
+      "deletions": 1,
+      "changes": 1,
+      "blob_url": "https://github.com/AnalyticalGraphicsInc/cesium-concierge/blob/929fa41e3ffcaf79cbdaf27553007806bef96054/lib/getUniqueMatch.js",
+      "raw_url": "https://github.com/AnalyticalGraphicsInc/cesium-concierge/raw/929fa41e3ffcaf79cbdaf27553007806bef96054/lib/getUniqueMatch.js",
+      "contents_url": "https://api.github.com/repos/AnalyticalGraphicsInc/cesium-concierge/contents/lib/getUniqueMatch.js?ref=929fa41e3ffcaf79cbdaf27553007806bef96054",
+      "patch": "@@ -6,7 +6,6 @@ module.exports = getUniqueMatch;\n \n /** Generic regex search over array of String. (Requires global regex)\n  *\n- * @private\n  * @param {String[]} textArray Array of strings to regex search\n  * @param {Object} regex Global Regex\n  * @returns {String[]} Unique matches of the regex"
+    },
+    {
+      "sha": "18962d3799f0979091dfbf6b02c2e2a941761164",
+      "filename": "specs/data/config_noError.json",
+      "status": "added",
+      "additions": 15,
+      "deletions": 0,
+      "changes": 15,
+      "blob_url": "https://github.com/AnalyticalGraphicsInc/cesium-concierge/blob/929fa41e3ffcaf79cbdaf27553007806bef96054/specs/data/config_noError.json",
+      "raw_url": "https://github.com/AnalyticalGraphicsInc/cesium-concierge/raw/929fa41e3ffcaf79cbdaf27553007806bef96054/specs/data/config_noError.json",
+      "contents_url": "https://api.github.com/repos/AnalyticalGraphicsInc/cesium-concierge/contents/specs/data/config_noError.json?ref=929fa41e3ffcaf79cbdaf27553007806bef96054",
+      "patch": "@@ -0,0 +1,15 @@\n+{\n+  \"secret\": \"foo\",\n+  \"port\": 10,\n+  \"listenPath\": \"/foo\",\n+  \"repositories\": {\n+    \"one\": {\n+      \"gitHubToken\": \"bar\",\n+      \"someVal\": true\n+    },\n+    \"two\": {\n+      \"gitHubToken\": \"bar2\",\n+      \"someVal\": false\n+    }\n+  }\n+}"
+    },
+    {
+      "sha": "6fbeda83c5fa26c27df332a8d073d1c35ffe3a43",
+      "filename": "specs/data/config_noGitHubToken.json",
+      "status": "added",
+      "additions": 11,
+      "deletions": 0,
+      "changes": 11,
+      "blob_url": "https://github.com/AnalyticalGraphicsInc/cesium-concierge/blob/929fa41e3ffcaf79cbdaf27553007806bef96054/specs/data/config_noGitHubToken.json",
+      "raw_url": "https://github.com/AnalyticalGraphicsInc/cesium-concierge/raw/929fa41e3ffcaf79cbdaf27553007806bef96054/specs/data/config_noGitHubToken.json",
+      "contents_url": "https://api.github.com/repos/AnalyticalGraphicsInc/cesium-concierge/contents/specs/data/config_noGitHubToken.json?ref=929fa41e3ffcaf79cbdaf27553007806bef96054",
+      "patch": "@@ -0,0 +1,11 @@\n+{\n+  \"secret\": \"foo\",\n+  \"repositories\": {\n+    \"one\": {\n+\n+    },\n+    \"two\": {\n+\n+    }\n+  }\n+}"
+    },
+    {
+      "sha": "1c78ff3bc9f3a5d3468f859af82c31b65ffc92d4",
+      "filename": "specs/data/config_noRepositories.json",
+      "status": "added",
+      "additions": 3,
+      "deletions": 0,
+      "changes": 3,
+      "blob_url": "https://github.com/AnalyticalGraphicsInc/cesium-concierge/blob/929fa41e3ffcaf79cbdaf27553007806bef96054/specs/data/config_noRepositories.json",
+      "raw_url": "https://github.com/AnalyticalGraphicsInc/cesium-concierge/raw/929fa41e3ffcaf79cbdaf27553007806bef96054/specs/data/config_noRepositories.json",
+      "contents_url": "https://api.github.com/repos/AnalyticalGraphicsInc/cesium-concierge/contents/specs/data/config_noRepositories.json?ref=929fa41e3ffcaf79cbdaf27553007806bef96054",
+      "patch": "@@ -0,0 +1,3 @@\n+{\n+  \"secret\": \"foo\"\n+}\n\\ No newline at end of file"
+    },
+    {
+      "sha": "28b3311eb7bf222d29341ce881f8efb108db62b0",
+      "filename": "specs/data/config_noRepositoryNames.json",
+      "status": "added",
+      "additions": 5,
+      "deletions": 0,
+      "changes": 5,
+      "blob_url": "https://github.com/AnalyticalGraphicsInc/cesium-concierge/blob/929fa41e3ffcaf79cbdaf27553007806bef96054/specs/data/config_noRepositoryNames.json",
+      "raw_url": "https://github.com/AnalyticalGraphicsInc/cesium-concierge/raw/929fa41e3ffcaf79cbdaf27553007806bef96054/specs/data/config_noRepositoryNames.json",
+      "contents_url": "https://api.github.com/repos/AnalyticalGraphicsInc/cesium-concierge/contents/specs/data/config_noRepositoryNames.json?ref=929fa41e3ffcaf79cbdaf27553007806bef96054",
+      "patch": "@@ -0,0 +1,5 @@\n+{\n+  \"secret\": \"foo\",\n+  \"repositories\": {\n+  }\n+}"
+    },
+    {
+      "sha": "60488e44f8d66fd0002335557a58c2bdd8b9464c",
+      "filename": "specs/data/config_noSecret.json",
+      "status": "added",
+      "additions": 7,
+      "deletions": 0,
+      "changes": 7,
+      "blob_url": "https://github.com/AnalyticalGraphicsInc/cesium-concierge/blob/929fa41e3ffcaf79cbdaf27553007806bef96054/specs/data/config_noSecret.json",
+      "raw_url": "https://github.com/AnalyticalGraphicsInc/cesium-concierge/raw/929fa41e3ffcaf79cbdaf27553007806bef96054/specs/data/config_noSecret.json",
+      "contents_url": "https://api.github.com/repos/AnalyticalGraphicsInc/cesium-concierge/contents/specs/data/config_noSecret.json?ref=929fa41e3ffcaf79cbdaf27553007806bef96054",
+      "patch": "@@ -0,0 +1,7 @@\n+{\n+  \"repositories\": {\n+    \"one\": {\n+\n+    }\n+  }\n+}"
+    },
+    {
+      "sha": "076979d7f86321980dcc36d6161e9c5bd60da757",
+      "filename": "specs/lib/SettingsSpec.js",
+      "status": "added",
+      "additions": 63,
+      "deletions": 0,
+      "changes": 63,
+      "blob_url": "https://github.com/AnalyticalGraphicsInc/cesium-concierge/blob/929fa41e3ffcaf79cbdaf27553007806bef96054/specs/lib/SettingsSpec.js",
+      "raw_url": "https://github.com/AnalyticalGraphicsInc/cesium-concierge/raw/929fa41e3ffcaf79cbdaf27553007806bef96054/specs/lib/SettingsSpec.js",
+      "contents_url": "https://api.github.com/repos/AnalyticalGraphicsInc/cesium-concierge/contents/specs/lib/SettingsSpec.js?ref=929fa41e3ffcaf79cbdaf27553007806bef96054",
+      "patch": "@@ -0,0 +1,63 @@\n+'use strict';\n+\n+var nconf = require('nconf');\n+\n+nconf.file({\n+    file: './specs/data/configTest.json'\n+});\n+\n+var Settings = require('../../lib/Settings');\n+\n+describe('loadRepositoriesSettings', function () {\n+    it('throws when config does not have `secret`', function () {\n+        expect(function () {\n+            Settings.loadRepositoriesSettings('./specs/data/config_noSecret.json');\n+        }).toThrowError();\n+    });\n+\n+    it('throws when config does not have `repositories`', function () {\n+        expect(function () {\n+            Settings.loadRepositoriesSettings('./specs/data/config_noRepositories.json');\n+        }).toThrowError();\n+    });\n+\n+    it('returns rejected Promise when `repositories` do not have names', function (done) {\n+        Settings.loadRepositoriesSettings('./specs/data/config_noRepositoryNames.json')\n+            .then(function () {\n+                done.fail();\n+            })\n+            .catch(function () {\n+                done();\n+            });\n+    });\n+\n+    it('returns rejected Promise when `repositories` do not have `gitHubToken`s', function (done) {\n+        Settings.loadRepositoriesSettings('./specs/data/config_noGitHubToken.json')\n+            .then(function () {\n+                done.fail();\n+            })\n+            .catch(function () {\n+                done();\n+            });\n+    });\n+\n+    it('correctly loads values', function (done) {\n+        Settings.loadRepositoriesSettings('./specs/data/config_noError.json')\n+            .then(function (repositoryNames) {\n+                expect(repositoryNames).toEqual(['one', 'two']);\n+\n+                expect(Settings.repositories.one.gitHubToken).toEqual('bar');\n+                expect(Settings.repositories.one.someVal).toBe(true);\n+                expect(Settings.repositories.two.gitHubToken).toEqual('bar2');\n+                expect(Settings.repositories.two.someVal).toEqual(false);\n+\n+                expect(Settings.port).toEqual(10);\n+                expect(Settings.listenPath).toEqual('/foo');\n+                expect(Settings.secret).toEqual('foo');\n+                done();\n+            })\n+            .catch(function (err) {\n+                done.fail(err);\n+            });\n+    });\n+});"
+    }
+  ]
+}
