@@ -35,6 +35,8 @@ describe('Google Group regex', function () {
     var commaAtEnd = 'https://groups.google.com/forum/?hl=en#!topic/cesium-dev/test1, fdsfoewjaf fjdsa f';
     var twoLinks = 'https://groups.google.com/forum/?hl=en#!topic/cesium-dev/test2, https://groups.google.com/forum/?hl=en#!topic/cesium-dev/test5';
     var twoSameLinks = 'https://groups.google.com/forum/?hl=en#!topic/cesium-dev/test2, https://groups.google.com/forum/?hl=en#!topic/cesium-dev/test2, https://groups.google.com/forum/?hl=en#!topic/cesium-dev/test3';
+    var markdownLink = 'This fixes #5446, also see this [forum post.](https://groups.google.com/forum/#!msg/cesium-dev/Ktn8aPQmOsQ/_Dbd7igkCQAJ)\\r\\n\\r\\nThis adds';
+    var returnAfterLink = 'https://groups.google.com/forum/#!msg/cesium-dev/Ktn8aPQmOsQ/_Dbd7igkCQAJ\\r\\n';
 
     it('Returns empty array for ""', function () {
         expect(getUniqueMatch([empty], googleLinkRegex)).toEqual([]);
@@ -60,5 +62,13 @@ describe('Google Group regex', function () {
         expect(getUniqueMatch([commaAtEnd], googleLinkRegex)).toEqual(['https://groups.google.com/forum/?hl=en#!topic/cesium-dev/test1']);
         expect(getUniqueMatch([twoLinks], googleLinkRegex)).toEqual(['https://groups.google.com/forum/?hl=en#!topic/cesium-dev/test2', 'https://groups.google.com/forum/?hl=en#!topic/cesium-dev/test5']);
         expect(getUniqueMatch([twoSameLinks], googleLinkRegex)).toEqual(['https://groups.google.com/forum/?hl=en#!topic/cesium-dev/test2', 'https://groups.google.com/forum/?hl=en#!topic/cesium-dev/test3']);
+    });
+
+    it('Finds markdown link', function () {
+        expect(getUniqueMatch([markdownLink], googleLinkRegex)).toEqual(['https://groups.google.com/forum/#!msg/cesium-dev/Ktn8aPQmOsQ/_Dbd7igkCQAJ']);
+    });
+
+    it('Finds link with newline after', function () {
+        expect(getUniqueMatch([returnAfterLink], googleLinkRegex)).toEqual(['https://groups.google.com/forum/#!msg/cesium-dev/Ktn8aPQmOsQ/_Dbd7igkCQAJ']);
     });
 });
