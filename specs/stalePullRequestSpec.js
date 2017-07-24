@@ -7,6 +7,8 @@ var requestPromise = require('request-promise');
 
 var stalePullRequest = require('../stalePullRequest');
 
+var pullRequests = fsExtra.readJsonSync('./specs/data/responses/pullRequests.json');
+
 describe('stalePullRequest', function () {
     beforeEach(function (){
         spyOn(nconf, 'get').and.callFake(function (key) {
@@ -55,10 +57,9 @@ describe('stalePullRequest', function () {
 });
 
 describe('stalePullRequest.implementation', function () {
-    var pullRequests = fsExtra.readJsonSync('./specs/data/responses/pullRequests.json');
     var pullRequests404 = fsExtra.readJsonSync('./specs/data/responses/pullRequests_404.json');
     beforeEach(function () {
-        spyOn(requestPromise, 'post');
+        spyOn(Date, 'now').and.returnValue(new Date(1500921244516));
     });
 
     it('returns rejected Promise if statusCode is bad', function (done) {
@@ -72,5 +73,47 @@ describe('stalePullRequest.implementation', function () {
             }
             done.fail();
         });
+    });
+
+    it('dateIsOlderThan gets called once for each pull request', function (done) {
+        spyOn(requestPromise, 'get').and.returnValue(Promise.resolve(pullRequests));
+        spyOn(stalePullRequest, 'dateIsOlderThan');
+        stalePullRequest.implementation(['one']).then(function () {
+            expect(stalePullRequest.dateIsOlderThan).toHaveBeenCalledTimes(30);
+            done();
+        })
+        .catch(function (err) {
+            done.fail(err);
+        });
+    });
+
+    it('requestPromise.post gets called once for each pull request older than 30 days', function (done) {
+        spyOn(requestPromise, 'get').and.returnValue(Promise.resolve(pullRequests));
+        spyOn(requestPromise, 'post');
+        stalePullRequest.implementation(['one']).then(function () {
+            expect(requestPromise.post).toHaveBeenCalledTimes(15);
+            done();
+        })
+        .catch(function (err) {
+            done.fail(err);
+        });
+    });
+});
+
+describe('stalePullRequest.dateIsOlderThan', function () {
+    beforeEach(function () {
+        spyOn(Date, 'now').and.returnValue(new Date(1500921244516));
+    });
+
+    it('returns true for dates older than specified number of days ago', function () {
+        expect(stalePullRequest.dateIsOlderThan(new Date(pullRequests.body[0].updated_at), 1)).toBe(true);
+        expect(stalePullRequest.dateIsOlderThan(new Date(pullRequests.body[0].updated_at), 10)).toBe(true);
+        expect(stalePullRequest.dateIsOlderThan(new Date(pullRequests.body[0].updated_at), 100)).toBe(true);
+        expect(stalePullRequest.dateIsOlderThan(new Date(pullRequests.body[0].updated_at), 189)).toBe(true);
+    });
+
+    it('returns false for dates before specified number of days ago', function () {
+        expect(stalePullRequest.dateIsOlderThan(new Date(pullRequests.body[0].updated_at), 191)).toBe(false);
+        expect(stalePullRequest.dateIsOlderThan(new Date(pullRequests.body[0].updated_at), 1000)).toBe(false);
     });
 });
