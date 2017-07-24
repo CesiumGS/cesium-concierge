@@ -2,10 +2,6 @@
 
 var nconf = require('nconf');
 
-nconf.file({
-    file: './specs/data/configTest.json'
-});
-
 var Settings = require('../../lib/Settings');
 
 describe('loadRepositoriesSettings', function () {
@@ -38,8 +34,11 @@ describe('loadRepositoriesSettings', function () {
             .then(function () {
                 done.fail();
             })
-            .catch(function () {
-                done();
+            .catch(function (err) {
+                if (/repositories/.test(err)) {
+                    return done();
+                }
+                done.fail(err);
             });
     });
 
@@ -48,8 +47,24 @@ describe('loadRepositoriesSettings', function () {
             .then(function () {
                 done.fail();
             })
-            .catch(function () {
-                done();
+            .catch(function (err) {
+                if (/gitHubToken/.test(err)) {
+                    return done();
+                }
+                done.fail(err);
+            });
+    });
+
+    it('returns rejected Promise when `bumpStalePullRequests` has no `url`', function (done) {
+        Settings.loadRepositoriesSettings('./specs/data/config/bumpStalePullRequests_noUrl.json')
+            .then(function () {
+                done.fail();
+            })
+            .catch(function (err) {
+                if (/bumpStalePullRequests/.test(err)) {
+                    return done();
+                }
+                done.fail(err);
             });
     });
 
