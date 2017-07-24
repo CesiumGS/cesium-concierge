@@ -35,7 +35,7 @@ The possible settings are:
 | `repositories:{name}` | `object` | Settings specific to the repository `{name}`. | ✓
 | `repositories:{name}:gitHubToken` | `string` | Token used to verify __outgoing__ requests to GitHub repository | ✓
 | `repositories:{name}:remindForum` | `boolean` | Enables the functionality to post a reminder message to a closed issue if it contains links to a Google Group forum. | X
-| `repositories:{name}:thirdPartyFolders` | `string[]` | Folders in which to look for changed files in pull request to remind user to update License. | X
+| `repositories:{name}:thirdPartyFolders` | `string` | Comma-seperated list of folders in which to look for changed files in pull request to remind user to update License. | X
 | `repositories:{name}:checkChangesMd` | `boolean` | If `true`, check if `CHANGES.md` has been updated in pull request. If not, post comment suggesting that it should be edited. | X
 | `port` | `number: default 5000` | Port on which to listen to incoming requests | X
 | `listenPath` | `string: default"/"` | Path on which to listen for incoming requests | X

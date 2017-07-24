@@ -75,6 +75,17 @@ describe('loadRepositoriesSettings', function () {
             });
     });
 
+    it('splits `thirdPartyFolders`', function (done) {
+        Settings.loadRepositoriesSettings('./specs/data/config/multipleThirdPartyFolders.json')
+            .then(function () {
+                expect(Settings.repositories['one'].thirdPartyFolders).toEqual(['ThirdParty/', 'AnotherFolder/']);
+                done();
+            })
+            .catch(function (err) {
+                done.fail(err);
+            });
+    });
+
     it('correctly loads values', function (done) {
         Settings.loadRepositoriesSettings('./specs/data/config/noError.json')
             .then(function (repositoryNames) {

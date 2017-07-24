@@ -6,7 +6,7 @@
     "one": {
       "gitHubToken": "bar",
       "someVal": true,
-      "thirdPartyFolders": "ThirdParty"
+      "thirdPartyFolders": "ThirdParty/,AnotherFolder/"
     },
     "two": {
       "gitHubToken": "bar2",
