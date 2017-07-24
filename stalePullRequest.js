@@ -26,11 +26,11 @@ function stalePullRequest(repositoryNames) {
     );
 }
 
-/**
+/** Implementation
  *
- * @param pullRequestsUrl
- * @param gitHubToken
- * @return {Promise<http.IncomingMessage | undefined>[]}
+ * @param {String} pullRequestsUrl Base url to list pull requests https://developer.github.com/v3/pulls/#list-pull-requests
+ * @param {String} gitHubToken Token to verify with github
+ * @return {Promise<http.IncomingMessage | undefined>[]} Array of promises to incoming messages
  */
 stalePullRequest.implementation = function (pullRequestsUrl, gitHubToken) {
     var headers = {
