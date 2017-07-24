@@ -64,6 +64,17 @@ describe('loadRepositoriesSettings', function () {
             });
     });
 
+    it('appends `/` to `thirdPartyFolders that don\'t end with `/`', function (done) {
+        Settings.loadRepositoriesSettings('./specs/data/config/noEndSlashThirdPartyFolders.json')
+            .then(function () {
+                expect(Settings.repositories['one'].thirdPartyFolders).toEqual(['ThirdParty/']);
+                done();
+            })
+            .catch(function (err) {
+                done.fail(err);
+            });
+    });
+
     it('correctly loads values', function (done) {
         Settings.loadRepositoriesSettings('./specs/data/config/noError.json')
             .then(function (repositoryNames) {
