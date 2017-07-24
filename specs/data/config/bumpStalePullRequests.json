@@ -1,0 +1,18 @@
+{
+  "secret": "foo",
+  "port": 10,
+  "listenPath": "/foo",
+  "repositories": {
+    "one": {
+      "gitHubToken": "bar",
+      "someVal": true,
+      "bumpStalePullRequests": {
+        "url": "www.example.com"
+      }
+    },
+    "two": {
+      "gitHubToken": "bar2",
+      "someVal": false
+    }
+  }
+}
