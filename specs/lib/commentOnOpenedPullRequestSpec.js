@@ -29,13 +29,13 @@ describe('commentOnOpenedPullRequest', function () {
     it('gets correct URLs from JSON response', function () {
         spyOn(commentOnOpenedPullRequest, '_implementation');
         var pullRequestJson = fsExtra.readJsonSync('./specs/data/events/pullRequest.json');
-        commentOnOpenedPullRequest(pullRequestJson, {}, []);
+        commentOnOpenedPullRequest(pullRequestJson, {}, [], false);
         expect(commentOnOpenedPullRequest._implementation).toHaveBeenCalledWith('https://api.github.com/repos/baxterthehacker/public-repo/pulls/1/files',
-            'https://api.github.com/repos/baxterthehacker/public-repo/issues/1/comments', {}, []);
+            'https://api.github.com/repos/baxterthehacker/public-repo/issues/1/comments', {}, [], false);
 
-        commentOnOpenedPullRequest(pullRequestJson, {}, ['c']);
+        commentOnOpenedPullRequest(pullRequestJson, {}, ['c'], true);
         expect(commentOnOpenedPullRequest._implementation).toHaveBeenCalledWith('https://api.github.com/repos/baxterthehacker/public-repo/pulls/1/files',
-            'https://api.github.com/repos/baxterthehacker/public-repo/issues/1/comments', {}, ['c']);
+            'https://api.github.com/repos/baxterthehacker/public-repo/issues/1/comments', {}, ['c'], true);
     });
 });
 
@@ -90,7 +90,7 @@ describe('commentOnOpenedPullRequest._implementation', function () {
 
     it('Posts Third Party signature', function (done) {
         okPullRequest();
-        commentOnOpenedPullRequest._implementation('', '', {}, ['specs/data/'])
+        commentOnOpenedPullRequest._implementation('', '', {}, ['specs/data/'], false)
             .then(function () {
                 var obj = requestPromise.post.calls.argsFor(0)[0];
                 console.log(obj);
@@ -105,7 +105,7 @@ describe('commentOnOpenedPullRequest._implementation', function () {
 
     it('Posts CHANGES signature', function (done) {
         spyOn(requestPromise, 'get').and.returnValue(Promise.resolve(pullRequestFilesWithChanges));
-        commentOnOpenedPullRequest._implementation('', '', {}, ['/some/folder'])
+        commentOnOpenedPullRequest._implementation('', '', {}, ['/some/folder'], true)
             .then(function () {
                 var obj = requestPromise.post.calls.argsFor(0)[0];
                 console.log(obj);

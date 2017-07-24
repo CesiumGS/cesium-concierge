@@ -41,11 +41,15 @@ Settings.loadRepositoriesSettings('./config.json')
 
             if ((event === 'issues' || event === 'pull_request') && jsonResponse.action === 'closed') {
                 promise = promise.then(function () {
+                    dateLog('Calling commentOnClosedIssue');
                     return commentOnClosedIssue(jsonResponse, headers);
                 });
-            } else if (event === 'pull_request' && jsonResponse.action === 'opened') {
+            } else if (event === 'pull_request' && jsonResponse.action === 'opened' &&
+                (defined(repositorySettings.thirdPartyFolders) || defined(repositorySettings.checkChangesMd))) {
                 promise = promise.then(function () {
-                    return commentOnOpenedPullRequest(jsonResponse, headers, repositorySettings.thirdPartyFolders);
+                    dateLog('Calling commentOnOpenedPullRequest');
+                    return commentOnOpenedPullRequest(jsonResponse, headers, repositorySettings.thirdPartyFolders,
+                        repositorySettings.checkChangesMd);
                 });
             }
 
