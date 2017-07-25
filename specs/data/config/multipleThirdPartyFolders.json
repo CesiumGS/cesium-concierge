@@ -1,0 +1,16 @@
+{
+  "secret": "foo",
+  "port": 10,
+  "listenPath": "/foo",
+  "repositories": {
+    "one": {
+      "gitHubToken": "bar",
+      "someVal": true,
+      "thirdPartyFolders": "ThirdParty/,AnotherFolder/"
+    },
+    "two": {
+      "gitHubToken": "bar2",
+      "someVal": false
+    }
+  }
+}

@@ -8,6 +8,8 @@ var Promise = require('bluebird');
 var defined = Cesium.defined;
 
 var commentOnClosedIssue = require('./lib/commentOnClosedIssue');
+var commentOnOpenedPullRequest = require('./lib/commentOnOpenedPullRequest');
+
 var dateLog = require('./lib/dateLog');
 var Settings = require('./lib/Settings');
 
@@ -31,14 +33,27 @@ Settings.loadRepositoriesSettings('./config.json')
             dateLog('jsonResponse: ' + jsonResponse);
 
             var promise = Promise.resolve();
+            var repositorySettings = Settings.repositories[repositoryName];
+            var headers = {
+                'User-Agent': 'cesium-concierge',
+                Authorization: 'token ' + repositorySettings.gitHubToken
+            };
+            var checkChangesMd = defined(repositorySettings.checkChangesMd) ? repositorySettings.checkChangesMd : true;
+
             if ((event === 'issues' || event === 'pull_request') && jsonResponse.action === 'closed') {
                 promise = promise.then(function () {
-                    return commentOnClosedIssue(jsonResponse, {
-                        'User-Agent': 'cesium-concierge',
-                        Authorization: 'token ' + Settings.repositories[repositoryName].gitHubToken
-                    });
+                    dateLog('Calling commentOnClosedIssue');
+                    return commentOnClosedIssue(jsonResponse, headers);
+                });
+            } else if (event === 'pull_request' && jsonResponse.action === 'opened' &&
+                (defined(repositorySettings.thirdPartyFolders) || checkChangesMd)) {
+                promise = promise.then(function () {
+                    dateLog('Calling commentOnOpenedPullRequest');
+                    return commentOnOpenedPullRequest(jsonResponse, headers, repositorySettings.thirdPartyFolders,
+                        checkChangesMd);
                 });
             }
+
             promise.then(function (res) {
                 if (!defined(res)) {
                     dateLog('GitHub request did not match any events the server is listening for');

@@ -7,8 +7,8 @@ var requestPromise = require('request-promise');
 var commentOnClosedIssue = require('../../lib/commentOnClosedIssue');
 var getUniqueMatch = require('../../lib/getUniqueMatch');
 
-var issueEventJson = fsExtra.readJsonSync('./specs/data/issueEvent.json');
-var issueJson = fsExtra.readJsonSync('./specs/data/issueResponse.json');
+var issueEventJson = fsExtra.readJsonSync('./specs/data/events/issue.json');
+var issueJson = fsExtra.readJsonSync('./specs/data/responses/issue.json');
 
 describe('commentOnClosedIssue', function () {
     it('throws if `jsonResponse` is undefined', function () {
@@ -25,21 +25,21 @@ describe('commentOnClosedIssue', function () {
 
     it('passes correct issueUrl and commentsUrl to _implementation', function () {
         spyOn(commentOnClosedIssue, '_implementation');
-        commentOnClosedIssue(fsExtra.readJsonSync('./specs/data/issueEvent.json'), {test: true});
+        commentOnClosedIssue(fsExtra.readJsonSync('./specs/data/events/issue.json'), {test: true});
         expect(commentOnClosedIssue._implementation).toHaveBeenCalledWith('https://api.github.com/repos/baxterthehacker/public-repo/issues/2',
             'https://api.github.com/repos/baxterthehacker/public-repo/issues/2/comments', {test: true});
     });
 
     it('passes correct pull request url and commentsUrl to _implementation', function () {
         spyOn(commentOnClosedIssue, '_implementation');
-        commentOnClosedIssue(fsExtra.readJsonSync('./specs/data/pullRequestEvent.json'), {test: true});
+        commentOnClosedIssue(fsExtra.readJsonSync('./specs/data/events/pullRequest.json'), {test: true});
         expect(commentOnClosedIssue._implementation).toHaveBeenCalledWith('https://api.github.com/repos/baxterthehacker/public-repo/pulls/1',
             'https://api.github.com/repos/baxterthehacker/public-repo/issues/1/comments', {test: true});
     });
 });
 
 describe('commentOnClosedIssue._implementation', function () {
-    var commentsJson = fsExtra.readJsonSync('./specs/data/issueComments.json');
+    var commentsJson = fsExtra.readJsonSync('./specs/data/responses/issueComments.json');
 
     beforeEach(function () {
         spyOn(commentOnClosedIssue, 'get').and.callFake(function (url) {
@@ -88,8 +88,8 @@ describe('commentOnClosedIssue._implementation', function () {
 });
 
 describe('commentOnClosedIssue._implementation detects bad statusCodes', function () {
-    var issueJson404 = fsExtra.readJsonSync('./specs/data/issueResponse_404.json');
-    var commentsJson404 = fsExtra.readJsonSync('./specs/data/issueComments_404.json');
+    var issueJson404 = fsExtra.readJsonSync('./specs/data/responses/issue_404.json');
+    var commentsJson404 = fsExtra.readJsonSync('./specs/data/responses/issueComments_404.json');
 
     it('returns rejected Promise if statusCode for issue !== 200', function (done) {
         spyOn(requestPromise, 'post');
