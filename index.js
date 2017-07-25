@@ -38,6 +38,7 @@ Settings.loadRepositoriesSettings('./config.json')
                 'User-Agent': 'cesium-concierge',
                 Authorization: 'token ' + repositorySettings.gitHubToken
             };
+            var checkChangesMd = defined(repositorySettings.checkChangesMd) ? repositorySettings.checkChangesMd : true;
 
             if ((event === 'issues' || event === 'pull_request') && jsonResponse.action === 'closed') {
                 promise = promise.then(function () {
@@ -45,11 +46,11 @@ Settings.loadRepositoriesSettings('./config.json')
                     return commentOnClosedIssue(jsonResponse, headers);
                 });
             } else if (event === 'pull_request' && jsonResponse.action === 'opened' &&
-                (defined(repositorySettings.thirdPartyFolders) || defined(repositorySettings.checkChangesMd))) {
+                (defined(repositorySettings.thirdPartyFolders) || checkChangesMd)) {
                 promise = promise.then(function () {
                     dateLog('Calling commentOnOpenedPullRequest');
                     return commentOnOpenedPullRequest(jsonResponse, headers, repositorySettings.thirdPartyFolders,
-                        repositorySettings.checkChangesMd);
+                        checkChangesMd);
                 });
             }
 
