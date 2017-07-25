@@ -3,7 +3,7 @@
 __Hello! I'm Cesium Conierge, a GitHub bot for [Cesium](https://github.com/AnalyticalGraphicsInc/cesium). I automate
 common certain GitHub tasks, and can currently:__
 - Post a reminder comment to closed issues that have Google Group links in them
-
+- Post a suggestion to update `CHANGES.md` on newly-opened pull requests, and/or to update licenses if files in Third-party folders have changed.
 ## Building
 
 Clone this repository:
