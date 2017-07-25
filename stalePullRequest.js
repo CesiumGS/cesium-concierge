@@ -12,6 +12,13 @@ var Settings = require('./lib/Settings');
 
 module.exports = stalePullRequest;
 
+if (require.main === module) {
+    Settings.loadRepositoriesSettings('./config.json')
+        .then(stalePullRequest)
+        .catch(function (err) {
+            dateLog('Received error: ' + err);
+        });
+}
 /** Bump stale pull requests for each repository
  *
  * @param {String[]} repositoryNames Names of repositories
