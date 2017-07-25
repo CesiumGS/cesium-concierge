@@ -12,6 +12,11 @@ var Settings = require('./lib/Settings');
 
 module.exports = stalePullRequest;
 
+/** Bump stale pull requests for each repository
+ *
+ * @param {String[]} repositoryNames Names of repositories
+ * @returns {Promise<Array<http.IncomingMessage | undefined> | undefined>} Promise to an array of incoming messages
+ */
 function stalePullRequest(repositoryNames) {
     return Promise.all(
         repositoryNames.map(function (repositoryName) {
@@ -30,7 +35,7 @@ function stalePullRequest(repositoryNames) {
  *
  * @param {String} pullRequestsUrl Base url to list pull requests https://developer.github.com/v3/pulls/#list-pull-requests
  * @param {String} gitHubToken Token to verify with github
- * @return {Promise<http.IncomingMessage | undefined>[]} Array of promises to incoming messages
+ * @return {Promise<Array<http.IncomingMessage | undefined>>} Promise to an array of incoming messages
  */
 stalePullRequest.implementation = function (pullRequestsUrl, gitHubToken) {
     var headers = {
@@ -43,21 +48,21 @@ stalePullRequest.implementation = function (pullRequestsUrl, gitHubToken) {
         json: true,
         resolveWithFullResponse: true
     })
-    .then(function (pullRequestsjsonResponse) {
-        return checkStatus(pullRequestsjsonResponse);
+    .then(function (pullRequestsJsonResponse) {
+        return checkStatus(pullRequestsJsonResponse);
     })
-    .then(function (pullRequestsjsonResponse) {
+    .then(function (pullRequestsJsonResponse) {
         var firstMessage = 'It looks like this pull request hasn\'t been updated in a while!\n\n' +
             'Please update it soon or close it!';
         var alreadyBumpedMessage = 'Hi again!\n\nThis pull request has not been active in a while. Please consider ' +
             'closing it!';
-        return Promise.all(pullRequestsjsonResponse.body.map(function(pullRequest) {
+        return Promise.all(pullRequestsJsonResponse.body.map(function(pullRequest) {
             var lastUpdate = new Date(pullRequest.updated_at);
 
             if (stalePullRequest.dateIsOlderThan(lastUpdate, 30)) {
                 // Check if last post was cesium-concierge
                 return requestPromise.get({
-                    uri: pullRequest._links.comments.href,
+                    uri: pullRequest.comments_url,
                     headers: headers,
                     json: true,
                     resolveWithFullResponse: true
@@ -67,13 +72,12 @@ stalePullRequest.implementation = function (pullRequestsUrl, gitHubToken) {
                 })
                 .then(function (commentsJsonResponse) {
                     var alreadyBumped = false;
-                    var message = alreadyBumped ? alreadyBumpedMessage : firstMessage;
                     commentsJsonResponse.body.forEach(function (comment) {
                         if (comment.user.login === 'cesium-concierge') {
                             alreadyBumped = true;
                         }
                     });
-                    message = alreadyBumped ? alreadyBumpedMessage : firstMessage;
+                    var message = alreadyBumped ? alreadyBumpedMessage : firstMessage;
                     return requestPromise.post({
                         uri: pullRequest.comments_url,
                         headers: headers,

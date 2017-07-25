@@ -57,10 +57,18 @@ describe('stalePullRequest', function () {
 });
 
 describe('stalePullRequest.implementation', function () {
+    var comments = fsExtra.readJsonSync('./specs/data/responses/pullRequestComments.json');
     var pullRequests404 = fsExtra.readJsonSync('./specs/data/responses/pullRequests_404.json');
     beforeEach(function () {
         spyOn(Date, 'now').and.returnValue(new Date(1500921244516));
     });
+
+    function getSwitch(obj) {
+        if (/\/comments/.test(obj.uri)) {
+            return Promise.resolve(comments);
+        }
+        return Promise.resolve(pullRequests);
+    }
 
     it('returns rejected Promise if statusCode is bad', function (done) {
         spyOn(requestPromise, 'get').and.returnValue(Promise.resolve(pullRequests404));
@@ -76,7 +84,7 @@ describe('stalePullRequest.implementation', function () {
     });
 
     it('dateIsOlderThan gets called once for each pull request', function (done) {
-        spyOn(requestPromise, 'get').and.returnValue(Promise.resolve(pullRequests));
+        spyOn(requestPromise, 'get').and.callFake(getSwitch);
         spyOn(stalePullRequest, 'dateIsOlderThan');
         stalePullRequest.implementation(['one']).then(function () {
             expect(stalePullRequest.dateIsOlderThan).toHaveBeenCalledTimes(30);
@@ -88,10 +96,36 @@ describe('stalePullRequest.implementation', function () {
     });
 
     it('requestPromise.post gets called once for each pull request older than 30 days', function (done) {
-        spyOn(requestPromise, 'get').and.returnValue(Promise.resolve(pullRequests));
+        spyOn(requestPromise, 'get').and.callFake(getSwitch);
         spyOn(requestPromise, 'post');
         stalePullRequest.implementation(['one']).then(function () {
             expect(requestPromise.post).toHaveBeenCalledTimes(15);
+            done();
+        })
+        .catch(function (err) {
+            done.fail(err);
+        });
+    });
+
+    it('requestPromise.post is called with the correct URLs', function (done) {
+        spyOn(requestPromise, 'get').and.callFake(getSwitch);
+        spyOn(requestPromise, 'post');
+        stalePullRequest.implementation(['one']).then(function () {
+            var obj = requestPromise.post.calls.argsFor(0)[0];
+            expect(obj.uri).toEqual('https://api.github.com/repos/AnalyticalGraphicsInc/cesium/issues/4635/comments');
+            done();
+        })
+        .catch(function (err) {
+            done.fail(err);
+        });
+    });
+
+    it('recognizes it has commented on a post before', function (done) {
+        spyOn(requestPromise, 'get').and.callFake(getSwitch);
+        spyOn(requestPromise, 'post');
+        stalePullRequest.implementation(['one']).then(function () {
+            var obj = requestPromise.post.calls.argsFor(0)[0];
+            expect(/Hi again/.test(obj.body.body)).toBe(true);
             done();
         })
         .catch(function (err) {
