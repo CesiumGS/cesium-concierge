@@ -46,8 +46,8 @@ describe('stalePullRequest', function () {
     it('calls implementation with correct values', function (done) {
         spyOn(stalePullRequest, 'implementation');
         stalePullRequest(['one', 'two']).then(function () {
-            expect(stalePullRequest.implementation.calls.argsFor(0)).toEqual(['one.example.com?sort=updated&direction=asc', 'oneGHT']);
-            expect(stalePullRequest.implementation.calls.argsFor(1)).toEqual(['two.example.com?sort=updated&direction=asc', 'twoGHT']);
+            expect(stalePullRequest.implementation.calls.argsFor(0)).toEqual(['one.example.com?sort=updated&direction=asc', 'oneGHT', undefined]);
+            expect(stalePullRequest.implementation.calls.argsFor(1)).toEqual(['two.example.com?sort=updated&direction=asc', 'twoGHT', undefined]);
             done();
         })
         .catch(function (err) {

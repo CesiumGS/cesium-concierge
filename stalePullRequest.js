@@ -33,7 +33,7 @@ function stalePullRequest(repositoryNames) {
                 return Promise.resolve();
             }
             return stalePullRequest.implementation(bumpStalePullRequests.url + '?sort=updated&direction=asc',
-                Settings.repositories[repositoryName].gitHubToken);
+                Settings.repositories[repositoryName].gitHubToken, Settings.repositories[repositoryName].maxDaysSinceUpdate);
         })
     );
 }
@@ -42,9 +42,10 @@ function stalePullRequest(repositoryNames) {
  *
  * @param {String} pullRequestsUrl Base url to list pull requests https://developer.github.com/v3/pulls/#list-pull-requests
  * @param {String} gitHubToken Token to verify with github
+ * @param {Number} maxDaysSinceUpdate Maximum days since a PR has been updated
  * @return {Promise<Array<http.IncomingMessage | undefined>>} Promise to an array of incoming messages
  */
-stalePullRequest.implementation = function (pullRequestsUrl, gitHubToken) {
+stalePullRequest.implementation = function (pullRequestsUrl, gitHubToken, maxDaysSinceUpdate) {
     var headers = {
         'User-Agent': 'cesium-concierge',
         Authorization: 'token ' + gitHubToken
@@ -65,11 +66,12 @@ stalePullRequest.implementation = function (pullRequestsUrl, gitHubToken) {
             'closing it!';
         return Promise.all(pullRequestsJsonResponse.body.map(function(pullRequest) {
             var lastUpdate = new Date(pullRequest.updated_at);
-
-            if (stalePullRequest.dateIsOlderThan(lastUpdate, 30)) {
+            var commentsUrl = pullRequest.comments_url;
+            maxDaysSinceUpdate = defined(maxDaysSinceUpdate) ? maxDaysSinceUpdate : 30;
+            if (stalePullRequest.dateIsOlderThan(lastUpdate, maxDaysSinceUpdate)) {
                 // Check if last post was cesium-concierge
                 return requestPromise.get({
-                    uri: pullRequest.comments_url,
+                    uri: commentsUrl,
                     headers: headers,
                     json: true,
                     resolveWithFullResponse: true
@@ -86,7 +88,7 @@ stalePullRequest.implementation = function (pullRequestsUrl, gitHubToken) {
                     });
                     var message = alreadyBumped ? alreadyBumpedMessage : firstMessage;
                     return requestPromise.post({
-                        uri: pullRequest.comments_url,
+                        uri: commentsUrl,
                         headers: headers,
                         body: {
                             body: message

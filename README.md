@@ -37,6 +37,8 @@ The possible settings are:
 | `repositories:{name}:remindForum` | `boolean` | Enables the functionality to post a reminder message to a closed issue if it contains links to a Google Group forum. | X
 | `repositories:{name}:thirdPartyFolders` | `string` | Comma-seperated list of folders in which to look for changed files in pull request to remind user to update License. | X
 | `repositories:{name}:checkChangesMd` | `boolean` | If `true`, check if `CHANGES.md` has been updated in pull request. If not, post comment suggesting that it should be edited. | X
+| `repositories:{name}:bumpStalePullRequests:url` | `string` | URL to query for all pull requests in repository. See [here](https://developer.github.com/v3/pulls/#list-pull-requests) | X
+| `repositories:{name}:bumpStalePullRequests:maxDaysSinceUpdate` | `number` | "Bump" pull requests older than this number of days ago | X
 | `port` | `number: default 5000` | Port on which to listen to incoming requests | X
 | `listenPath` | `string: default"/"` | Path on which to listen for incoming requests | X
 
