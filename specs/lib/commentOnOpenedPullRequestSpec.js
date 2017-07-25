@@ -88,14 +88,14 @@ describe('commentOnOpenedPullRequest._implementation', function () {
             });
     });
 
-    it('Posts Third Party signature', function (done) {
+    it('Posts Third Party and CHANGES signature', function (done) {
         okPullRequest();
-        commentOnOpenedPullRequest._implementation('', '', {}, ['specs/data/'], false)
+        commentOnOpenedPullRequest._implementation('', '', {}, ['specs/data/'], true)
             .then(function () {
                 var obj = requestPromise.post.calls.argsFor(0)[0];
                 console.log(obj);
                 expect(/Third-party/i.test(obj.body.body)).toBe(true);
-                expect(/CHANGES/.test(obj.body.body)).toBe(false);
+                expect(/CHANGES/.test(obj.body.body)).toBe(true);
                 done();
             })
             .catch(function (err) {
@@ -103,7 +103,35 @@ describe('commentOnOpenedPullRequest._implementation', function () {
             });
     });
 
-    it('Posts CHANGES signature', function (done) {
+    it('Posts well-formatted English for two Third Party folders', function (done) {
+        okPullRequest();
+        commentOnOpenedPullRequest._implementation('', '', {}, ['specs/data/', 'a/b/'], true)
+            .then(function () {
+                var obj = requestPromise.post.calls.argsFor(0)[0];
+                console.log(obj);
+                expect(/`specs\/data\/` or `a\/b\/`/i.test(obj.body.body)).toBe(true);
+                done();
+            })
+            .catch(function (err) {
+                done.fail(err);
+            });
+    });
+
+    it('Posts well-formatted English for three Third Party folders', function (done) {
+        okPullRequest();
+        commentOnOpenedPullRequest._implementation('', '', {}, ['specs/data/', 'a/b/', 'some/folder/'], true)
+            .then(function () {
+                var obj = requestPromise.post.calls.argsFor(0)[0];
+                console.log(obj);
+                expect(/`specs\/data\/`, `a\/b\/`, or `some\/folder\/`/i.test(obj.body.body)).toBe(true);
+                done();
+            })
+            .catch(function (err) {
+                done.fail(err);
+            });
+    });
+
+    it('Does not post CHANGES or Third Party signature', function (done) {
         spyOn(requestPromise, 'get').and.returnValue(Promise.resolve(pullRequestFilesWithChanges));
         commentOnOpenedPullRequest._implementation('', '', {}, ['/some/folder'], true)
             .then(function () {
