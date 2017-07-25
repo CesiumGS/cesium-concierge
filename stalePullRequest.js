@@ -43,24 +43,46 @@ stalePullRequest.implementation = function (pullRequestsUrl, gitHubToken) {
         json: true,
         resolveWithFullResponse: true
     })
-    .then(function (jsonResponse) {
-        return checkStatus(jsonResponse);
+    .then(function (pullRequestsjsonResponse) {
+        return checkStatus(pullRequestsjsonResponse);
     })
-    .then(function (jsonResponse) {
-        var message = 'It looks like this pull request hasn\'t been updated in a while!\n' +
+    .then(function (pullRequestsjsonResponse) {
+        var firstMessage = 'It looks like this pull request hasn\'t been updated in a while!\n\n' +
             'Please update it soon or close it!';
-        return Promise.all(jsonResponse.body.map(function(pullRequest) {
+        var alreadyBumpedMessage = 'Hi again!\n\nThis pull request has not been active in a while. Please consider ' +
+            'closing it!';
+        return Promise.all(pullRequestsjsonResponse.body.map(function(pullRequest) {
             var lastUpdate = new Date(pullRequest.updated_at);
 
             if (stalePullRequest.dateIsOlderThan(lastUpdate, 30)) {
-                return requestPromise.post({
-                    uri: pullRequest.comments_url,
+                // Check if last post was cesium-concierge
+                return requestPromise.get({
+                    uri: pullRequest._links.comments.href,
                     headers: headers,
-                    body: {
-                        body: message
-                    },
                     json: true,
                     resolveWithFullResponse: true
+                })
+                .then(function (commentsJsonResponse) {
+                    return checkStatus(commentsJsonResponse);
+                })
+                .then(function (commentsJsonResponse) {
+                    var alreadyBumped = false;
+                    var message = alreadyBumped ? alreadyBumpedMessage : firstMessage;
+                    commentsJsonResponse.body.forEach(function (comment) {
+                        if (comment.user.login === 'cesium-concierge') {
+                            alreadyBumped = true;
+                        }
+                    });
+                    message = alreadyBumped ? alreadyBumpedMessage : firstMessage;
+                    return requestPromise.post({
+                        uri: pullRequest.comments_url,
+                        headers: headers,
+                        body: {
+                            body: message
+                        },
+                        json: true,
+                        resolveWithFullResponse: true
+                    });
                 });
             }
             return Promise.resolve();
