@@ -110,7 +110,7 @@ describe('commentOnOpenedPullRequest._implementation', function () {
                 var obj = requestPromise.post.calls.argsFor(0)[0];
                 console.log(obj);
                 expect(/THIRD_PARTY/.test(obj.body.body)).toBe(false);
-                expect(/CHANGES/.test(obj.body.body)).toBe(true);
+                expect(/CHANGES/.test(obj.body.body)).toBe(false);
                 done();
             })
             .catch(function (err) {
