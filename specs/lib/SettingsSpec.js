@@ -55,19 +55,6 @@ describe('loadRepositoriesSettings', function () {
             });
     });
 
-    it('returns rejected Promise when `bumpStalePullRequests` has no `url`', function (done) {
-        Settings.loadRepositoriesSettings('./specs/data/config/bumpStalePullRequests_noUrl.json')
-            .then(function () {
-                done.fail();
-            })
-            .catch(function (err) {
-                if (/bumpStalePullRequests/.test(err)) {
-                    return done();
-                }
-                done.fail(err);
-            });
-    });
-
     it('returns rejected Promise when repositories don\'t have a user prepended', function (done) {
         Settings.loadRepositoriesSettings('./specs/data/config/noUserBeforeRepository.json')
         .then(function () {
@@ -107,6 +94,17 @@ describe('loadRepositoriesSettings', function () {
         Settings.loadRepositoriesSettings('./specs/data/config/multipleThirdPartyFolders.json')
             .then(function () {
                 expect(Settings.repositories['one'].thirdPartyFolders).toEqual(['ThirdParty/', 'AnotherFolder/']);
+                done();
+            })
+            .catch(function (err) {
+                done.fail(err);
+            });
+    });
+
+    it('sets `bumpStalePullRequests` `url` correctly', function (done) {
+        Settings.loadRepositoriesSettings('./specs/data/config/bumpStalePullRequests_noUrl.json')
+            .then(function () {
+                expect(Settings.repositories['one'].bumpStalePullRequests.url).toEqual('https://api.github.com/repos/a/one/pulls');
                 done();
             })
             .catch(function (err) {
