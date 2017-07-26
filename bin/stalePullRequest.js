@@ -6,9 +6,9 @@ var requestPromise = require('request-promise');
 
 var defined = Cesium.defined;
 
-var dateLog = require('./lib/dateLog');
-var checkStatus = require('./lib/checkStatus');
-var Settings = require('./lib/Settings');
+var dateLog = require('../lib/dateLog');
+var checkStatus = require('../lib/checkStatus');
+var Settings = require('../lib/Settings');
 
 module.exports = stalePullRequest;
 
@@ -60,11 +60,12 @@ stalePullRequest.implementation = function (pullRequestsUrl, gitHubToken, maxDay
         return checkStatus(pullRequestsJsonResponse);
     })
     .then(function (pullRequestsJsonResponse) {
-        var firstMessage = 'It looks like this pull request hasn\'t been updated in a while!\n\n' +
-            'Please update it soon or close it!';
-        var alreadyBumpedMessage = 'Hi again!\n\nThis pull request has not been active in a while. Please consider ' +
-            'closing it!';
-        return Promise.all(pullRequestsJsonResponse.body.map(function(pullRequest) {
+        var firstMessage = 'Thank you for this pull request.\n\n' +
+            'If it has pending requests for code changes, please address all comments and post a new message when it is ready for review.\n\n' +
+            'If you are waiting for review, we\'re sorry for the delay. A Cesium maintainer will be by to comment or review soon.';
+        var alreadyBumpedMessage = 'This pull request hasn\'t seen activity in a while. Please close it if it is no longer relevant.\n\n\'' +
+            'Otherwise, please address all comments and post a new message when it is ready for review.';
+        return Promise.each(pullRequestsJsonResponse.body, function(pullRequest) {
             var lastUpdate = new Date(pullRequest.updated_at);
             var commentsUrl = pullRequest.comments_url;
             maxDaysSinceUpdate = defined(maxDaysSinceUpdate) ? maxDaysSinceUpdate : 30;
@@ -98,8 +99,7 @@ stalePullRequest.implementation = function (pullRequestsUrl, gitHubToken, maxDay
                     });
                 });
             }
-            return Promise.resolve();
-        }));
+        });
     });
 };
 

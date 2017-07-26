@@ -3,14 +3,14 @@
   "port": 10,
   "listenPath": "/foo",
   "repositories": {
-    "one": {
+    "a/one": {
       "gitHubToken": "bar",
       "someVal": true,
       "bumpStalePullRequests": {
         "url": "www.example.com"
       }
     },
-    "two": {
+    "a/two": {
       "gitHubToken": "bar2",
       "someVal": false
     }

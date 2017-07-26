@@ -68,6 +68,19 @@ describe('loadRepositoriesSettings', function () {
             });
     });
 
+    it('returns rejected Promise when repositories don\'t have a user prepended', function (done) {
+        Settings.loadRepositoriesSettings('./specs/data/config/noUserBeforeRepository.json')
+        .then(function () {
+            done.fail();
+        })
+        .catch(function (err) {
+            if (/must be in the form/.test(err)) {
+                return done();
+            }
+            done.fail(err);
+        });
+    });
+
     it('removes `/` from `thirdPartyFolders` that begin with `/`', function (done) {
         Settings.loadRepositoriesSettings('./specs/data/config/slashWithThirdPartyFolders.json')
             .then(function () {
@@ -105,7 +118,6 @@ describe('loadRepositoriesSettings', function () {
         Settings.loadRepositoriesSettings('./specs/data/config/noError.json')
             .then(function (repositoryNames) {
                 expect(repositoryNames).toEqual(['one', 'two']);
-
                 expect(Settings.repositories.one.gitHubToken).toEqual('bar');
                 expect(Settings.repositories.one.someVal).toBe(true);
                 expect(Settings.repositories.two.gitHubToken).toEqual('bar2');

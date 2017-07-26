@@ -5,7 +5,7 @@ var nconf = require('nconf');
 var Promise = require('bluebird');
 var requestPromise = require('request-promise');
 
-var stalePullRequest = require('../stalePullRequest');
+var stalePullRequest = require('../../bin/stalePullRequest');
 
 var pullRequests = fsExtra.readJsonSync('./specs/data/responses/pullRequests.json');
 
@@ -125,7 +125,7 @@ describe('stalePullRequest.implementation', function () {
         spyOn(requestPromise, 'post');
         stalePullRequest.implementation(['one']).then(function () {
             var obj = requestPromise.post.calls.argsFor(0)[0];
-            expect(/Hi again/.test(obj.body.body)).toBe(true);
+            expect(/Otherwise/i.test(obj.body.body)).toBe(true);
             done();
         })
         .catch(function (err) {
