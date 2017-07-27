@@ -27,12 +27,11 @@ if (require.main === module) {
 function stalePullRequest(repositoryNames) {
     return Promise.all(
         repositoryNames.map(function (repositoryName) {
-            var bumpStalePullRequests = Settings.repositories[repositoryName].bumpStalePullRequests;
-            if (!defined(bumpStalePullRequests)) {
+            if (!defined(Settings.repositories[repositoryName].bumpStalePullRequests)) {
                 dateLog('Repository ' + repositoryName + ' does not have `bumpStalePullRequests` turned on');
                 return Promise.resolve();
             }
-            return stalePullRequest.implementation(bumpStalePullRequests.url + '?sort=updated&direction=asc',
+            return stalePullRequest.implementation(Settings.repositories[repositoryName].bumpStalePullRequestsUrl + '?sort=updated&direction=asc',
                 Settings.repositories[repositoryName].gitHubToken, Settings.repositories[repositoryName].maxDaysSinceUpdate);
         })
     );
@@ -99,6 +98,7 @@ stalePullRequest.implementation = function (pullRequestsUrl, gitHubToken, maxDay
                     });
                 });
             }
+            dateLog('Pull request at ' + pullRequest.url + ' was not older than ' + maxDaysSinceUpdate + ' days.');
         });
     });
 };

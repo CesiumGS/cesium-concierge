@@ -16,15 +16,13 @@ describe('stalePullRequest', function () {
                 return {
                     one: {
                         gitHubToken: 'oneGHT',
-                        bumpStalePullRequests: {
-                            url: 'one.example.com'
-                        }
+                        bumpStalePullRequests: true,
+                        bumpStalePullRequestsUrl: 'one.example.com'
                     },
                     two: {
                         gitHubToken: 'twoGHT',
-                        bumpStalePullRequests: {
-                            url: 'two.example.com'
-                        }
+                        bumpStalePullRequests: true,
+                        bumpStalePullRequestsUrl: 'two.example.com'
                     },
                     three: {}
                 };

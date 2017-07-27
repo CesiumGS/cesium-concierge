@@ -104,7 +104,7 @@ describe('loadRepositoriesSettings', function () {
     it('sets `bumpStalePullRequests` `url` correctly', function (done) {
         Settings.loadRepositoriesSettings('./specs/data/config/bumpStalePullRequests_noUrl.json')
             .then(function () {
-                expect(Settings.repositories['one'].bumpStalePullRequests.url).toEqual('https://api.github.com/repos/a/one/pulls');
+                expect(Settings.repositories['one'].bumpStalePullRequestsUrl).toEqual('https://api.github.com/repos/a/one/pulls');
                 done();
             })
             .catch(function (err) {
