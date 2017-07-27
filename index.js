@@ -38,7 +38,10 @@ Settings.loadRepositoriesSettings('./config.json')
                 'User-Agent': 'cesium-concierge',
                 Authorization: 'token ' + repositorySettings.gitHubToken
             };
-            var checkChangesMd = defined(repositorySettings.checkChangesMd) ? repositorySettings.checkChangesMd : true;
+            var checkChangesMd = false;
+            if (defined(repositorySettings.checkChangesMd)) {
+                checkChangesMd = (repositorySettings.checkChangesMd === 'true');
+            }
 
             if ((event === 'issues' || event === 'pull_request') && jsonResponse.action === 'closed') {
                 promise = promise.then(function () {
