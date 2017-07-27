@@ -92,10 +92,8 @@ describe('commentOnOpenedPullRequest._implementation', function () {
         okPullRequest();
         commentOnOpenedPullRequest._implementation('', '', {}, ['specs/data/'], true)
             .then(function () {
-                var obj = requestPromise.post.calls.argsFor(0)[0];
-                console.log(obj);
-                expect(/Third-party/i.test(obj.body.body)).toBe(true);
-                expect(/CHANGES/.test(obj.body.body)).toBe(true);
+                expect(/CHANGES/.test(requestPromise.post.calls.argsFor(0)[0].body.body)).toBe(true);
+                expect(/license/i.test(requestPromise.post.calls.argsFor(1)[0].body.body)).toBe(true);
                 done();
             })
             .catch(function (err) {
@@ -107,7 +105,7 @@ describe('commentOnOpenedPullRequest._implementation', function () {
         okPullRequest();
         commentOnOpenedPullRequest._implementation('', '', {}, ['specs/data/', 'a/b/'], true)
             .then(function () {
-                var obj = requestPromise.post.calls.argsFor(0)[0];
+                var obj = requestPromise.post.calls.argsFor(1)[0];
                 console.log(obj);
                 expect(/`specs\/data\/` or `a\/b\/`/i.test(obj.body.body)).toBe(true);
                 done();
@@ -121,7 +119,7 @@ describe('commentOnOpenedPullRequest._implementation', function () {
         okPullRequest();
         commentOnOpenedPullRequest._implementation('', '', {}, ['specs/data/', 'a/b/', 'some/folder/'], true)
             .then(function () {
-                var obj = requestPromise.post.calls.argsFor(0)[0];
+                var obj = requestPromise.post.calls.argsFor(1)[0];
                 console.log(obj);
                 expect(/`specs\/data\/`, `a\/b\/`, or `some\/folder\/`/i.test(obj.body.body)).toBe(true);
                 done();
@@ -135,10 +133,7 @@ describe('commentOnOpenedPullRequest._implementation', function () {
         spyOn(requestPromise, 'get').and.returnValue(Promise.resolve(pullRequestFilesWithChanges));
         commentOnOpenedPullRequest._implementation('', '', {}, ['/some/folder'], true)
             .then(function () {
-                var obj = requestPromise.post.calls.argsFor(0)[0];
-                console.log(obj);
-                expect(/THIRD_PARTY/.test(obj.body.body)).toBe(false);
-                expect(/CHANGES/.test(obj.body.body)).toBe(false);
+                expect(requestPromise.post).toHaveBeenCalledTimes(0);
                 done();
             })
             .catch(function (err) {
