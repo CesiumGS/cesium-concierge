@@ -123,7 +123,7 @@ describe('stalePullRequest.implementation', function () {
         spyOn(requestPromise, 'post');
         stalePullRequest.implementation(['one']).then(function () {
             var obj = requestPromise.post.calls.argsFor(0)[0];
-            expect(/Otherwise/i.test(obj.body.body)).toBe(true);
+            expect(/i last commented/i.test(obj.body.body)).toBe(true);
             done();
         })
         .catch(function (err) {

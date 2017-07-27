@@ -49,6 +49,7 @@ stalePullRequest.implementation = function (pullRequestsUrl, gitHubToken, maxDay
         'User-Agent': 'cesium-concierge',
         Authorization: 'token ' + gitHubToken
     };
+    maxDaysSinceUpdate = defined(maxDaysSinceUpdate) ? maxDaysSinceUpdate : 30;
     return requestPromise.get({
         uri: pullRequestsUrl,
         headers: headers,
@@ -59,15 +60,19 @@ stalePullRequest.implementation = function (pullRequestsUrl, gitHubToken, maxDay
         return checkStatus(pullRequestsJsonResponse);
     })
     .then(function (pullRequestsJsonResponse) {
-        var firstMessage = 'Thank you for this pull request.\n\n' +
-            'If it has pending requests for code changes, please address all comments and post a new message when it is ready for review.\n\n' +
-            'If you are waiting for review, we\'re sorry for the delay. A Cesium maintainer will be by to comment or review soon.';
-        var alreadyBumpedMessage = 'This pull request hasn\'t seen activity in a while. Please close it if it is no longer relevant.\n\n\'' +
-            'Otherwise, please address all comments and post a new message when it is ready for review.';
+        var thankYou = 'Thank you for the pull request!\n\n';
+        var firstMessage = thankYou + 'I noticed that this pull request hasn\'t been updated in ' + maxDaysSinceUpdate + ' days. ' +
+            'If it is waiting on a review or changes from a previous review, could someone please take a look?\n' +
+            'If I don’t see a commit or comment in the next ' + maxDaysSinceUpdate + ' days, we may want to close this pull request to keep things tidy.\n\n' +
+            '__I am a bot who helps facilitate your development!__ Thanks again for contributing.';
+
+        var alreadyBumpedMessage = thankYou + 'Looks like this pull request hasn\'t been updated in ' + maxDaysSinceUpdate + ' days since I last commented.\n' +
+            'To keep things tidy should this be closed? Perhaps keep the branch and submit an issue?\n\n' +
+            '__I am a bot who helps facilitate your development!__ Have a nice day.\n';
+
         return Promise.each(pullRequestsJsonResponse.body, function(pullRequest) {
             var lastUpdate = new Date(pullRequest.updated_at);
             var commentsUrl = pullRequest.comments_url;
-            maxDaysSinceUpdate = defined(maxDaysSinceUpdate) ? maxDaysSinceUpdate : 30;
             if (stalePullRequest.dateIsOlderThan(lastUpdate, maxDaysSinceUpdate)) {
                 // Check if last post was cesium-concierge
                 return requestPromise.get({
