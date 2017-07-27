@@ -8,7 +8,7 @@ COPY . /var/app
 WORKDIR /var/app
 
 RUN useradd --no-log-init -m -g users concierge \
-  && chown -R concierge /var/app
+  && chown -R concierge /var/appfdsafdsa
 
 USER concierge:users
 RUN npm install
