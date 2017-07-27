@@ -9,7 +9,6 @@ var defined = Cesium.defined;
 
 var commentOnClosedIssue = require('./lib/commentOnClosedIssue');
 var commentOnOpenedPullRequest = require('./lib/commentOnOpenedPullRequest');
-var parseBoolean = require('./lib/parseBoolean');
 
 var dateLog = require('./lib/dateLog');
 var Settings = require('./lib/Settings');
@@ -39,10 +38,10 @@ Settings.loadRepositoriesSettings('./config.json')
                 'User-Agent': 'cesium-concierge',
                 Authorization: 'token ' + repositorySettings.gitHubToken
             };
-            var checkChangesMd = parseBoolean(repositorySettings.checkChangesMd);
+            var checkChangesMd = repositorySettings.checkChangesMd;
 
             if ((event === 'issues' || event === 'pull_request') && jsonResponse.action === 'closed' &&
-                parseBoolean(repositorySettings.remindForum)) {
+                repositorySettings.remindForum) {
                 promise = promise.then(function () {
                     dateLog('Calling commentOnClosedIssue');
                     return commentOnClosedIssue(jsonResponse, headers);
