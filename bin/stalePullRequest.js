@@ -27,12 +27,13 @@ if (require.main === module) {
 function stalePullRequest(repositoryNames) {
     return Promise.all(
         repositoryNames.map(function (repositoryName) {
-            if (!defined(Settings.repositories[repositoryName].bumpStalePullRequests)) {
+            var repositorySettings = Settings.repositories[repositoryName];
+            if (!defined(repositorySettings.bumpStalePullRequests)) {
                 dateLog('Repository ' + repositoryName + ' does not have `bumpStalePullRequests` turned on');
                 return Promise.resolve();
             }
-            return stalePullRequest.implementation(Settings.repositories[repositoryName].bumpStalePullRequestsUrl + '?sort=updated&direction=asc',
-                Settings.repositories[repositoryName].gitHubToken, Settings.repositories[repositoryName].maxDaysSinceUpdate);
+            return stalePullRequest.implementation(repositorySettings.bumpStalePullRequestsUrl + '?sort=updated&direction=asc',
+                repositorySettings.gitHubToken, repositorySettings.maxDaysSinceUpdate);
         })
     );
 }
