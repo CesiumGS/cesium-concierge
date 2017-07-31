@@ -93,6 +93,7 @@ stalePullRequest.implementation = function (pullRequestsUrl, gitHubToken, maxDay
                         }
                     });
                     var message = alreadyBumped ? alreadyBumpedMessage : firstMessage;
+                    dateLog('Posting comment to ' + commentsUrl);
                     return requestPromise.post({
                         uri: commentsUrl,
                         headers: headers,
