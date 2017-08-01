@@ -107,198 +107,184 @@ describe('Ignore unmatched path', function () {
                 done();
             });
     });
-    /* eslint-enable no-unused-vars */
 });
-//
-// it('Ignore unmatched request method', function (t) {
-//     t.plan(1);
-//
-//     /**
-//      * Create mock express app
-//      */
-//     var webhookHandler = gitHubWebHook({path: '/github/hook'});
-//     var app = express();
-//
-//     app.use(webhookHandler); // use our middleware
-//     app.use(function (req, res) {
-//         res.status(200).send({message: 'Here'});
-//     });
-//
-//     request(app)
-//         .get('/github/hook')
-//         .expect('Content-Type', /json/)
-//         .expect(200)
-//         .end(function (err, res) {
-//             t.deepEqual(res.body, {message: 'Here'}, 'ignore unmatched request method');
-//         });
-// });
-//
-// it('Invalid request meta', function (t) {
-//     t.plan(6);
-//     /**
-//      * Create mock express app
-//      */
-//     var webhookHandler = gitHubWebHook({path: '/github/hook', secret: 'secret'});
-//     var app = express();
-//     app.use(bodyParser.json());
-//     app.use(webhookHandler); // use our middleware
-//     app.use(function (req, res) {
-//         res.status(200).send({message: 'Here'});
-//         t.fail(true, 'should not reach here');
-//     });
-//
-//     request(app)
-//         .post('/github/hook')
-//         .set('Content-Type', 'application/json')
-//         .expect('Content-Type', /json/)
-//         .expect(400)
-//         .end(function (err, res) {
-//             t.deepEqual(res.body, {error: 'No id found in the request'}, 'request should have id');
-//         });
-//
-//     request(app)
-//         .post('/github/hook')
-//         .set('Content-Type', 'application/json')
-//         .set('X-GitHub-Delivery', 'id')
-//         .expect('Content-Type', /json/)
-//         .expect(400)
-//         .end(function (err, res) {
-//             t.deepEqual(res.body, {error: 'No event found in the request'}, 'request should have event');
-//         });
-//
-//     request(app)
-//         .post('/github/hook')
-//         .set('Content-Type', 'application/json')
-//         .set('X-GitHub-Delivery', 'id')
-//         .set('X-GitHub-Event', 'event')
-//         .expect('Content-Type', /json/)
-//         .expect(400)
-//         .end(function (err, res) {
-//             t.deepEqual(res.body, {error: 'No signature found in the request'}, 'request should have signature');
-//         });
-//
-//     webhookHandler.on('error', function (err, req, res) {
-//         t.ok(err, 'error caught');
-//     });
-// });
-//
-// it('Invalid signature', function (t) {
-//     t.plan(2);
-//     /**
-//      * Create mock express app
-//      */
-//     var webhookHandler = gitHubWebHook({path: '/github/hook', secret: 'secret'});
-//     var app = express();
-//     app.use(bodyParser.json());
-//     app.use(webhookHandler); // use our middleware
-//     app.use(function (req, res) {
-//         res.status(200).send({message: 'Here'});
-//         t.fail(true, 'should not reach here');
-//     });
-//
-//     var invalidSignature = 'signature';
-//
-//     request(app)
-//         .post('/github/hook')
-//         .set('Content-Type', 'application/json')
-//         .set('X-GitHub-Delivery', 'id')
-//         .set('X-GitHub-Event', 'event')
-//         .set('X-Hub-Signature', invalidSignature)
-//         .expect('Content-Type', /json/)
-//         .expect(400)
-//         .end(function (err, res) {
-//             t.deepEqual(res.body, {error: 'Failed to verify signature'}, 'signature does not match');
-//         });
-//
-//     webhookHandler.on('error', function (err, req, res) {
-//         t.ok(err, 'error caught');
-//     });
-// });
-//
-// it('No body-parser is used', function (t) {
-//     t.plan(2);
-//     /**
-//      * Create mock express app
-//      */
-//     var webhookHandler = gitHubWebHook({path: '/github/hook', secret: 'secret'});
-//     var app = express();
-//     app.use(webhookHandler); // use our middleware
-//     app.use(function (req, res) {
-//         res.status(200).send({message: 'Here'});
-//         t.fail(true, 'should not reach here');
-//     });
-//
-//     var invalidSignature = 'signature';
-//
-//     request(app)
-//         .post('/github/hook')
-//         .set('Content-Type', 'application/json')
-//         .set('X-GitHub-Delivery', 'id')
-//         .set('X-GitHub-Event', 'event')
-//         .set('X-Hub-Signature', invalidSignature)
-//         .expect('Content-Type', /json/)
-//         .expect(400)
-//         .end(function (err, res) {
-//             t.deepEqual(res.body, {error: 'Make sure body-parser is used'}, 'Verify use of body-parser');
-//         });
-//
-//     webhookHandler.on('error', function (err, req, res) {
-//         t.ok(err, 'error caught');
-//     });
-// });
-//
-// it('Accept a valid request with json data', function (t) {
-//     t.plan(8);
-//     /**
-//      * Create mock express app
-//      */
-//     var webhookHandler = gitHubWebHook({path: '/github/hook', secret: 'secret'});
-//     var app = express();
-//     app.use(bodyParser.json());
-//     app.use(webhookHandler); // use our middleware
-//     app.use(function (req, res) {
-//         res.status(200).send({message: 'Here'});
-//         t.fail(true, 'should not reach here');
-//     });
-//
-//     /**
-//      * Mock request data
-//      */
-//     var data = {
-//         ref: 'ref',
-//         foo: 'bar',
-//         repository: {
-//             name: 'repo'
-//         }
-//     };
-//     var json = JSON.stringify(data);
-//
-//     request(app)
-//         .post('/github/hook')
-//         .send(json)
-//         .set('Content-Type', 'application/json')
-//         .set('X-GitHub-Delivery', 'id')
-//         .set('X-GitHub-Event', 'push')
-//         .set('X-Hub-Signature', signData('secret', json))
-//         .expect('Content-Type', /json/)
-//         .expect(200)
-//         .end(function (err, res) {
-//             t.deepEqual(res.body, {success: true}, 'accept valid json request');
-//         });
-//
-//     webhookHandler.on('repo', function (event, data) {
-//         t.equal(event, 'push', 'receive a push event on event \'repo\'');
-//         t.deepEqual(data, data, 'receive correct data on event \'repo\'');
-//     });
-//
-//     webhookHandler.on('push', function (repo, data) {
-//         t.equal(repo, 'repo', 'receive a event for repo on event \'push\'');
-//         t.deepEqual(data, data, 'receive correct data on event \'push\'');
-//     });
-//
-//     webhookHandler.on('*', function (event, repo, data) {
-//         t.equal(event, 'push', 'receive a push event on event \'*\'');
-//         t.equal(repo, 'repo', 'receive a event for repo on event \'*\'');
-//         t.deepEqual(data, data, 'receive correct data on event \'*\'');
-//     });
-// });
+
+describe('Invalid request meta', function () {
+    /**
+     * Create mock express app
+     */
+    var webhookHandler = gitHubWebHook({path: '/github/hook', secret: 'secret'});
+    var app = express();
+    app.use(bodyParser.json());
+    app.use(webhookHandler); // use our middleware
+    app.use(function (req, res) {
+        res.status(200).send({message: 'Here'});
+        expect(true).toBe(false); // shouldn't reach here
+    });
+
+    it('request should have id', function (done) {
+        request(app)
+            .post('/github/hook')
+            .set('Content-Type', 'application/json')
+            .expect('Content-Type', /json/)
+            .expect(400)
+            .end(function (err, res) {
+                if (err) {
+                    done.fail(err);
+                }
+                expect(res.body).toEqual({error: 'No id found in the request'});
+                done();
+            });
+    });
+
+    it('request should have event', function (done) {
+        request(app)
+            .post('/github/hook')
+            .set('Content-Type', 'application/json')
+            .set('X-GitHub-Delivery', 'id')
+            .expect('Content-Type', /json/)
+            .expect(400)
+            .end(function (err, res) {
+                if (err) {
+                    done.fail(err);
+                }
+                expect(res.body).toEqual({error: 'No event found in the request'});
+                done();
+            });
+    });
+
+    it('request should have signature', function (done) {
+        request(app)
+            .post('/github/hook')
+            .set('Content-Type', 'application/json')
+            .set('X-GitHub-Delivery', 'id')
+            .set('X-GitHub-Event', 'event')
+            .expect('Content-Type', /json/)
+            .expect(400)
+            .end(function (err, res) {
+                if (err) {
+                    done.fail(err);
+                }
+                expect(res.body).toEqual({error: 'No signature found in the request'});
+                done();
+            });
+    });
+});
+
+describe('Invalid signature', function () {
+    /**
+     * Create mock express app
+     */
+    var webhookHandler = gitHubWebHook({path: '/github/hook', secret: 'secret'});
+    var app = express();
+    app.use(bodyParser.json());
+    app.use(webhookHandler); // use our middleware
+    app.use(function (req, res) {
+        res.status(200).send({message: 'Here'});
+        expect(true).toBe(false); // shouldn't reach here
+    });
+
+    var invalidSignature = 'signature';
+
+    it('signature does not match', function (done) {
+        request(app)
+            .post('/github/hook')
+            .set('Content-Type', 'application/json')
+            .set('X-GitHub-Delivery', 'id')
+            .set('X-GitHub-Event', 'event')
+            .set('X-Hub-Signature', invalidSignature)
+            .expect('Content-Type', /json/)
+            .expect(400)
+            .end(function (err, res) {
+                if (err) {
+                    done.fail(err);
+                }
+                expect(res.body).toEqual({error: 'Failed to verify signature'});
+                done();
+            });
+    });
+});
+
+describe('No body-parser is used', function () {
+    /**
+     * Create mock express app
+     */
+    var webhookHandler = gitHubWebHook({path: '/github/hook', secret: 'secret'});
+    var app = express();
+    app.use(webhookHandler); // use our middleware
+    app.use(function (req, res) {
+        res.status(200).send({message: 'Here'});
+        expect(true).toBe(false); // shouldn't reach here
+    });
+
+    var invalidSignature = 'signature';
+
+    it('Verify use of body-parser', function (done) {
+        request(app)
+            .post('/github/hook')
+            .set('Content-Type', 'application/json')
+            .set('X-GitHub-Delivery', 'id')
+            .set('X-GitHub-Event', 'event')
+            .set('X-Hub-Signature', invalidSignature)
+            .expect('Content-Type', /json/)
+            .expect(400)
+            .end(function (err, res) {
+                if (err) {
+                    done.fail(err);
+                }
+                expect(res.body).toEqual({error: 'Make sure body-parser is used'});
+                done();
+            });
+    });
+});
+
+describe('Accept a valid request with json data', function () {
+    /**
+     * Create mock express app
+     */
+    var webhookHandler = gitHubWebHook({path: '/github/hook', secret: 'secret'});
+    var app = express();
+    app.use(bodyParser.json());
+    app.use(webhookHandler); // use our middleware
+    app.use(function (req, res) {
+        res.status(200).send({message: 'Here'});
+        expect(true).toBe(false); // shouldn't reach here
+    });
+
+    /**
+     * Mock request data
+     */
+    var data = {
+        ref: 'ref',
+        foo: 'bar',
+        repository: {
+            name: 'repo'
+        }
+    };
+    var json = JSON.stringify(data);
+
+    it('accepts valid json request', function (done) {
+        request(app)
+            .post('/github/hook')
+            .send(json)
+            .set('Content-Type', 'application/json')
+            .set('X-GitHub-Delivery', 'id')
+            .set('X-GitHub-Event', 'push')
+            .set('X-Hub-Signature', signData('secret', json))
+            .expect('Content-Type', /json/)
+            .expect(200)
+            .end(function (err, res) {
+                if (err) {
+                    done.fail(err);
+                }
+                expect(res.body).toEqual({success: true});
+                done();
+            });
+    });
+
+    webhookHandler.on('repo', function (event, data) {
+        expect(event).toEqual('push');
+        expect(data).toEqual(data);
+    });
+});
+/* eslint-enable no-unused-vars */

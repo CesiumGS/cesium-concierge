@@ -26,6 +26,7 @@
   },
   "dependencies": {
     "bluebird": "^3.0.0",
+    "buffer-equal-constant-time": "^1.0.1",
     "body-parser": "^1.0.0",
     "cesium": "^1.35.1",
     "express": "^4.0.0",
