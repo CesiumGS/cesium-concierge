@@ -2,13 +2,13 @@
 var Cesium = require('cesium');
 var bodyParser = require('body-parser');
 var express = require('express');
-var gitHubWebHook = require('express-github-webhook');
 var Promise = require('bluebird');
 
 var defined = Cesium.defined;
 
 var commentOnClosedIssue = require('./lib/commentOnClosedIssue');
 var commentOnOpenedPullRequest = require('./lib/commentOnOpenedPullRequest');
+var gitHubWebHook = require('./lib/gitHubWebHook');
 
 var dateLog = require('./lib/dateLog');
 var Settings = require('./lib/Settings');
