@@ -8,7 +8,7 @@ var defined = Cesium.defined;
 
 var commentOnClosedIssue = require('./lib/commentOnClosedIssue');
 var commentOnOpenedPullRequest = require('./lib/commentOnOpenedPullRequest');
-var gitHubWebHook = require('./lib/gitHubWebHook');
+var checkWebHook = require('./lib/checkWebHook');
 
 var dateLog = require('./lib/dateLog');
 var Settings = require('./lib/Settings');
@@ -16,60 +16,70 @@ var Settings = require('./lib/Settings');
 Settings.loadRepositoriesSettings('./config.json')
 .then(function (repositoryNames) {
     dateLog('Loaded settings successfully');
-    var webHookHandler = gitHubWebHook({
-        path: Settings.listenPath,
-        secret: Settings.secret
-    });
 
     var app = express();
     app.use(bodyParser.json());
-    app.use(webHookHandler);
+    app.use(Settings.listenPath, function (req, res) {
+        var check = checkWebHook(req, res, Settings.secret);
+        if (defined(check)) {
+            dateLog('Throwing ' + check);
+            throw check;
+        }
 
-    repositoryNames.forEach(function (repositoryName) {
-        dateLog('Listening to ' + repositoryName);
-        webHookHandler.on(repositoryName, function (event, jsonResponse) {
-            dateLog('Received event to repository: ' + repositoryName);
-            dateLog('event: ' + event);
-            dateLog('jsonResponse: ' + jsonResponse);
+        var repositoryName = req.body.repository.full_name;
+        var event = req.headers['x-github-event'];
+        if (!(repositoryName in repositoryNames)) {
+            dateLog('Could not find ' + repositoryName + ' in ' + repositoryNames);
+            return;
+        }
 
-            var promise = Promise.resolve();
-            var repositorySettings = Settings.repositories[repositoryName];
-            var headers = {
-                'User-Agent': 'cesium-concierge',
-                Authorization: 'token ' + repositorySettings.gitHubToken
-            };
-            var checkChangesMd = repositorySettings.checkChangesMd;
+        dateLog('Received event to repository: ' + repositoryName);
+        dateLog('event: ' + event);
+        dateLog('jsonResponse: ' + res.body);
 
-            if ((event === 'issues' || event === 'pull_request') && jsonResponse.action === 'closed' &&
-                repositorySettings.remindForum) {
-                promise = promise.then(function () {
-                    dateLog('Calling commentOnClosedIssue');
-                    return commentOnClosedIssue(jsonResponse, headers);
-                });
-            } else if (event === 'pull_request' && jsonResponse.action === 'opened' &&
-                (defined(repositorySettings.thirdPartyFolders) || checkChangesMd)) {
-                promise = promise.then(function () {
-                    dateLog('Calling commentOnOpenedPullRequest');
-                    return commentOnOpenedPullRequest(jsonResponse, headers, repositorySettings.thirdPartyFolders,
-                        checkChangesMd);
-                });
-            }
+        var promise = Promise.resolve();
+        var repositorySettings = Settings.repositories[repositoryName];
+        var headers = {
+            'User-Agent': 'cesium-concierge',
+            Authorization: 'token ' + repositorySettings.gitHubToken
+        };
+        var checkChangesMd = repositorySettings.checkChangesMd;
 
-            promise.then(function (res) {
-                if (!defined(res)) {
-                    dateLog('GitHub request did not match any events the server is listening for');
-                    return;
-                }
-                dateLog('GitHub API returned with statusCode: ' + res.statusCode);
-                dateLog('and statusMessage: ' + res.statusMessage);
-            }).catch(function (e) {
-                dateLog('Got an error: ' + e);
+        if ((event === 'issues' || event === 'pull_request') && res.body.action === 'closed' &&
+            repositorySettings.remindForum) {
+            promise = promise.then(function () {
+                dateLog('Calling commentOnClosedIssue');
+                return commentOnClosedIssue(res.body, headers);
             });
+        } else if (event === 'pull_request' && res.body.action === 'opened' &&
+            (defined(repositorySettings.thirdPartyFolders) || checkChangesMd)) {
+            promise = promise.then(function () {
+                dateLog('Calling commentOnOpenedPullRequest');
+                return commentOnOpenedPullRequest(res.body, headers, repositorySettings.thirdPartyFolders,
+                    checkChangesMd);
+            });
+        }
+
+        promise.then(function (result) {
+            res.status(200).send({
+                success: true
+            });
+
+            if (!defined(result)) {
+                dateLog('GitHub request did not match any events the server is listening for');
+                return;
+            }
+            dateLog('GitHub API returned with statusCode: ' + result.statusCode);
+            dateLog('and statusMessage: ' + result.statusMessage);
+        }).catch(function (e) {
+            dateLog('Got an error: ' + e);
         });
     });
 
-    webHookHandler.on('error', function (err, req, res) { // eslint-disable-line no-unused-vars
-        dateLog('WebHookHandler got error: ' + err);
+    // Handle errors
+    app.use(function (err, req, res, next) { // eslint-disable-line no-unused-vars
+        dateLog(err);
+        res.status(500).send('Error:' + err);
     });
 
     // Start server on port specified by env.PORT

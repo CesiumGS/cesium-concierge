@@ -4,108 +4,30 @@ var request = require('supertest');
 var crypto = require('crypto');
 var express = require('express');
 var bodyParser = require('body-parser');
-var gitHubWebHook = require('../../lib/gitHubWebHook');
+var checkWebHook = require('../../lib/checkWebHook');
 
 function signData(secret, data) {
     return 'sha1=' + crypto.createHmac('sha1', secret).update(data).digest('hex');
 }
 
-describe('Invalid construction of gitHubWebHook handler', function () {
+describe('Invalid construction of checkWebHook handler', function () {
     it('exports a function', function () {
-        expect(typeof gitHubWebHook).toEqual('function');
+        expect(typeof checkWebHook).toEqual('function');
     });
     it('throws if no options', function () {
         expect(function () {
-            return gitHubWebHook();
+            return checkWebHook();
         }).toThrowError();
     });
     it('throws if option is not an object', function () {
         expect(function () {
-            return gitHubWebHook('');
+            return checkWebHook('');
         }).toThrow();
     });
     it('throws if no path option', function () {
         expect(function () {
-            return gitHubWebHook({});
+            return checkWebHook({});
         }).toThrow();
-    });
-});
-
-
-describe('gitHubWebHook handler is an EventEmitter', function () {
-    var options = {path: '/hook', secret: 'secret'};
-    var handler = gitHubWebHook(options);
-    it('has h.on()', function () {
-        console.log(handler);
-        expect(handler.on).toEqual(jasmine.any(Function));
-    });
-    it('has h.emit()', function () {
-        expect(typeof handler.emit).toBe('function');
-    });
-    it('has h.removeListener()', function () {
-        expect(typeof handler.removeListener).toBe('function');
-    });
-    it('got event', function (done) {
-        handler.on('foo', function (bar) {
-            expect(bar).toBe('bar');
-            done();
-        });
-        handler.emit('foo', 'bar');
-    });
-});
-
-describe('Ignore unmatched path', function () {
-    /* eslint-disable no-unused-vars */
-    /**
-     * Create mock express app
-     */
-    var webhookHandler = gitHubWebHook({path: '/github/hook'});
-    var app = express();
-
-    app.use(webhookHandler); // use our middleware
-    app.use(function (req, res) {
-        res.status(200).send({message: 'Here'});
-    });
-    it('ignore path unmatched request /', function (done) {
-        request(app)
-            .get('/')
-            .expect('Content-Type', /json/)
-            .expect(200)
-            .end(function (err, res) {
-                if (err) {
-                    done.fail(err);
-                }
-                expect(res.body).toEqual({message: 'Here'});
-                done();
-            });
-    });
-
-    it('ignore path unmatched request /github/hook', function (done) {
-        request(app)
-            .get('/github/hook/')
-            .expect('Content-Type', /json/)
-            .expect(200)
-            .end(function (err, res) {
-                if (err) {
-                    done.fail(err);
-                }
-                expect(res.body).toEqual({message: 'Here'});
-                done();
-            });
-    });
-
-    it('ignore path unmatched request /github', function (done) {
-        request(app)
-            .get('/github')
-            .expect('Content-Type', /json/)
-            .expect(200)
-            .end(function (err, res) {
-                if (err) {
-                    done.fail(err);
-                }
-                expect(res.body).toEqual({message: 'Here'});
-                done();
-            });
     });
 });
 
@@ -113,11 +35,10 @@ describe('Invalid request meta', function () {
     /**
      * Create mock express app
      */
-    var webhookHandler = gitHubWebHook({path: '/github/hook', secret: 'secret'});
     var app = express();
     app.use(bodyParser.json());
-    app.use(webhookHandler); // use our middleware
-    app.use(function (req, res) {
+    app.use('/github/hook', function (req, res) {
+        expect(checkWebHook(req, res, 'secret')).not.toBe(undefined);
         res.status(200).send({message: 'Here'});
         expect(true).toBe(false); // shouldn't reach here
     });
@@ -175,11 +96,10 @@ describe('Invalid signature', function () {
     /**
      * Create mock express app
      */
-    var webhookHandler = gitHubWebHook({path: '/github/hook', secret: 'secret'});
     var app = express();
     app.use(bodyParser.json());
-    app.use(webhookHandler); // use our middleware
-    app.use(function (req, res) {
+    app.use('/github/hook', function (req, res) {
+        expect(checkWebHook(req, res, 'secret')).not.toBe(undefined);
         res.status(200).send({message: 'Here'});
         expect(true).toBe(false); // shouldn't reach here
     });
@@ -209,10 +129,9 @@ describe('No body-parser is used', function () {
     /**
      * Create mock express app
      */
-    var webhookHandler = gitHubWebHook({path: '/github/hook', secret: 'secret'});
     var app = express();
-    app.use(webhookHandler); // use our middleware
-    app.use(function (req, res) {
+    app.use('/github/hook', function (req, res) {
+        expect(checkWebHook(req, res, 'secret')).not.toBe(undefined);
         res.status(200).send({message: 'Here'});
         expect(true).toBe(false); // shouldn't reach here
     });
@@ -242,13 +161,13 @@ describe('Accept a valid request with json data', function () {
     /**
      * Create mock express app
      */
-    var webhookHandler = gitHubWebHook({path: '/github/hook', secret: 'secret'});
     var app = express();
     app.use(bodyParser.json());
-    app.use(webhookHandler); // use our middleware
-    app.use(function (req, res) {
+    app.use('/github/hook', function (req, res) {
+        expect(checkWebHook(req, res, 'secret')).toBe(undefined);
+        expect(req.headers['x-github-event']).toEqual('push');
+        expect(req.body.repository.full_name).toEqual('my/repo');
         res.status(200).send({message: 'Here'});
-        expect(true).toBe(false); // shouldn't reach here
     });
 
     /**
@@ -258,7 +177,7 @@ describe('Accept a valid request with json data', function () {
         ref: 'ref',
         foo: 'bar',
         repository: {
-            name: 'repo'
+            full_name: 'my/repo'
         }
     };
     var json = JSON.stringify(data);
@@ -277,14 +196,9 @@ describe('Accept a valid request with json data', function () {
                 if (err) {
                     done.fail(err);
                 }
-                expect(res.body).toEqual({success: true});
+                expect(res.body).toEqual({message: 'Here'});
                 done();
             });
-    });
-
-    webhookHandler.on('repo', function (event, data) {
-        expect(event).toEqual('push');
-        expect(data).toEqual(data);
     });
 });
 /* eslint-enable no-unused-vars */
