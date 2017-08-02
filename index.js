@@ -6,9 +6,9 @@ var Promise = require('bluebird');
 
 var defined = Cesium.defined;
 
+var checkWebHook = require('./lib/checkWebHook');
 var commentOnClosedIssue = require('./lib/commentOnClosedIssue');
 var commentOnOpenedPullRequest = require('./lib/commentOnOpenedPullRequest');
-var checkWebHook = require('./lib/checkWebHook');
 
 var dateLog = require('./lib/dateLog');
 var Settings = require('./lib/Settings');
@@ -18,16 +18,13 @@ Settings.loadRepositoriesSettings('./config.json')
     dateLog('Loaded settings successfully');
 
     var app = express();
-    app.use(bodyParser.json());
-    app.use(Settings.listenPath, function (req, res) {
-        var check = checkWebHook(req, Settings.secret);
-        if (typeof(check) === Error) {
-            dateLog('Throwing ' + check);
-            throw check;
-        }
 
-        var repositoryName = check.full_name;
-        var event = check.event;
+    app.use(bodyParser.json());
+    app.use(checkWebHook);
+
+    app.use(Settings.listenPath, function (req, res) {
+        var repositoryName = req.body.repository.full_name;
+        var event = req.headers['x-github-event'];
         if (!(repositoryName in repositoryNames)) {
             dateLog('Could not find ' + repositoryName + ' in ' + repositoryNames);
             return;
@@ -37,14 +34,13 @@ Settings.loadRepositoriesSettings('./config.json')
         dateLog('event: ' + event);
         dateLog('jsonResponse: ' + res.body);
 
-        var promise = Promise.resolve();
         var repositorySettings = Settings.repositories[repositoryName];
         var headers = {
             'User-Agent': 'cesium-concierge',
             Authorization: 'token ' + repositorySettings.gitHubToken
         };
         var checkChangesMd = repositorySettings.checkChangesMd;
-
+        var promise = Promise.resolve();
         if ((event === 'issues' || event === 'pull_request') && res.body.action === 'closed' &&
             repositorySettings.remindForum) {
             promise = promise.then(function () {
@@ -73,13 +69,14 @@ Settings.loadRepositoriesSettings('./config.json')
             dateLog('and statusMessage: ' + result.statusMessage);
         }).catch(function (e) {
             dateLog('Got an error: ' + e);
+            res.status(400).send('Error: ' + e);
         });
     });
 
     // Handle errors
     app.use(function (err, req, res, next) { // eslint-disable-line no-unused-vars
         dateLog(err);
-        res.status(400).send('Error:' + err);
+        res.status(400).send('Error: ' + err);
     });
 
     // Start server on port specified by env.PORT
