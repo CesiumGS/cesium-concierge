@@ -20,14 +20,14 @@ Settings.loadRepositoriesSettings('./config.json')
     var app = express();
     app.use(bodyParser.json());
     app.use(Settings.listenPath, function (req, res) {
-        var check = checkWebHook(req, res, Settings.secret);
-        if (defined(check)) {
+        var check = checkWebHook(req, Settings.secret);
+        if (typeof(check) === Error) {
             dateLog('Throwing ' + check);
             throw check;
         }
 
-        var repositoryName = req.body.repository.full_name;
-        var event = req.headers['x-github-event'];
+        var repositoryName = check.full_name;
+        var event = check.event;
         if (!(repositoryName in repositoryNames)) {
             dateLog('Could not find ' + repositoryName + ' in ' + repositoryNames);
             return;
@@ -79,7 +79,7 @@ Settings.loadRepositoriesSettings('./config.json')
     // Handle errors
     app.use(function (err, req, res, next) { // eslint-disable-line no-unused-vars
         dateLog(err);
-        res.status(500).send('Error:' + err);
+        res.status(400).send('Error:' + err);
     });
 
     // Start server on port specified by env.PORT

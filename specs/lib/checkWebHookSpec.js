@@ -35,15 +35,17 @@ describe('Invalid request meta', function () {
     /**
      * Create mock express app
      */
-    var app = express();
-    app.use(bodyParser.json());
-    app.use('/github/hook', function (req, res) {
-        expect(checkWebHook(req, res, 'secret')).not.toBe(undefined);
-        res.status(200).send({message: 'Here'});
-        expect(true).toBe(false); // shouldn't reach here
+    var app;
+    beforeEach(function () {
+        app = express();
+        app.use(bodyParser.json());
     });
 
     it('request should have id', function (done) {
+        app.use('/github/hook', function (req, res) {
+            expect(checkWebHook(req, 'secret')).not.toBe(undefined);
+            res.status(200).send({message: 'Here'});
+        });
         request(app)
             .post('/github/hook')
             .set('Content-Type', 'application/json')
