@@ -32,15 +32,17 @@ The possible settings are:
 | Name | Type | Description | Required? |
 | --- | --- | --- | --- |
 | `secret` | `string` | Repository secret to verify __incoming__ WebHook requests from GitHub | ✓
-| `repositories:{name}` | `object` | Settings specific to the repository `{name}`. | ✓
-| `repositories:{name}:gitHubToken` | `string` | Token used to verify __outgoing__ requests to GitHub repository | ✓
-| `repositories:{name}:remindForum` | `boolean` | Enables the functionality to post a reminder message to a closed issue if it contains links to a Google Group forum. | X
-| `repositories:{name}:thirdPartyFolders` | `string` | Comma-seperated list of folders in which to look for changed files in pull request to remind user to update License. | X
-| `repositories:{name}:checkChangesMd` | `boolean` | If `true`, check if `CHANGES.md` has been updated in pull request. If not, post comment suggesting that it should be edited. | X
+| `repositories:{full_name}` | `object` | Settings specific to the repository `{full_name}`. | ✓
+| `repositories:{full_name}:gitHubToken` | `string` | Token used to verify __outgoing__ requests to GitHub repository | ✓
+| `repositories:{full_name}:remindForum` | `boolean` | Enables the functionality to post a reminder message to a closed issue if it contains links to a Google Group forum. | X
+| `repositories:{full_name}:thirdPartyFolders` | `string` | Comma-seperated list of folders in which to look for changed files in pull request to remind user to update License. | X
+| `repositories:{full_name}:checkChangesMd` | `boolean` | If `true`, check if `CHANGES.md` has been updated in pull request. If not, post comment suggesting that it should be edited. | X
 | `port` | `number: default 5000` | Port on which to listen to incoming requests | X
 | `listenPath` | `string: default"/"` | Path on which to listen for incoming requests | X
 
-`secret` and `repositories:{name}:gitHubToken` are the important settings; they verify that the communication between your server and
+> Note: `full_name` is the repository name in the form `{organization}/{repository}`. For example: `AnalyticalGraphicsInc/cesium`
+
+`secret` and `repositories:{full_name}:gitHubToken` are the important settings; they verify that the communication between your server and
 GitHub is safe.
 
 ### Setting `secret`
