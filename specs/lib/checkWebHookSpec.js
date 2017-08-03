@@ -135,7 +135,7 @@ describe('No body-parser is used', function () {
                 if (err) {
                     done.fail(err);
                 }
-                expect(res.body).toEqual({error: 'Make sure body-parser is used'});
+                expect(res.body).toEqual({error: 'Expected req.body to be defined'});
                 done();
             });
     });
