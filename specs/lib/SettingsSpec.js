@@ -71,7 +71,8 @@ describe('loadRepositoriesSettings', function () {
     it('removes `/` from `thirdPartyFolders` that begin with `/`', function (done) {
         Settings.loadRepositoriesSettings('./specs/data/config/slashWithThirdPartyFolders.json')
             .then(function () {
-                expect(Settings.repositories['one'].thirdPartyFolders).toEqual(['ThirdParty/']);
+                console.log(Settings.repositories);
+                expect(Settings.repositories['a/one'].thirdPartyFolders).toEqual(['ThirdParty/']);
                 done();
             })
             .catch(function (err) {
@@ -82,7 +83,7 @@ describe('loadRepositoriesSettings', function () {
     it('appends `/` to `thirdPartyFolders that don\'t end with `/`', function (done) {
         Settings.loadRepositoriesSettings('./specs/data/config/noEndSlashThirdPartyFolders.json')
             .then(function () {
-                expect(Settings.repositories['one'].thirdPartyFolders).toEqual(['ThirdParty/']);
+                expect(Settings.repositories['a/one'].thirdPartyFolders).toEqual(['ThirdParty/']);
                 done();
             })
             .catch(function (err) {
@@ -93,7 +94,7 @@ describe('loadRepositoriesSettings', function () {
     it('splits `thirdPartyFolders`', function (done) {
         Settings.loadRepositoriesSettings('./specs/data/config/multipleThirdPartyFolders.json')
             .then(function () {
-                expect(Settings.repositories['one'].thirdPartyFolders).toEqual(['ThirdParty/', 'AnotherFolder/']);
+                expect(Settings.repositories['a/one'].thirdPartyFolders).toEqual(['ThirdParty/', 'AnotherFolder/']);
                 done();
             })
             .catch(function (err) {
@@ -104,7 +105,7 @@ describe('loadRepositoriesSettings', function () {
     it('sets `bumpStalePullRequests` `url` correctly', function (done) {
         Settings.loadRepositoriesSettings('./specs/data/config/bumpStalePullRequests_noUrl.json')
             .then(function () {
-                expect(Settings.repositories['one'].bumpStalePullRequestsUrl).toEqual('https://api.github.com/repos/a/one/pulls');
+                expect(Settings.repositories['a/one'].bumpStalePullRequestsUrl).toEqual('https://api.github.com/repos/a/one/pulls');
                 done();
             })
             .catch(function (err) {
@@ -115,10 +116,10 @@ describe('loadRepositoriesSettings', function () {
     it('correctly loads values', function (done) {
         Settings.loadRepositoriesSettings('./specs/data/config/noError.json')
             .then(function () {
-                expect(Settings.repositories.one.gitHubToken).toEqual('bar');
-                expect(Settings.repositories.one.someVal).toBe(true);
-                expect(Settings.repositories.two.gitHubToken).toEqual('bar2');
-                expect(Settings.repositories.two.someVal).toEqual(false);
+                expect(Settings.repositories['a/one'].gitHubToken).toEqual('bar');
+                expect(Settings.repositories['a/one'].someVal).toBe(true);
+                expect(Settings.repositories['a/two'].gitHubToken).toEqual('bar2');
+                expect(Settings.repositories['a/two'].someVal).toEqual(false);
 
                 expect(Settings.port).toEqual(10);
                 expect(Settings.listenPath).toEqual('/foo');
