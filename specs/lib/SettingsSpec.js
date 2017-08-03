@@ -114,8 +114,7 @@ describe('loadRepositoriesSettings', function () {
 
     it('correctly loads values', function (done) {
         Settings.loadRepositoriesSettings('./specs/data/config/noError.json')
-            .then(function (repositoryNames) {
-                expect(repositoryNames).toEqual(['one', 'two']);
+            .then(function () {
                 expect(Settings.repositories.one.gitHubToken).toEqual('bar');
                 expect(Settings.repositories.one.someVal).toBe(true);
                 expect(Settings.repositories.two.gitHubToken).toEqual('bar2');

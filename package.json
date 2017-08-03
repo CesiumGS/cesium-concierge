@@ -29,7 +29,6 @@
     "body-parser": "^1.0.0",
     "cesium": "^1.35.1",
     "express": "^4.0.0",
-    "express-github-webhook": "^1.0.6",
     "nconf": "^0.8.4",
     "request": "^2.81.0",
     "request-promise": "^4.2.1"
@@ -46,6 +45,7 @@
     "jasmine-spec-reporter": "^4.1.1",
     "nyc": "^11.0.3",
     "open": "^0.0.5",
+    "supertest": "^3.0.0",
     "yargs": "^8.0.2"
   },
   "scripts": {
