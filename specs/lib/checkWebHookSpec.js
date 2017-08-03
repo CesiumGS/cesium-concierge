@@ -11,27 +11,6 @@ function signData(secret, data) {
     return 'sha1=' + crypto.createHmac('sha1', secret).update(data).digest('hex');
 }
 
-describe('Invalid construction of checkWebHook handler', function () {
-    it('exports a function', function () {
-        expect(typeof checkWebHook).toEqual('function');
-    });
-    it('throws if no options', function () {
-        expect(function () {
-            return checkWebHook();
-        }).toThrowError();
-    });
-    it('throws if option is not an object', function () {
-        expect(function () {
-            return checkWebHook('');
-        }).toThrow();
-    });
-    it('throws if no path option', function () {
-        expect(function () {
-            return checkWebHook({});
-        }).toThrow();
-    });
-});
-
 describe('Invalid request meta', function () {
     /**
      * Create mock express app
@@ -43,7 +22,7 @@ describe('Invalid request meta', function () {
         app.use(bodyParser.json());
         app.use(checkWebHook);
         app.use(function (err, req, res, next) { // eslint-disable-line no-unused-vars
-            res.send({ error: err.message });
+            res.send({error: err.message});
         });
     });
 
@@ -104,7 +83,7 @@ describe('Invalid signature', function () {
         app.use(bodyParser.json());
         app.use(checkWebHook);
         app.use(function (err, req, res, next) { // eslint-disable-line no-unused-vars
-            res.send({ error: err.message });
+            res.send({error: err.message});
         });
     });
 
@@ -138,7 +117,7 @@ describe('No body-parser is used', function () {
         app = express();
         app.use(checkWebHook);
         app.use(function (err, req, res, next) { // eslint-disable-line no-unused-vars
-            res.send({ error: err.message });
+            res.send({error: err.message});
         });
     });
 
