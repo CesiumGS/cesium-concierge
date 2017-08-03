@@ -15,12 +15,6 @@ Settings.loadRepositoriesSettings('./config.json')
         var app = express();
         app.post(Settings.listenPath, bodyParser.json(), checkWebHook, postToGitHub);
 
-        // Handle errors
-        app.use(function (err, req, res, next) { // eslint-disable-line no-unused-vars
-            dateLog(err);
-            res.status(400).send('Error: ' + err);
-        });
-
         // Start server on port specified by env.PORT
         app.listen(Settings.port, function () {
             dateLog('cesium-concierge listening on port ' + Settings.port);
