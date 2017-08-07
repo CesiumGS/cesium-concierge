@@ -36,7 +36,8 @@ The possible settings are:
 | `repositories:{full_name}:gitHubToken` | `string` | Token used to verify __outgoing__ requests to GitHub repository | ✓
 | `repositories:{full_name}:remindForum` | `boolean` | Enables the functionality to post a reminder message to a closed issue if it contains links to a Google Group forum. | X
 | `repositories:{full_name}:thirdPartyFolders` | `string` | Comma-seperated list of folders in which to look for changed files in pull request to remind user to update License. | X
-| `repositories:{full_name}:checkChangesMd` | `boolean` | If `true`, check if `CHANGES.md` has been updated in pull request. If not, post comment suggesting that it should be edited. | X
+| `repositories:{full_name}:checkChangesMd` | `boolean` | If `true`, check if `./CHANGES.md` has been updated in pull request. If not, post a comment suggesting that it should be edited. | X
+| `repositories:{full_name}:checkCLA` | `boolean` | If `true`, check if the user of a new pull request exists in `./CLA.json`. If not, post a comment instructing the user how to add themselves to the CLA. | X
 | `port` | `number: default 5000` | Port on which to listen to incoming requests | X
 | `listenPath` | `string: default"/"` | Path on which to listen for incoming requests | X
 
