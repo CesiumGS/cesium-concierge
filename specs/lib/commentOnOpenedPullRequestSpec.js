@@ -6,7 +6,13 @@ var requestPromise = require('request-promise');
 
 var commentOnOpenedPullRequest = require('../../lib/commentOnOpenedPullRequest');
 
-var cla = fsExtra.readJsonSync('./specs/data/config/CLA.json');
+var claJson = fsExtra.readJsonSync('./specs/data/config/CLA.json');
+var content = Buffer.from(JSON.stringify(claJson)).toString('base64');
+var cla = {
+    body: {
+        content: content
+    }
+};
 
 describe('commentOnOpenedPullRequest', function () {
     it('throws if `jsonResponse` is undefined', function () {
@@ -141,9 +147,18 @@ describe('commentOnOpenedPullRequest._implementation', function () {
             });
     });
 
+    function switchGet() {
+        spyOn(requestPromise, 'get').and.callFake(function (obj) {
+            if (/files/.test(obj.url)) {
+                return Promise.resolve(pullRequestFiles);
+            }
+            return Promise.resolve(cla);
+        });
+    }
     it('Does not post when user has signed CLA', function (done) {
-        okPullRequest();
-        commentOnOpenedPullRequest._implementation('', '', {}, [], false, cla, 'bbb')
+        switchGet();
+        commentOnOpenedPullRequest._implementation('.../files', '', {}, [], false,
+            'https://api.github.com/repos/AnalyticalGraphicsInc/cesium-concierge/contents/specs/data/responses/issue.json', 'bbb')
             .then(function () {
                 expect(requestPromise.post).not.toHaveBeenCalled();
                 done();
@@ -154,8 +169,9 @@ describe('commentOnOpenedPullRequest._implementation', function () {
     });
 
     it('Posts when user has not signed CLA', function (done) {
-        okPullRequest();
-        commentOnOpenedPullRequest._implementation('', '', {}, [], false, cla, 'test')
+        switchGet();
+        commentOnOpenedPullRequest._implementation('.../files', '', {}, [], false,
+            'https://api.github.com/repos/AnalyticalGraphicsInc/cesium-concierge/contents/specs/data/responses/issue.json', 'test')
             .then(function () {
                 var obj = requestPromise.post.calls.argsFor(0)[0];
                 console.log(requestPromise.post.calls.argsFor(0));
@@ -225,12 +241,12 @@ describe('commentOnOpenedPullRequest._didUpdateThirdParty', function () {
 });
 
 describe('commentOnOpenedPullRequest._needsToUpdateCLA', function () {
-    it('returns false when username is not in cla', function () {
-        expect(commentOnOpenedPullRequest._needsToUpdateCLA('test', cla)).toBe(true);
+    it('returns true when username is not in cla', function () {
+        expect(commentOnOpenedPullRequest._needsToUpdateCLA('test', claJson)).toBe(true);
     });
 
-    it('returns true when username is in cla', function () {
-        expect(commentOnOpenedPullRequest._needsToUpdateCLA('bbb', cla)).toBe(false);
+    it('returns false when username is in cla', function () {
+        expect(commentOnOpenedPullRequest._needsToUpdateCLA('bbb', claJson)).toBe(false);
     });
 
     it('returns false when cla is null', function () {
