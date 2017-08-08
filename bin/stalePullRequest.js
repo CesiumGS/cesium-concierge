@@ -21,10 +21,10 @@ if (require.main === module) {
 }
 /** Bump stale pull requests for each repository
  *
- * @param {String[]} repositoryNames Names of repositories
  * @returns {Promise<Array<http.IncomingMessage | undefined> | undefined>} Promise to an array of incoming messages
  */
-function stalePullRequest(repositoryNames) {
+function stalePullRequest() {
+    var repositoryNames = Object.keys(Settings.repositories);
     return Promise.all(
         repositoryNames.map(function (repositoryName) {
             var repositorySettings = Settings.repositories[repositoryName];
