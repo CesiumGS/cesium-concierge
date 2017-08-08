@@ -61,13 +61,14 @@ stalePullRequest.implementation = function (pullRequestsUrl, gitHubToken, maxDay
         return checkStatus(pullRequestsJsonResponse);
     })
     .then(function (pullRequestsJsonResponse) {
-        var thankYou = 'Thank you for the pull request!\n\n';
-        var firstMessage = thankYou + 'I noticed that this pull request hasn\'t been updated in ' + maxDaysSinceUpdate + ' days. ' +
-            'If it is waiting on a review or changes from a previous review, could someone please take a look?\n' +
+        var firstMessage = 'Thank you for the pull request!\n\n' +
+            'I noticed that this pull request hasn\'t been updated in ' + maxDaysSinceUpdate + ' days. ' +
+            'If it is waiting on a review or changes from a previous review, could someone please take a look?\n\n' +
             'If I don’t see a commit or comment in the next ' + maxDaysSinceUpdate + ' days, we may want to close this pull request to keep things tidy.\n\n' +
             '__I am a bot who helps facilitate your development!__ Thanks again for contributing.';
 
-        var alreadyBumpedMessage = thankYou + 'Looks like this pull request hasn\'t been updated in ' + maxDaysSinceUpdate + ' days since I last commented.\n' +
+        var alreadyBumpedMessage = 'Thank you again for the pull request.\n\n' +
+            'Looks like this pull request hasn\'t been updated in ' + maxDaysSinceUpdate + ' days since I last commented.\n\n' +
             'To keep things tidy should this be closed? Perhaps keep the branch and submit an issue?\n\n' +
             '__I am a bot who helps facilitate your development!__ Have a nice day.\n';
 
