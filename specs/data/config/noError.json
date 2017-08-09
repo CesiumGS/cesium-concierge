@@ -3,11 +3,11 @@
   "port": 10,
   "listenPath": "/foo",
   "repositories": {
-    "one": {
+    "a/one": {
       "gitHubToken": "bar",
       "someVal": true
     },
-    "two": {
+    "a/two": {
       "gitHubToken": "bar2",
       "someVal": false
     }

@@ -60,8 +60,11 @@ gulp.task('create-zip', function () {
     var zipName = 'cesium-concierge-' + hash + '.zip';
 
     var serverFiles = gulp.src([
+            'bin/**',
             'lib/**',
             'Dockerfile',
+            'supervisord.conf',
+            'crontab',
             'index.js'],
         {
             base: '.'
