@@ -54,6 +54,21 @@ The secret verifies that all incoming requests to your server are from GitHub an
 Next, get a [Personal Access Token](https://help.github.com/articles/creating-a-personal-access-token-for-the-command-line/), which verifies with GitHub that all requests to its API come from an account
 with privileges. Set it locally by using any of the three ways listed above.
 
+### CLA Format
+The `repositories:{full_name}:claUrl` should point to a GitHub URL of a JSON file with the following format:
+```json
+[
+  {
+    "gitHub": "jdoe"
+  },
+  {
+    "gitHub": "baxterthehacker"
+  },
+  // ...
+]
+```
+The `gitHub` value is the only required field, but this format provides for storing more information alongside the GitHub name.
+
 ---
 
 <p align="center">
