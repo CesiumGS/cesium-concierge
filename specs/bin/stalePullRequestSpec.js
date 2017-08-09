@@ -56,6 +56,7 @@ describe('stalePullRequest', function () {
 
 describe('stalePullRequest.implementation', function () {
     var comments = fsExtra.readJsonSync('./specs/data/responses/pullRequestComments.json');
+    var noConciergeComments = fsExtra.readJsonSync('./specs/data/responses/pullRequestCommentsNoConcierge.json');
     var pullRequests404 = fsExtra.readJsonSync('./specs/data/responses/pullRequests_404.json');
     beforeEach(function () {
         spyOn(Date, 'now').and.returnValue(new Date(1500921244516));
@@ -123,7 +124,25 @@ describe('stalePullRequest.implementation', function () {
         spyOn(requestPromise, 'post');
         stalePullRequest.implementation(['one']).then(function () {
             var obj = requestPromise.post.calls.argsFor(0)[0];
-            expect(/i last commented/i.test(obj.body.body)).toBe(true);
+            expect(obj.body.body).toMatch(/last commented/i);
+            done();
+        })
+        .catch(function (err) {
+            done.fail(err);
+        });
+    });
+
+    it('recognizes it has not commented on a post before', function (done) {
+        spyOn(requestPromise, 'get').and.callFake(function (obj) {
+            if (/\/comments/.test(obj.uri)) {
+                return Promise.resolve(noConciergeComments);
+            }
+            return Promise.resolve(pullRequests);
+        });
+        spyOn(requestPromise, 'post');
+        stalePullRequest.implementation(['one']).then(function () {
+            var obj = requestPromise.post.calls.argsFor(0)[0];
+            expect(obj.body.body).toMatch(/could someone please/i);
             done();
         })
         .catch(function (err) {
