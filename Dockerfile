@@ -4,13 +4,15 @@ ENV NODE_ENV production
 
 EXPOSE 5000
 
+RUN apt-get update \
+  && apt-get -y install cron supervisor --no-install-recommends \
+  && rm -rf /var/lib/apt/lists/*
+
 COPY . /var/app
 WORKDIR /var/app
 
-RUN useradd --no-log-init -m -g users concierge \
-  && chown -R concierge /var/app
-
-USER concierge:users
 RUN npm install
 
-ENTRYPOINT ["npm", "start"]
+RUN crontab crontab
+
+ENTRYPOINT ["/usr/bin/supervisord", "-c", "/var/app/supervisord.conf"]

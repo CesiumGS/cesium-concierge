@@ -49,6 +49,7 @@
     "yargs": "^8.0.2"
   },
   "scripts": {
+    "bumper": "node ./bin/stalePullRequest.js",
     "create-zip": "gulp create-zip",
     "eslint": "eslint . --cache",
     "start": "node index.js",

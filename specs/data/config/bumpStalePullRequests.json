@@ -6,7 +6,9 @@
     "a/one": {
       "gitHubToken": "bar",
       "someVal": true,
-      "thirdPartyFolders": "ThirdParty"
+      "bumpStalePullRequests": {
+        "url": "www.example.com"
+      }
     },
     "a/two": {
       "gitHubToken": "bar2",
