@@ -62,7 +62,7 @@ stalePullRequest.implementation = function (pullRequestsUrl, gitHubToken, maxDay
     })
     .then(function (pullRequestsJsonResponse) {
         var firstMessage = 'Thank you for the pull request!\n\n' +
-            'I noticed that this pull request hasn\'t been updated in ' + maxDaysSinceUpdate + ' days. ' +
+            'I noticed that this pull request hasn\'t been commented on in ' + maxDaysSinceUpdate + ' days. ' +
             'If it is waiting on a review or changes from a previous review, could someone please take a look?\n\n' +
             'If I don’t see a commit or comment in the next ' + maxDaysSinceUpdate + ' days, we may want to close this pull request to keep things tidy.\n\n' +
             '__I am a bot who helps facilitate your development!__ Thanks again for contributing.';
@@ -72,21 +72,19 @@ stalePullRequest.implementation = function (pullRequestsUrl, gitHubToken, maxDay
             'To keep things tidy should this be closed? Perhaps keep the branch and submit an issue?\n\n' +
             '__I am a bot who helps facilitate your development!__ Have a nice day.\n';
 
-        return Promise.each(pullRequestsJsonResponse.body, function(pullRequest) {
-            var lastUpdate = new Date(pullRequest.updated_at);
+        return Promise.each(pullRequestsJsonResponse.body, function (pullRequest) {
             var commentsUrl = pullRequest.comments_url;
-            if (stalePullRequest.dateIsOlderThan(lastUpdate, maxDaysSinceUpdate)) {
-                // Check if last post was cesium-concierge
-                return requestPromise.get({
-                    uri: commentsUrl,
-                    headers: headers,
-                    json: true,
-                    resolveWithFullResponse: true
-                })
-                .then(function (commentsJsonResponse) {
-                    return checkStatus(commentsJsonResponse);
-                })
-                .then(function (commentsJsonResponse) {
+            // Check if last post was cesium-concierge
+            return requestPromise.get({
+                uri: commentsUrl,
+                headers: headers,
+                json: true,
+                resolveWithFullResponse: true
+            })
+            .then(checkStatus)
+            .then(function (commentsJsonResponse) {
+                var latestCommentCreatedAt = commentsJsonResponse.body[commentsJsonResponse.body.length - 1].created_at;
+                if (stalePullRequest.dateIsOlderThan(new Date(latestCommentCreatedAt), maxDaysSinceUpdate)) {
                     var alreadyBumped = false;
                     commentsJsonResponse.body.forEach(function (comment) {
                         if (comment.user.login === 'cesium-concierge') {
@@ -104,9 +102,9 @@ stalePullRequest.implementation = function (pullRequestsUrl, gitHubToken, maxDay
                         json: true,
                         resolveWithFullResponse: true
                     });
-                });
-            }
-            dateLog('Pull request at ' + pullRequest.url + ' was not older than ' + maxDaysSinceUpdate + ' days.');
+                }
+                dateLog('Pull request at ' + pullRequest.url + ' did not have comment older than ' + maxDaysSinceUpdate + ' days.');
+            });
         });
     });
 };
