@@ -27,14 +27,14 @@ describe('commentOnClosedIssue', function () {
         spyOn(commentOnClosedIssue, '_implementation');
         commentOnClosedIssue(fsExtra.readJsonSync('./specs/data/events/issue.json'), {test: true});
         expect(commentOnClosedIssue._implementation).toHaveBeenCalledWith('https://api.github.com/repos/baxterthehacker/public-repo/issues/2',
-            'https://api.github.com/repos/baxterthehacker/public-repo/issues/2/comments', {test: true});
+            'https://api.github.com/repos/baxterthehacker/public-repo/issues/2/comments', {test: true}, undefined);
     });
 
     it('passes correct pull request url and commentsUrl to _implementation', function () {
         spyOn(commentOnClosedIssue, '_implementation');
         commentOnClosedIssue(fsExtra.readJsonSync('./specs/data/events/pullRequest.json'), {test: true});
         expect(commentOnClosedIssue._implementation).toHaveBeenCalledWith('https://api.github.com/repos/baxterthehacker/public-repo/pulls/1',
-            'https://api.github.com/repos/baxterthehacker/public-repo/issues/1/comments', {test: true});
+            'https://api.github.com/repos/baxterthehacker/public-repo/issues/1/comments', {test: true}, undefined);
     });
 });
 
@@ -73,7 +73,7 @@ describe('commentOnClosedIssue._implementation', function () {
 
     it('calls requestPromise.post with correct values', function (done) {
         spyOn(getUniqueMatch, '_implementation').and.returnValue(['https://example.com']);
-        commentOnClosedIssue(issueEventJson, {test: true})
+        commentOnClosedIssue(issueEventJson, {test: true}, {})
             .then(function () {
                 var obj = requestPromise.post.calls.argsFor(0)[0];
                 expect(obj.uri).toEqual('https://api.github.com/repos/baxterthehacker/public-repo/issues/2/comments');
@@ -94,7 +94,7 @@ describe('commentOnClosedIssue._implementation detects bad statusCodes', functio
     it('returns rejected Promise if statusCode for issue !== 200', function (done) {
         spyOn(requestPromise, 'post');
         spyOn(commentOnClosedIssue, 'get').and.returnValue(Promise.resolve(issueJson404));
-        commentOnClosedIssue(issueEventJson, {test: true})
+        commentOnClosedIssue(issueEventJson, {test: true}, {})
         .then(function () {
             done.fail();
         })
@@ -111,7 +111,7 @@ describe('commentOnClosedIssue._implementation detects bad statusCodes', functio
             }
             return Promise.resolve(issueJson);
         });
-        commentOnClosedIssue(issueEventJson, {test: true})
+        commentOnClosedIssue(issueEventJson, {test: true}, {})
             .then(function () {
                 done.fail();
             })

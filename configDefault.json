@@ -1,0 +1,13 @@
+{
+  "repositories": {
+    "AnalyticalGraphicsInc/cesium": {
+      "project": "Cesium",
+      "changesMarkdownLink": "[CHANGES.md](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/CHANGES.md)",
+      "signature": "__I am a bot who helps you make Cesium awesome!__ Thanks again.",
+      "licenseMarkdownLink": "[LICENSE.md](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/LICENSE.md)",
+      "guidelinesMarkdownLink": "[Pull Request Guidelines](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/CONTRIBUTING.md#pull-request-guidelines)",
+      "projectGitHub": "https://github.com/AnalyticalGraphicsInc/cesium",
+      "signature2": "__I am a bot who helps facilitate your Cesium development!__ Thanks again for contributing."
+    }
+  }
+}

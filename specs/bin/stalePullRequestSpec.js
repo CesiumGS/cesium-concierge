@@ -44,8 +44,12 @@ describe('stalePullRequest', function () {
     it('calls implementation with correct values', function (done) {
         spyOn(stalePullRequest, 'implementation');
         stalePullRequest(['one', 'two']).then(function () {
-            expect(stalePullRequest.implementation.calls.argsFor(0)).toEqual(['one.example.com?sort=updated&direction=asc', 'oneGHT', undefined]);
-            expect(stalePullRequest.implementation.calls.argsFor(1)).toEqual(['two.example.com?sort=updated&direction=asc', 'twoGHT', undefined]);
+            var obj = stalePullRequest.implementation.calls.argsFor(0);
+            expect(obj[0]).toEqual('one.example.com?sort=updated&direction=asc');
+            expect(obj[1]).toEqual('oneGHT');
+            obj = stalePullRequest.implementation.calls.argsFor(1);
+            expect(obj[0]).toEqual('two.example.com?sort=updated&direction=asc');
+            expect(obj[1]).toEqual('twoGHT');
             done();
         })
         .catch(function (err) {
@@ -55,6 +59,26 @@ describe('stalePullRequest', function () {
 });
 
 describe('stalePullRequest.implementation', function () {
+    beforeEach(function (){
+        spyOn(nconf, 'get').and.callFake(function (key) {
+            if (key === 'repositories') {
+                return {
+                    one: {
+                        gitHubToken: 'oneGHT',
+                        bumpStalePullRequests: true,
+                        bumpStalePullRequestsUrl: 'one.example.com'
+                    },
+                    two: {
+                        gitHubToken: 'twoGHT',
+                        bumpStalePullRequests: true,
+                        bumpStalePullRequestsUrl: 'two.example.com'
+                    },
+                    three: {}
+                };
+            }
+        });
+    });
+
     var comments = fsExtra.readJsonSync('./specs/data/responses/pullRequestComments.json');
     var noConciergeComments = fsExtra.readJsonSync('./specs/data/responses/pullRequestCommentsNoConcierge.json');
     var pullRequests404 = fsExtra.readJsonSync('./specs/data/responses/pullRequests_404.json');
@@ -71,7 +95,7 @@ describe('stalePullRequest.implementation', function () {
 
     it('returns rejected Promise if statusCode is bad', function (done) {
         spyOn(requestPromise, 'get').and.returnValue(Promise.resolve(pullRequests404));
-        stalePullRequest.implementation(['one']).then(function () {
+        stalePullRequest.implementation().then(function () {
             done.fail();
         })
         .catch(function (err) {
@@ -85,7 +109,7 @@ describe('stalePullRequest.implementation', function () {
     it('dateIsOlderThan gets called once for each pull request', function (done) {
         spyOn(requestPromise, 'get').and.callFake(getSwitch);
         spyOn(stalePullRequest, 'dateIsOlderThan');
-        stalePullRequest.implementation(['one']).then(function () {
+        stalePullRequest.implementation().then(function () {
             expect(stalePullRequest.dateIsOlderThan).toHaveBeenCalledTimes(30);
             done();
         })
@@ -97,7 +121,7 @@ describe('stalePullRequest.implementation', function () {
     it('requestPromise.post gets called once for each pull request older than 30 days', function (done) {
         spyOn(requestPromise, 'get').and.callFake(getSwitch);
         spyOn(requestPromise, 'post');
-        stalePullRequest.implementation(['one']).then(function () {
+        stalePullRequest.implementation().then(function () {
             expect(requestPromise.post).toHaveBeenCalledTimes(15);
             done();
         })
@@ -109,7 +133,7 @@ describe('stalePullRequest.implementation', function () {
     it('requestPromise.post is called with the correct URLs', function (done) {
         spyOn(requestPromise, 'get').and.callFake(getSwitch);
         spyOn(requestPromise, 'post');
-        stalePullRequest.implementation(['one']).then(function () {
+        stalePullRequest.implementation().then(function () {
             var obj = requestPromise.post.calls.argsFor(0)[0];
             expect(obj.uri).toEqual('https://api.github.com/repos/AnalyticalGraphicsInc/cesium/issues/4635/comments');
             done();
@@ -122,7 +146,7 @@ describe('stalePullRequest.implementation', function () {
     it('recognizes it has commented on a post before', function (done) {
         spyOn(requestPromise, 'get').and.callFake(getSwitch);
         spyOn(requestPromise, 'post');
-        stalePullRequest.implementation(['one']).then(function () {
+        stalePullRequest.implementation().then(function () {
             var obj = requestPromise.post.calls.argsFor(0)[0];
             expect(obj.body.body).toMatch(/last commented/i);
             done();
@@ -140,7 +164,7 @@ describe('stalePullRequest.implementation', function () {
             return Promise.resolve(pullRequests);
         });
         spyOn(requestPromise, 'post');
-        stalePullRequest.implementation(['one']).then(function () {
+        stalePullRequest.implementation().then(function () {
             var obj = requestPromise.post.calls.argsFor(0)[0];
             expect(obj.body.body).toMatch(/could someone please/i);
             done();

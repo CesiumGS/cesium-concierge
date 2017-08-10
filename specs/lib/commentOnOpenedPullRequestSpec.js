@@ -31,11 +31,11 @@ describe('commentOnOpenedPullRequest', function () {
         var pullRequestJson = fsExtra.readJsonSync('./specs/data/events/pullRequest.json');
         commentOnOpenedPullRequest(pullRequestJson, {}, [], false);
         expect(commentOnOpenedPullRequest._implementation).toHaveBeenCalledWith('https://api.github.com/repos/baxterthehacker/public-repo/pulls/1/files',
-            'https://api.github.com/repos/baxterthehacker/public-repo/issues/1/comments', {}, [], false);
+            'https://api.github.com/repos/baxterthehacker/public-repo/issues/1/comments', {}, [], false, undefined);
 
         commentOnOpenedPullRequest(pullRequestJson, {}, ['c'], true);
         expect(commentOnOpenedPullRequest._implementation).toHaveBeenCalledWith('https://api.github.com/repos/baxterthehacker/public-repo/pulls/1/files',
-            'https://api.github.com/repos/baxterthehacker/public-repo/issues/1/comments', {}, ['c'], true);
+            'https://api.github.com/repos/baxterthehacker/public-repo/issues/1/comments', {}, ['c'], true, undefined);
     });
 });
 
@@ -69,7 +69,7 @@ describe('commentOnOpenedPullRequest._implementation', function () {
         okPullRequest();
         spyOn(commentOnOpenedPullRequest, '_didUpdateChanges');
         spyOn(commentOnOpenedPullRequest, '_didUpdateThirdParty');
-        commentOnOpenedPullRequest._implementation()
+        commentOnOpenedPullRequest._implementation('', '', {}, ['specs/data/'], false, {})
             .then(function () {
                 expect(commentOnOpenedPullRequest._didUpdateChanges).toHaveBeenCalledWith(['.gitignore',
                     'index.js', 'lib/Settings.js', 'lib/commentOnClosedIssue.js', 'lib/getUniqueMatch.js',
@@ -80,7 +80,7 @@ describe('commentOnOpenedPullRequest._implementation', function () {
                     'index.js', 'lib/Settings.js', 'lib/commentOnClosedIssue.js', 'lib/getUniqueMatch.js',
                     'specs/data/config_noError.json', 'specs/data/config_noGitHubToken.json',
                     'specs/data/config_noRepositories.json', 'specs/data/config_noRepositoryNames.json',
-                    'specs/data/config_noSecret.json', 'specs/lib/SettingsSpec.js'], undefined);
+                    'specs/data/config_noSecret.json', 'specs/lib/SettingsSpec.js'], ['specs/data/']);
                 done();
             })
             .catch(function (err) {
@@ -90,7 +90,7 @@ describe('commentOnOpenedPullRequest._implementation', function () {
 
     it('Posts Third Party and CHANGES signature', function (done) {
         okPullRequest();
-        commentOnOpenedPullRequest._implementation('', '', {}, ['specs/data/'], true)
+        commentOnOpenedPullRequest._implementation('', '', {}, ['specs/data/'], true, {})
             .then(function () {
                 expect(/CHANGES/.test(requestPromise.post.calls.argsFor(0)[0].body.body)).toBe(true);
                 expect(/license/i.test(requestPromise.post.calls.argsFor(1)[0].body.body)).toBe(true);
@@ -103,7 +103,7 @@ describe('commentOnOpenedPullRequest._implementation', function () {
 
     it('Posts well-formatted English for two Third Party folders', function (done) {
         okPullRequest();
-        commentOnOpenedPullRequest._implementation('', '', {}, ['specs/data/', 'a/b/'], true)
+        commentOnOpenedPullRequest._implementation('', '', {}, ['specs/data/', 'a/b/'], true, {})
             .then(function () {
                 var obj = requestPromise.post.calls.argsFor(1)[0];
                 console.log(obj);
@@ -117,7 +117,7 @@ describe('commentOnOpenedPullRequest._implementation', function () {
 
     it('Posts well-formatted English for three Third Party folders', function (done) {
         okPullRequest();
-        commentOnOpenedPullRequest._implementation('', '', {}, ['specs/data/', 'a/b/', 'some/folder/'], true)
+        commentOnOpenedPullRequest._implementation('', '', {}, ['specs/data/', 'a/b/', 'some/folder/'], true, {})
             .then(function () {
                 var obj = requestPromise.post.calls.argsFor(1)[0];
                 console.log(obj);
@@ -131,7 +131,7 @@ describe('commentOnOpenedPullRequest._implementation', function () {
 
     it('Does not post CHANGES or Third Party signature', function (done) {
         spyOn(requestPromise, 'get').and.returnValue(Promise.resolve(pullRequestFilesWithChanges));
-        commentOnOpenedPullRequest._implementation('', '', {}, ['/some/folder'], true)
+        commentOnOpenedPullRequest._implementation('', '', {}, ['/some/folder'], true, {})
             .then(function () {
                 expect(requestPromise.post).toHaveBeenCalledTimes(0);
                 done();

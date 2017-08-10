@@ -7,8 +7,8 @@ var requestPromise = require('request-promise');
 
 var defined = Cesium.defined;
 
-var dateLog = require('../lib/dateLog');
 var checkStatus = require('../lib/checkStatus');
+var dateLog = require('../lib/dateLog');
 var Settings = require('../lib/Settings');
 
 module.exports = stalePullRequest;
@@ -22,8 +22,6 @@ var alreadyBumpedMessage = 'Thank you again for the pull request.\n\n' +
     'Looks like this pull request hasn\'t been updated in {{ maxDaysSinceUpdate }} days since I last commented.\n\n' +
     'To keep things tidy should this be closed? Perhaps keep the branch and submit an issue?\n\n{{ signature }}';
 
-var signature = '__I am a bot who helps facilitate your Cesium development!__ Thanks again for contributing.';
-
 if (require.main === module) {
     Settings.loadRepositoriesSettings('./config.json')
         .then(stalePullRequest)
@@ -31,6 +29,7 @@ if (require.main === module) {
             dateLog('Received error: ' + err);
         });
 }
+
 /** Bump stale pull requests for each repository
  *
  * @returns {Promise<Array<http.IncomingMessage | undefined> | undefined>} Promise to an array of incoming messages
@@ -44,8 +43,12 @@ function stalePullRequest() {
                 dateLog('Repository ' + repositoryName + ' does not have `bumpStalePullRequests` turned on');
                 return Promise.resolve();
             }
+            var templateObject = {
+                signature: repositorySettings.signature2,
+                maxDaysSinceUpdate: repositorySettings.maxDaysSinceUpdate
+            };
             return stalePullRequest.implementation(repositorySettings.bumpStalePullRequestsUrl + '?sort=updated&direction=asc',
-                repositorySettings.gitHubToken, repositorySettings.maxDaysSinceUpdate);
+                repositorySettings.gitHubToken, repositorySettings.maxDaysSinceUpdate, templateObject);
         })
     );
 }
@@ -55,9 +58,10 @@ function stalePullRequest() {
  * @param {String} pullRequestsUrl Base url to list pull requests https://developer.github.com/v3/pulls/#list-pull-requests
  * @param {String} gitHubToken Token to verify with github
  * @param {Number} maxDaysSinceUpdate Maximum days since a PR has been updated
+ * @param {Object} templateObject Object to populate template strings
  * @return {Promise<Array<http.IncomingMessage | undefined>>} Promise to an array of incoming messages
  */
-stalePullRequest.implementation = function (pullRequestsUrl, gitHubToken, maxDaysSinceUpdate) {
+stalePullRequest.implementation = function (pullRequestsUrl, gitHubToken, maxDaysSinceUpdate, templateObject) {
     var headers = {
         'User-Agent': 'cesium-concierge',
         Authorization: 'token ' + gitHubToken
@@ -69,9 +73,7 @@ stalePullRequest.implementation = function (pullRequestsUrl, gitHubToken, maxDay
         json: true,
         resolveWithFullResponse: true
     })
-    .then(function (pullRequestsJsonResponse) {
-        return checkStatus(pullRequestsJsonResponse);
-    })
+    .then(checkStatus)
     .then(function (pullRequestsJsonResponse) {
         return Promise.each(pullRequestsJsonResponse.body, function(pullRequest) {
             var lastUpdate = new Date(pullRequest.updated_at);
@@ -84,9 +86,7 @@ stalePullRequest.implementation = function (pullRequestsUrl, gitHubToken, maxDay
                     json: true,
                     resolveWithFullResponse: true
                 })
-                .then(function (commentsJsonResponse) {
-                    return checkStatus(commentsJsonResponse);
-                })
+                .then(checkStatus)
                 .then(function (commentsJsonResponse) {
                     var alreadyBumped = false;
                     commentsJsonResponse.body.forEach(function (comment) {
@@ -96,10 +96,7 @@ stalePullRequest.implementation = function (pullRequestsUrl, gitHubToken, maxDay
                     });
                     var message = alreadyBumped ? alreadyBumpedMessage : firstMessage;
                     var template = handlebars.compile(message);
-                    var finalMessage = template({
-                        signature: signature,
-                        maxDaysSinceUpdate: maxDaysSinceUpdate
-                    });
+                    var finalMessage = template(templateObject);
 
                     dateLog('Posting comment to ' + commentsUrl);
                     return requestPromise.post({
