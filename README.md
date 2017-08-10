@@ -1,9 +1,11 @@
 # cesium-concierge
 
-__Hello! I'm Cesium Conierge, a GitHub bot for [Cesium](https://github.com/AnalyticalGraphicsInc/cesium). I automate
-common certain GitHub tasks, and can currently:__
+__Hello! I'm Cesium Concierge, a GitHub bot for [Cesium](https://github.com/AnalyticalGraphicsInc/cesium). I automate
+common GitHub tasks, and can currently:__
 - Post a reminder comment to closed issues that have Google Group links in them
-- Post a suggestion to update `CHANGES.md` on newly-opened pull requests, and/or to update licenses if files in Third-party folders have changed.
+- Post a suggestion to update `CHANGES.md` on newly-opened pull requests, and/or to update licenses if files in Third-party folders have changed
+- Bump pull requests which have not been updated past a certain number of days 
+
 ## Building
 
 Clone this repository:
@@ -32,14 +34,26 @@ The possible settings are:
 | Name | Type | Description | Required? |
 | --- | --- | --- | --- |
 | `secret` | `string` | Repository secret to verify __incoming__ WebHook requests from GitHub | ✓
-| `repositories:{full_name}` | `object` | Settings specific to the repository `{full_name}`. | ✓
-| `repositories:{full_name}:gitHubToken` | `string` | Token used to verify __outgoing__ requests to GitHub repository | ✓
-| `repositories:{full_name}:remindForum` | `boolean` | Enables the functionality to post a reminder message to a closed issue if it contains links to a Google Group forum. | X
-| `repositories:{full_name}:thirdPartyFolders` | `string` | Comma-seperated list of folders in which to look for changed files in pull request to remind user to update License. | X
-| `repositories:{full_name}:checkChangesMd` | `boolean` | If `true`, check if `CHANGES.md` has been updated in pull request. If not, post comment suggesting that it should be edited. | X
-| `repositories:{full_name}:maxDaysSinceUpdate` | `number` | "Bump" pull requests older than this number of days ago | X
-| `port` | `number: default 5000` | Port on which to listen to incoming requests | X
 | `listenPath` | `string: default"/"` | Path on which to listen for incoming requests | X
+| `port` | `number: default 5000` | Port on which to listen to incoming requests | X
+| `repositories:{full_name}` | `object` | Settings specific to the repository `{full_name}`. | ✓
+
+Within the `repositories:{full_name}` object, there are these options:
+
+| Name | Type | Description | Required? |
+| --- | --- | --- | --- |
+| `gitHubToken` | `string` | Token used to verify __outgoing__ requests to GitHub repository | ✓
+| `remindForum` | `boolean` | Enables the functionality to post a reminder message to a closed issue if it contains links to a Google Group forum. | X
+| `thirdPartyFolders` | `string` | Comma-seperated list of folders in which to look for changed files in pull request to remind user to update License. | X
+| `checkChangesMd` | `boolean` | If `true`, check if `CHANGES.md` has been updated in pull request. If not, post comment suggesting that it should be edited. | X
+| `maxDaysSinceUpdate` | `number` | "Bump" pull requests older than this number of days ago | X
+| `signature` | `string` | _Part of comment:_ Last sentence in comment | X
+| `signature2` | `string` | _Part of comment:_ Last sentence in comment | X
+| `project` | `string` | _Part of comment:_ Name of project | X
+| `changesMarkdownLink` | `string` | _Part of comment:_ Markdown link to `CHANGES.md` or similar | X
+| `licenseMarkdownLink` | `string` | _Part of comment:_ Markdown link to `LICENSE.md` or similar | X
+| `guidelinesMarkdownLink` | `string` | _Part of comment:_ Markdown link to Guidelines document | X
+| `projectGitHub` | `string` | _Part of comment:_ GitHub link to Project Page | X
 
 > Note: `full_name` is the repository name in the form `{organization}/{repository}`. For example: `AnalyticalGraphicsInc/cesium`
 
