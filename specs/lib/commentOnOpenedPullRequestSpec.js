@@ -6,6 +6,14 @@ var requestPromise = require('request-promise');
 
 var commentOnOpenedPullRequest = require('../../lib/commentOnOpenedPullRequest');
 
+var claJson = fsExtra.readJsonSync('./specs/data/config/CLA.json');
+var content = Buffer.from(JSON.stringify(claJson)).toString('base64');
+var cla = {
+    body: {
+        content: content
+    }
+};
+
 describe('commentOnOpenedPullRequest', function () {
     it('throws if `jsonResponse` is undefined', function () {
         expect(function () {
@@ -31,11 +39,11 @@ describe('commentOnOpenedPullRequest', function () {
         var pullRequestJson = fsExtra.readJsonSync('./specs/data/events/pullRequest.json');
         commentOnOpenedPullRequest(pullRequestJson, {}, [], false);
         expect(commentOnOpenedPullRequest._implementation).toHaveBeenCalledWith('https://api.github.com/repos/baxterthehacker/public-repo/pulls/1/files',
-            'https://api.github.com/repos/baxterthehacker/public-repo/issues/1/comments', {}, [], false);
+            'https://api.github.com/repos/baxterthehacker/public-repo/issues/1/comments', {}, [], false, undefined, 'baxterthehacker');
 
         commentOnOpenedPullRequest(pullRequestJson, {}, ['c'], true);
         expect(commentOnOpenedPullRequest._implementation).toHaveBeenCalledWith('https://api.github.com/repos/baxterthehacker/public-repo/pulls/1/files',
-            'https://api.github.com/repos/baxterthehacker/public-repo/issues/1/comments', {}, ['c'], true);
+            'https://api.github.com/repos/baxterthehacker/public-repo/issues/1/comments', {}, ['c'], true, undefined, 'baxterthehacker');
     });
 });
 
@@ -92,8 +100,8 @@ describe('commentOnOpenedPullRequest._implementation', function () {
         okPullRequest();
         commentOnOpenedPullRequest._implementation('', '', {}, ['specs/data/'], true)
             .then(function () {
-                expect(/CHANGES/.test(requestPromise.post.calls.argsFor(0)[0].body.body)).toBe(true);
-                expect(/license/i.test(requestPromise.post.calls.argsFor(1)[0].body.body)).toBe(true);
+                expect(requestPromise.post.calls.argsFor(0)[0].body.body).toMatch(/CHANGES/);
+                expect(requestPromise.post.calls.argsFor(1)[0].body.body).toMatch(/license/i);
                 done();
             })
             .catch(function (err) {
@@ -106,8 +114,7 @@ describe('commentOnOpenedPullRequest._implementation', function () {
         commentOnOpenedPullRequest._implementation('', '', {}, ['specs/data/', 'a/b/'], true)
             .then(function () {
                 var obj = requestPromise.post.calls.argsFor(1)[0];
-                console.log(obj);
-                expect(/`specs\/data\/` or `a\/b\/`/i.test(obj.body.body)).toBe(true);
+                expect(obj.body.body).toMatch(/`specs\/data\/` or `a\/b\/`/i);
                 done();
             })
             .catch(function (err) {
@@ -120,8 +127,7 @@ describe('commentOnOpenedPullRequest._implementation', function () {
         commentOnOpenedPullRequest._implementation('', '', {}, ['specs/data/', 'a/b/', 'some/folder/'], true)
             .then(function () {
                 var obj = requestPromise.post.calls.argsFor(1)[0];
-                console.log(obj);
-                expect(/`specs\/data\/`, `a\/b\/`, or `some\/folder\/`/i.test(obj.body.body)).toBe(true);
+                expect(obj.body.body).toMatch(/`specs\/data\/`, `a\/b\/`, or `some\/folder\/`/i);
                 done();
             })
             .catch(function (err) {
@@ -134,6 +140,42 @@ describe('commentOnOpenedPullRequest._implementation', function () {
         commentOnOpenedPullRequest._implementation('', '', {}, ['/some/folder'], true)
             .then(function () {
                 expect(requestPromise.post).toHaveBeenCalledTimes(0);
+                done();
+            })
+            .catch(function (err) {
+                done.fail(err);
+            });
+    });
+
+    function switchGet() {
+        spyOn(requestPromise, 'get').and.callFake(function (obj) {
+            if (/files/.test(obj.url)) {
+                return Promise.resolve(pullRequestFiles);
+            }
+            return Promise.resolve(cla);
+        });
+    }
+    it('Does not post when user has signed CLA', function (done) {
+        switchGet();
+        commentOnOpenedPullRequest._implementation('.../files', '', {}, [], false,
+            'https://api.github.com/repos/AnalyticalGraphicsInc/cesium-concierge/contents/specs/data/responses/issue.json', 'bbb')
+            .then(function () {
+                expect(requestPromise.post).not.toHaveBeenCalled();
+                done();
+            })
+            .catch(function (err) {
+                done.fail(err);
+            });
+    });
+
+    it('Posts when user has not signed CLA', function (done) {
+        switchGet();
+        commentOnOpenedPullRequest._implementation('.../files', '', {}, [], false,
+            'https://api.github.com/repos/AnalyticalGraphicsInc/cesium-concierge/contents/specs/data/responses/issue.json', 'test')
+            .then(function () {
+                var obj = requestPromise.post.calls.argsFor(0)[0];
+                console.log(requestPromise.post.calls.argsFor(0));
+                expect(obj.body.body).toMatch(/Welcome/);
                 done();
             })
             .catch(function (err) {
@@ -195,5 +237,19 @@ describe('commentOnOpenedPullRequest._didUpdateThirdParty', function () {
         expect(commentOnOpenedPullRequest._didUpdateThirdParty(['c.txt'], ['/some/folder/'])).toBe(false);
         expect(commentOnOpenedPullRequest._didUpdateThirdParty(['c.txt'], ['/a/b/c/'])).toBe(false);
         expect(commentOnOpenedPullRequest._didUpdateThirdParty(['/a/bc.txt'], ['/a/b/c/'])).toBe(false);
+    });
+});
+
+describe('commentOnOpenedPullRequest._needsToUpdateCLA', function () {
+    it('returns true when username is not in cla', function () {
+        expect(commentOnOpenedPullRequest._needsToUpdateCLA('test', claJson)).toBe(true);
+    });
+
+    it('returns false when username is in cla', function () {
+        expect(commentOnOpenedPullRequest._needsToUpdateCLA('bbb', claJson)).toBe(false);
+    });
+
+    it('returns false when cla is null', function () {
+        expect(commentOnOpenedPullRequest._needsToUpdateCLA('test', null)).toBe(false);
     });
 });
