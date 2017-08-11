@@ -70,7 +70,7 @@ describe('stalePullRequest.implementation', function () {
 
     it('returns rejected Promise if statusCode is bad', function (done) {
         spyOn(requestPromise, 'get').and.returnValue(Promise.resolve(pullRequests404));
-        stalePullRequest.implementation(['one']).then(function () {
+        stalePullRequest.implementation().then(function () {
             done.fail();
         })
         .catch(function (err) {
@@ -84,20 +84,8 @@ describe('stalePullRequest.implementation', function () {
     it('dateIsOlderThan gets called once for each pull request', function (done) {
         spyOn(requestPromise, 'get').and.callFake(getSwitch);
         spyOn(stalePullRequest, 'dateIsOlderThan');
-        stalePullRequest.implementation(['one']).then(function () {
+        stalePullRequest.implementation().then(function () {
             expect(stalePullRequest.dateIsOlderThan).toHaveBeenCalledTimes(30);
-            done();
-        })
-        .catch(function (err) {
-            done.fail(err);
-        });
-    });
-
-    it('requestPromise.post gets called once for each pull request older than 30 days', function (done) {
-        spyOn(requestPromise, 'get').and.callFake(getSwitch);
-        spyOn(requestPromise, 'post');
-        stalePullRequest.implementation(['one']).then(function () {
-            expect(requestPromise.post).toHaveBeenCalledTimes(15);
             done();
         })
         .catch(function (err) {
@@ -108,7 +96,7 @@ describe('stalePullRequest.implementation', function () {
     it('requestPromise.post is called with the correct URLs', function (done) {
         spyOn(requestPromise, 'get').and.callFake(getSwitch);
         spyOn(requestPromise, 'post');
-        stalePullRequest.implementation(['one']).then(function () {
+        stalePullRequest.implementation().then(function () {
             var obj = requestPromise.post.calls.argsFor(0)[0];
             expect(obj.uri).toEqual('https://api.github.com/repos/AnalyticalGraphicsInc/cesium/issues/4635/comments');
             done();
@@ -121,7 +109,7 @@ describe('stalePullRequest.implementation', function () {
     it('recognizes it has commented on a post before', function (done) {
         spyOn(requestPromise, 'get').and.callFake(getSwitch);
         spyOn(requestPromise, 'post');
-        stalePullRequest.implementation(['one']).then(function () {
+        stalePullRequest.implementation().then(function () {
             var obj = requestPromise.post.calls.argsFor(0)[0];
             expect(/i last commented/i.test(obj.body.body)).toBe(true);
             done();
