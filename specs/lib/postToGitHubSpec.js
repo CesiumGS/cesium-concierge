@@ -1,139 +1,178 @@
 'use strict';
 
-var fsExtra = require('fs-extra');
 var nconf = require('nconf');
 var Promise = require('bluebird');
 
-var commentOnClosedIssue = require('../../lib/commentOnClosedIssue');
-var commentOnOpenedPullRequest = require('../../lib/commentOnOpenedPullRequest');
 var postToGitHub = require('../../lib/postToGitHub');
 
 describe('postToGitHub', function () {
-    var successResponse = {
-        status: function (code) {
-            expect(code).toEqual(200);
-            return {
-                send: function () {
-                }
-            };
-        }
-    };
+    var res;
+    var headers;
 
-    it('returns error if `repository` is not in `repositoryNames`', function () {
-        var reqSimplePullRequest = {
+    beforeEach(function () {
+        res = {
+            status: jasmine.createSpy('status').and.callFake(function () {
+                return res;
+            }),
+            end: jasmine.createSpy('end')
+        };
+
+        spyOn(nconf, 'get').and.returnValue({
+            'AnalyticalGraphics/cesium': {
+                gitHubToken: '123442345'
+            }
+        });
+
+        headers = {
+            'User-Agent': 'cesium-concierge',
+            Authorization: 'token 123442345'
+        };
+    });
+
+    it('errors if the specified repository is not configured', function () {
+        var req = {
+            body: {
+                repository: {
+                    full_name: 'ThisDoesNotExist'
+                }
+            }
+        };
+
+        var next = jasmine.createSpy('next');
+        postToGitHub(req, {}, next);
+        expect(next).toHaveBeenCalledWith(new Error('ThisDoesNotExist is not a configured repository.'));
+    });
+
+    it('calls commentOnClosedIssue for a closed pull request', function (done) {
+        var req = {
             headers: {
                 'x-github-event': 'pull_request'
             },
             body: {
+                action: 'closed',
                 repository: {
-                    full_name: 'agi/uno'
+                    full_name: 'AnalyticalGraphics/cesium'
                 }
             }
         };
-        spyOn(nconf, 'get').and.returnValue({
-            'agi/one/': {},
-            'agi/two': {}
-        });
-        postToGitHub(reqSimplePullRequest, {}, function (err) {
-            expect(err.message).toMatch(/Could not find/);
-        });
+
+        spyOn(postToGitHub, '_commentOnClosedIssue').and.returnValue(Promise.resolve());
+        var next = jasmine.createSpy('next');
+
+        postToGitHub(req, res, next)
+            .then(function () {
+                expect(postToGitHub._commentOnClosedIssue).toHaveBeenCalledWith(req.body, headers);
+                expect(res.status).toHaveBeenCalledWith(204);
+                expect(res.end).toHaveBeenCalled();
+                expect(next).toHaveBeenCalledWith();
+                done();
+            })
+            .catch(done.fail);
     });
 
-    it('calls commentOnClosedIssue', function (done) {
-        var reqClosedIssue = {
+    it('calls commentOnClosedIssue for a closed issue', function (done) {
+        var req = {
             headers: {
                 'x-github-event': 'issues'
+            },
+            body: {
+                action: 'closed',
+                repository: {
+                    full_name: 'AnalyticalGraphics/cesium'
+                }
             }
         };
-        reqClosedIssue.body = fsExtra.readJsonSync('./specs/data/events/issue.json');
-        reqClosedIssue.body.action = 'closed';
-        spyOn(nconf, 'get').and.returnValue({
-            'baxterthehacker/public-repo': {
-                gitHubToken: '',
-                remindForum: true
-            }
-        });
-        spyOn(commentOnClosedIssue, '_implementation');
-        postToGitHub(reqClosedIssue, successResponse, function (err) {
-            var obj = commentOnClosedIssue._implementation.calls.argsFor(0);
-            expect(obj[0]).toEqual('https://api.github.com/repos/baxterthehacker/public-repo/issues/2');
-            expect(obj[1]).toEqual('https://api.github.com/repos/baxterthehacker/public-repo/issues/2/comments');
-            // ignore expected error
-            if (/did not match any events/.test(err)) {
-                return done();
-            }
-            done.fail(err);
-        });
+
+        spyOn(postToGitHub, '_commentOnClosedIssue').and.returnValue(Promise.resolve());
+        var next = jasmine.createSpy('next');
+
+        postToGitHub(req, res, next)
+            .then(function () {
+                expect(postToGitHub._commentOnClosedIssue).toHaveBeenCalledWith(req.body, headers);
+                expect(res.status).toHaveBeenCalledWith(204);
+                expect(res.end).toHaveBeenCalled();
+                expect(next).toHaveBeenCalledWith();
+                done();
+            })
+            .catch(done.fail);
     });
 
-    it('calls commentOnOpenedPullRequest', function (done) {
-        var reqClosedIssue = {
+    it('calls commentOnOpenedPullRequest for a opened pull request', function (done) {
+        var req = {
             headers: {
                 'x-github-event': 'pull_request'
+            },
+            body: {
+                action: 'opened',
+                repository: {
+                    full_name: 'AnalyticalGraphics/cesium'
+                }
             }
         };
-        reqClosedIssue.body = fsExtra.readJsonSync('./specs/data/events/pullRequest.json');
-        spyOn(nconf, 'get').and.returnValue({
-            'baxterthehacker/public-repo': {
-                gitHubToken: '',
-                checkChangesMd: true
-            }
-        });
-        spyOn(commentOnOpenedPullRequest, '_implementation');
-        postToGitHub(reqClosedIssue, successResponse, function (err) {
-            var obj = commentOnOpenedPullRequest._implementation.calls.argsFor(0);
-            expect(obj[0]).toEqual('https://api.github.com/repos/baxterthehacker/public-repo/pulls/1/files');
-            expect(obj[1]).toEqual('https://api.github.com/repos/baxterthehacker/public-repo/issues/1/comments');
-            expect(obj[4]).toBe(true);
-            // ignore expected error
-            if (/did not match any events/.test(err)) {
-                return done();
-            }
-            done.fail(err);
-        });
+
+        spyOn(postToGitHub, '_commentOnOpenedPullRequest').and.returnValue(Promise.resolve());
+        var next = jasmine.createSpy('next');
+
+        postToGitHub(req, res, next)
+            .then(function () {
+                expect(postToGitHub._commentOnOpenedPullRequest).toHaveBeenCalledWith(req.body, headers);
+                expect(res.status).toHaveBeenCalledWith(204);
+                expect(res.end).toHaveBeenCalled();
+                expect(next).toHaveBeenCalledWith();
+                done();
+            })
+            .catch(done.fail);
     });
 
-    it('calls next with Error when Promise fails', function (done) {
-        var reqClosedIssue = {
+    it('no-op on an unknown event', function (done) {
+        var req = {
             headers: {
-                'x-github-event': 'pull_request'
+                'x-github-event': 'na-da'
+            },
+            body: {
+                action: 'opened',
+                repository: {
+                    full_name: 'AnalyticalGraphics/cesium'
+                }
             }
         };
-        reqClosedIssue.body = fsExtra.readJsonSync('./specs/data/events/pullRequest.json');
-        spyOn(nconf, 'get').and.returnValue({
-            'baxterthehacker/public-repo': {
-                gitHubToken: '',
-                checkChangesMd: true
-            }
-        });
-        spyOn(commentOnOpenedPullRequest, '_implementation').and.returnValue(Promise.reject('uh-oh'));
-        postToGitHub(reqClosedIssue, successResponse, function (err) {
-            if (/uh-oh/.test(err)) {
-                return done();
-            }
-            done.fail(err);
-        });
+
+        var next = jasmine.createSpy('next');
+
+        postToGitHub(req, res, next)
+            .then(function () {
+                expect(res.status).toHaveBeenCalledWith(204);
+                expect(res.end).toHaveBeenCalled();
+                expect(next).toHaveBeenCalledWith();
+                done();
+            })
+            .catch(done.fail);
     });
 
-    it('calls next if everything works', function (done) {
-        var reqClosedIssue = {
+    it('calls next with rejected promise error', function (done) {
+        var req = {
             headers: {
                 'x-github-event': 'pull_request'
+            },
+            body: {
+                action: 'opened',
+                repository: {
+                    full_name: 'AnalyticalGraphics/cesium'
+                }
             }
         };
-        reqClosedIssue.body = fsExtra.readJsonSync('./specs/data/events/pullRequest.json');
-        spyOn(nconf, 'get').and.returnValue({
-            'baxterthehacker/public-repo': {
-                gitHubToken: '',
-                checkChangesMd: true
-            }
-        });
-        spyOn(commentOnOpenedPullRequest, '_implementation').and.returnValue(Promise.resolve({}));
-        postToGitHub(reqClosedIssue, successResponse, function (err) {
-            if (err) {
-                return done.fail(err);
-            }
-            done();
-        });
+
+        var error = new Error('Something bad happened');
+        spyOn(postToGitHub, '_commentOnOpenedPullRequest').and.returnValue(Promise.reject(error));
+        var next = jasmine.createSpy('next');
+
+        postToGitHub(req, res, next)
+            .then(done.fail)
+            .catch(function () {
+                expect(res.status).not.toHaveBeenCalled();
+                expect(res.end).not.toHaveBeenCalled();
+                expect(next).toHaveBeenCalledWith(error);
+                done();
+            });
     });
 });

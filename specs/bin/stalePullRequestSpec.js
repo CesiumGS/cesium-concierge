@@ -56,30 +56,17 @@ describe('stalePullRequest', function () {
 
 describe('stalePullRequest.implementation', function () {
     var comments = fsExtra.readJsonSync('./specs/data/responses/pullRequestComments.json');
-    var pullRequests404 = fsExtra.readJsonSync('./specs/data/responses/pullRequests_404.json');
+
     beforeEach(function () {
         spyOn(Date, 'now').and.returnValue(new Date(1500921244516));
     });
 
     function getSwitch(obj) {
-        if (/\/comments/.test(obj.uri)) {
+        if (/\/comments/.test(obj.url)) {
             return Promise.resolve(comments);
         }
         return Promise.resolve(pullRequests);
     }
-
-    it('returns rejected Promise if statusCode is bad', function (done) {
-        spyOn(requestPromise, 'get').and.returnValue(Promise.resolve(pullRequests404));
-        stalePullRequest.implementation().then(function () {
-            done.fail();
-        })
-        .catch(function (err) {
-            if (/Status code/i.test(err)) {
-                return done();
-            }
-            done.fail();
-        });
-    });
 
     it('dateIsOlderThan gets called once for each pull request', function (done) {
         spyOn(requestPromise, 'get').and.callFake(getSwitch);
@@ -98,7 +85,7 @@ describe('stalePullRequest.implementation', function () {
         spyOn(requestPromise, 'post');
         stalePullRequest.implementation().then(function () {
             var obj = requestPromise.post.calls.argsFor(0)[0];
-            expect(obj.uri).toEqual('https://api.github.com/repos/AnalyticalGraphicsInc/cesium/issues/4635/comments');
+            expect(obj.url).toEqual('https://api.github.com/repos/AnalyticalGraphicsInc/cesium/issues/4635/comments');
             done();
         })
         .catch(function (err) {

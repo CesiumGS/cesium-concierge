@@ -6,4 +6,5 @@ dist: trusty
 script:
   - npm run eslint
   - npm run test -- --failTaskOnError
+  - npm install # Work around bug in "npm shrinkwrap" which is used by create-zip.
   - npm run create-zip
