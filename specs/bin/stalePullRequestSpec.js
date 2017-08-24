@@ -1,126 +1,156 @@
 'use strict';
 
-var fsExtra = require('fs-extra');
-var nconf = require('nconf');
 var Promise = require('bluebird');
 var requestPromise = require('request-promise');
 
 var stalePullRequest = require('../../bin/stalePullRequest');
-
-var pullRequests = fsExtra.readJsonSync('./specs/data/responses/pullRequests.json');
+var RepositorySettings = require('../../lib/RepositorySettings');
 
 describe('stalePullRequest', function () {
-    beforeEach(function (){
-        spyOn(nconf, 'get').and.callFake(function (key) {
-            if (key === 'repositories') {
-                return {
-                    one: {
-                        gitHubToken: 'oneGHT',
-                        bumpStalePullRequests: true,
-                        bumpStalePullRequestsUrl: 'one.example.com'
-                    },
-                    two: {
-                        gitHubToken: 'twoGHT',
-                        bumpStalePullRequests: true,
-                        bumpStalePullRequestsUrl: 'two.example.com'
-                    },
-                    three: {}
-                };
+    var repositories;
+    beforeEach(function () {
+        repositories = {
+            'AnalyticalGraphics/cesium': new RepositorySettings({
+                gitHubToken: 'token1'
+            }),
+            'AnalyticalGraphics/cesium-concierge': new RepositorySettings({
+                gitHubToken: 'token2'
+            })
+        };
+    });
+
+    it('calls stalePullRequest._processRepository once for each repository', function (done) {
+        spyOn(stalePullRequest, '_processRepository').and.returnValue(Promise.resolve());
+        stalePullRequest(repositories)
+            .then(function () {
+                var keys = Object.keys(repositories);
+                expect(stalePullRequest._processRepository).toHaveBeenCalledTimes(2);
+                expect(stalePullRequest._processRepository.calls.argsFor(0)).toEqual([keys[0], repositories[keys[0]]]);
+                expect(stalePullRequest._processRepository.calls.argsFor(1)).toEqual([keys[1], repositories[keys[1]]]);
+                done();
+            })
+            .catch(done.fail);
+    });
+
+    it('calls stalePullRequest._processPullRequest once for each returned pull request', function (done) {
+        var mockPullRequest = {};
+        var mockPullRequest2 = {};
+        spyOn(requestPromise, 'get').and.callFake(function (options) {
+            if (options.url === 'https://api.github.com/repos/AnalyticalGraphics/cesium/pulls?state=opened&base=master') {
+                return Promise.resolve([mockPullRequest, mockPullRequest2]);
             }
+            return Promise.reject(new Error('Unexpected Url'));
         });
+
+        spyOn(stalePullRequest, '_processPullRequest').and.returnValue(Promise.resolve());
+
+        stalePullRequest._processRepository('AnalyticalGraphics/cesium', repositories['AnalyticalGraphics/cesium'])
+            .then(function () {
+                expect(stalePullRequest._processPullRequest).toHaveBeenCalledTimes(2);
+                expect(stalePullRequest._processPullRequest.calls.argsFor(0)).toEqual([mockPullRequest, repositories['AnalyticalGraphics/cesium']]);
+                expect(stalePullRequest._processPullRequest.calls.argsFor(1)).toEqual([mockPullRequest2, repositories['AnalyticalGraphics/cesium']]);
+                done();
+            })
+            .catch(done.fail);
     });
 
-    it('calls implementation the correct number of times', function (done) {
-        spyOn(stalePullRequest, 'implementation');
-        stalePullRequest(['one', 'two', 'three']).then(function () {
-            expect(stalePullRequest.implementation).toHaveBeenCalledTimes(2);
-            done();
-        })
-        .catch(function (err) {
-            done.fail(err);
+    it('stalePullRequest._processPullRequest does not post non-stale pull request', function (done) {
+        var repositorySettings = new RepositorySettings();
+        var commentsUrl = 'commentsUrl';
+        var pullRequest = {
+            comments_url: commentsUrl
+        };
+
+        spyOn(requestPromise, 'get').and.callFake(function (options) {
+            if (options.url === commentsUrl) {
+                var timestamp = new Date(Date.now());
+                return Promise.resolve([{
+                    created_at: timestamp
+                }]);
+            }
+            return Promise.reject(new Error('Unexpected Url'));
         });
-    });
-
-    it('calls implementation with correct values', function (done) {
-        spyOn(stalePullRequest, 'implementation');
-        stalePullRequest(['one', 'two']).then(function () {
-            expect(stalePullRequest.implementation.calls.argsFor(0)).toEqual(['one.example.com?sort=updated&direction=asc', 'oneGHT', undefined]);
-            expect(stalePullRequest.implementation.calls.argsFor(1)).toEqual(['two.example.com?sort=updated&direction=asc', 'twoGHT', undefined]);
-            done();
-        })
-        .catch(function (err) {
-            done.fail(err);
-        });
-    });
-});
-
-describe('stalePullRequest.implementation', function () {
-    var comments = fsExtra.readJsonSync('./specs/data/responses/pullRequestComments.json');
-
-    beforeEach(function () {
-        spyOn(Date, 'now').and.returnValue(new Date(1500921244516));
-    });
-
-    function getSwitch(obj) {
-        if (/\/comments/.test(obj.url)) {
-            return Promise.resolve(comments);
-        }
-        return Promise.resolve(pullRequests);
-    }
-
-    it('dateIsOlderThan gets called once for each pull request', function (done) {
-        spyOn(requestPromise, 'get').and.callFake(getSwitch);
-        spyOn(stalePullRequest, 'dateIsOlderThan');
-        stalePullRequest.implementation().then(function () {
-            expect(stalePullRequest.dateIsOlderThan).toHaveBeenCalledTimes(30);
-            done();
-        })
-        .catch(function (err) {
-            done.fail(err);
-        });
-    });
-
-    it('requestPromise.post is called with the correct URLs', function (done) {
-        spyOn(requestPromise, 'get').and.callFake(getSwitch);
         spyOn(requestPromise, 'post');
-        stalePullRequest.implementation().then(function () {
-            var obj = requestPromise.post.calls.argsFor(0)[0];
-            expect(obj.url).toEqual('https://api.github.com/repos/AnalyticalGraphicsInc/cesium/issues/4635/comments');
-            done();
-        })
-        .catch(function (err) {
-            done.fail(err);
-        });
+
+        stalePullRequest._processPullRequest(pullRequest, repositorySettings)
+            .then(function () {
+                expect(requestPromise.post).not.toHaveBeenCalled();
+                done();
+            })
+            .catch(done.fail);
     });
 
-    it('recognizes it has commented on a post before', function (done) {
-        spyOn(requestPromise, 'get').and.callFake(getSwitch);
+    it('stalePullRequest._processPullRequest posts expected message for initial stale pull request', function (done) {
+        var repositorySettings = new RepositorySettings();
+        var commentsUrl = 'commentsUrl';
+        var pullRequest = {
+            comments_url: commentsUrl
+        };
+
+        spyOn(requestPromise, 'get').and.callFake(function (options) {
+            if (options.url === commentsUrl) {
+                var timestamp = new Date(Date.now());
+                timestamp.setDate(timestamp.getDate() - repositorySettings.maxDaysSinceUpdate);
+                return Promise.resolve([{
+                    created_at: timestamp,
+                    user: {login: 'boomerjones'}
+                }]);
+            }
+            return Promise.reject(new Error('Unexpected Url'));
+        });
         spyOn(requestPromise, 'post');
-        stalePullRequest.implementation().then(function () {
-            var obj = requestPromise.post.calls.argsFor(0)[0];
-            expect(/i last commented/i.test(obj.body.body)).toBe(true);
-            done();
-        })
-        .catch(function (err) {
-            done.fail(err);
+
+        stalePullRequest._processPullRequest(pullRequest, repositorySettings)
+            .then(function () {
+                expect(requestPromise.post).toHaveBeenCalledWith({
+                    url: commentsUrl,
+                    headers: repositorySettings.headers,
+                    body: {
+                        body: repositorySettings.initialStalePullRequestTemplate({
+                            maxDaysSinceUpdate: repositorySettings.maxDaysSinceUpdate
+                        })
+                    },
+                    json: true
+                });
+                done();
+            })
+            .catch(done.fail);
+    });
+
+    it('stalePullRequest._processPullRequest posts expected message for secondary stale pull request', function (done) {
+        var repositorySettings = new RepositorySettings();
+        var commentsUrl = 'commentsUrl';
+        var pullRequest = {
+            comments_url: commentsUrl
+        };
+
+        spyOn(requestPromise, 'get').and.callFake(function (options) {
+            if (options.url === commentsUrl) {
+                var timestamp = new Date(Date.now());
+                timestamp.setDate(timestamp.getDate() - repositorySettings.maxDaysSinceUpdate);
+                return Promise.resolve([{
+                    created_at: timestamp,
+                    user: {login: 'cesium-concierge'}
+                }]);
+            }
+            return Promise.reject(new Error('Unexpected Url'));
         });
-    });
-});
+        spyOn(requestPromise, 'post');
 
-describe('stalePullRequest.dateIsOlderThan', function () {
-    beforeEach(function () {
-        spyOn(Date, 'now').and.returnValue(new Date(1500921244516));
-    });
-
-    it('returns true for dates older than specified number of days ago', function () {
-        expect(stalePullRequest.dateIsOlderThan(new Date(pullRequests.body[0].updated_at), 1)).toBe(true);
-        expect(stalePullRequest.dateIsOlderThan(new Date(pullRequests.body[0].updated_at), 10)).toBe(true);
-        expect(stalePullRequest.dateIsOlderThan(new Date(pullRequests.body[0].updated_at), 100)).toBe(true);
-        expect(stalePullRequest.dateIsOlderThan(new Date(pullRequests.body[0].updated_at), 189)).toBe(true);
-    });
-
-    it('returns false for dates before specified number of days ago', function () {
-        expect(stalePullRequest.dateIsOlderThan(new Date(pullRequests.body[0].updated_at), 191)).toBe(false);
-        expect(stalePullRequest.dateIsOlderThan(new Date(pullRequests.body[0].updated_at), 1000)).toBe(false);
+        stalePullRequest._processPullRequest(pullRequest, repositorySettings)
+            .then(function () {
+                expect(requestPromise.post).toHaveBeenCalledWith({
+                    url: commentsUrl,
+                    headers: repositorySettings.headers,
+                    body: {
+                        body: repositorySettings.secondaryStalePullRequestTemplate({
+                            maxDaysSinceUpdate: repositorySettings.maxDaysSinceUpdate
+                        })
+                    },
+                    json: true
+                });
+                done();
+            })
+            .catch(done.fail);
     });
 });

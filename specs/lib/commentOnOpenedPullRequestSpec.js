@@ -1,24 +1,20 @@
 'use strict';
 
 var fsExtra = require('fs-extra');
-var Settings = require('../../lib/Settings');
 
 var Promise = require('bluebird');
 var requestPromise = require('request-promise');
 
 var commentOnOpenedPullRequest = require('../../lib/commentOnOpenedPullRequest');
-describe('commentOnOpenedPullRequest', function () {
-    var headers = Object.freeze({
-        'User-Agent': 'cesium-concierge',
-        Authorization: 'token notARealToken'
-    });
+var RepositorySettings = require('../../lib/RepositorySettings');
 
+describe('commentOnOpenedPullRequest', function () {
     var filesUrl = 'url/files';
     var commentsUrl = 'https://api.github.com/repos/AnalyticalGraphicsInc/cesium/issues/1/comments';
     var userName = 'boomerJones';
     var repositoryName = 'AnalyticalGraphics/cesium';
     var repositoryUrl = 'https://github.com/AnalyticalGraphicsInc/cesium';
-    var thirdPartyFolders = ['ThirdParty', 'Source/ThirdParty'];
+    var thirdPartyFolders = ['ThirdParty/', 'Source/ThirdParty/'];
 
     var pullRequestJson = {
         pull_request: {
@@ -36,7 +32,7 @@ describe('commentOnOpenedPullRequest', function () {
 
     it('throws if body is undefined', function () {
         expect(function () {
-            commentOnOpenedPullRequest(undefined, headers);
+            commentOnOpenedPullRequest(undefined, {});
         }).toThrowError();
     });
 
@@ -54,13 +50,13 @@ describe('commentOnOpenedPullRequest', function () {
     });
 
     it('passes expected parameters to implementation', function () {
-        spyOn(Settings, 'getThirdPartyFolders').and.returnValue(thirdPartyFolders);
         spyOn(commentOnOpenedPullRequest, '_implementation');
 
-        commentOnOpenedPullRequest(pullRequestJson, headers);
+        var repositorySettings = new RepositorySettings();
 
-        expect(commentOnOpenedPullRequest._implementation).toHaveBeenCalledWith(filesUrl, commentsUrl, headers, userName, repositoryUrl, thirdPartyFolders);
-        expect(Settings.getThirdPartyFolders).toHaveBeenCalledWith(repositoryName);
+        commentOnOpenedPullRequest(pullRequestJson, repositorySettings);
+
+        expect(commentOnOpenedPullRequest._implementation).toHaveBeenCalledWith(filesUrl, commentsUrl, repositorySettings, userName, repositoryUrl);
     });
 
     it('commentOnOpenedPullRequest._askAboutChanges works', function () {
@@ -80,11 +76,12 @@ describe('commentOnOpenedPullRequest', function () {
         expect(commentOnOpenedPullRequest._askAboutThirdParty(['NotThirdParty/file.js'], ['ThirdParty'])).toBe(false);
     });
 
-    it('commentOnOpenedPullRequest._implementation does not post if CHANGES.md was updated and there are no modified ThirdParty folders', function (done) {
+    it('commentOnOpenedPullRequest._implementation posts CLA confirmation if CHANGES.md was updated and there are no modified ThirdParty folders', function (done) {
         var pullRequestFilesUrl = 'pullRequestFilesUrl';
         var pullRequestCommentsUrl = 'pullRequestCommentsUrl';
 
-        spyOn(Settings, 'getThirdPartyFolders').and.returnValue(thirdPartyFolders);
+        var repositorySettings = new RepositorySettings();
+
         spyOn(requestPromise, 'post');
 
         spyOn(requestPromise, 'get').and.callFake(function (options) {
@@ -96,9 +93,22 @@ describe('commentOnOpenedPullRequest', function () {
             return Promise.reject('Unknown url.');
         });
 
-        commentOnOpenedPullRequest._implementation(pullRequestFilesUrl, pullRequestCommentsUrl, headers, userName, repositoryUrl, thirdPartyFolders)
+        commentOnOpenedPullRequest._implementation(pullRequestFilesUrl, pullRequestCommentsUrl, repositorySettings, userName, repositoryUrl)
             .then(function () {
-                expect(requestPromise.post).not.toHaveBeenCalled();
+                expect(requestPromise.post).toHaveBeenCalledWith({
+                    url: pullRequestCommentsUrl,
+                    headers: repositorySettings.headers,
+                    body: {
+                        body: repositorySettings.pullRequestOpenedTemplate({
+                            userName: userName,
+                            repository_url: repositoryUrl,
+                            askAboutChanges: false,
+                            askAboutThirdParty: false,
+                            thirdPartyFolders: thirdPartyFolders.join(', ')
+                        })
+                    },
+                    json: true
+                });
                 done();
             })
             .catch(done.fail);
@@ -108,25 +118,34 @@ describe('commentOnOpenedPullRequest', function () {
         var pullRequestFilesUrl = 'pullRequestFilesUrl';
         var pullRequestCommentsUrl = 'pullRequestCommentsUrl';
 
-        spyOn(Settings, 'getThirdPartyFolders').and.returnValue(thirdPartyFolders);
+        var repositorySettings = new RepositorySettings({
+            thirdPartyFolders: thirdPartyFolders.join(',')
+        });
+
         spyOn(requestPromise, 'post');
 
         spyOn(requestPromise, 'get').and.callFake(function (options) {
             if (options.url === pullRequestFilesUrl) {
                 return Promise.resolve([
-                        {filename: 'notCHANGES.md'}
-                    ]);
+                    {filename: 'notCHANGES.md'}
+                ]);
             }
             return Promise.reject('Unknown url.');
         });
 
-        commentOnOpenedPullRequest._implementation(pullRequestFilesUrl, pullRequestCommentsUrl, headers, userName, repositoryUrl, thirdPartyFolders)
+        commentOnOpenedPullRequest._implementation(pullRequestFilesUrl, pullRequestCommentsUrl, repositorySettings, userName, repositoryUrl)
             .then(function () {
                 expect(requestPromise.post).toHaveBeenCalledWith({
                     url: pullRequestCommentsUrl,
-                    headers: headers,
+                    headers: repositorySettings.headers,
                     body: {
-                        body: commentOnOpenedPullRequest.renderMessage(userName, repositoryUrl, true, false, thirdPartyFolders)
+                        body: repositorySettings.pullRequestOpenedTemplate({
+                            userName: userName,
+                            repository_url: repositoryUrl,
+                            askAboutChanges: true,
+                            askAboutThirdParty: false,
+                            thirdPartyFolders: thirdPartyFolders.join(', ')
+                        })
                     },
                     json: true
                 });
@@ -139,26 +158,35 @@ describe('commentOnOpenedPullRequest', function () {
         var pullRequestFilesUrl = 'pullRequestFilesUrl';
         var pullRequestCommentsUrl = 'pullRequestCommentsUrl';
 
-        spyOn(Settings, 'getThirdPartyFolders').and.returnValue(thirdPartyFolders);
+        var repositorySettings = new RepositorySettings({
+            thirdPartyFolders: thirdPartyFolders.join(',')
+        });
+
         spyOn(requestPromise, 'post');
 
         spyOn(requestPromise, 'get').and.callFake(function (options) {
             if (options.url === pullRequestFilesUrl) {
                 return Promise.resolve([
-                        {filename: 'CHANGES.md'},
-                        {filename: 'ThirdParty/stuff.js'}
-                    ]);
+                    {filename: 'CHANGES.md'},
+                    {filename: 'ThirdParty/stuff.js'}
+                ]);
             }
             return Promise.reject('Unknown url.');
         });
 
-        commentOnOpenedPullRequest._implementation(pullRequestFilesUrl, pullRequestCommentsUrl, headers, userName, repositoryUrl, thirdPartyFolders)
+        commentOnOpenedPullRequest._implementation(pullRequestFilesUrl, pullRequestCommentsUrl, repositorySettings, userName, repositoryUrl)
             .then(function () {
                 expect(requestPromise.post).toHaveBeenCalledWith({
                     url: pullRequestCommentsUrl,
-                    headers: headers,
+                    headers: repositorySettings.headers,
                     body: {
-                        body: commentOnOpenedPullRequest.renderMessage(userName, repositoryUrl, false, true, thirdPartyFolders)
+                        body: repositorySettings.pullRequestOpenedTemplate({
+                            userName: userName,
+                            repository_url: repositoryUrl,
+                            askAboutChanges: false,
+                            askAboutThirdParty: true,
+                            thirdPartyFolders: thirdPartyFolders.join(', ')
+                        })
                     },
                     json: true
                 });
@@ -167,30 +195,78 @@ describe('commentOnOpenedPullRequest', function () {
             .catch(done.fail);
     });
 
-
     it('commentOnOpenedPullRequest._implementation posts if CHANGES.md was not updated and there are modified ThirdParty folders', function (done) {
         var pullRequestFilesUrl = 'pullRequestFilesUrl';
         var pullRequestCommentsUrl = 'pullRequestCommentsUrl';
 
-        spyOn(Settings, 'getThirdPartyFolders').and.returnValue(thirdPartyFolders);
+        var repositorySettings = new RepositorySettings({
+            thirdPartyFolders: thirdPartyFolders.join(',')
+        });
         spyOn(requestPromise, 'post');
 
         spyOn(requestPromise, 'get').and.callFake(function (options) {
             if (options.url === pullRequestFilesUrl) {
                 return Promise.resolve([
-                        {filename: 'ThirdParty/stuff.js'}
-                    ]);
+                    {filename: 'ThirdParty/stuff.js'}
+                ]);
             }
             return Promise.reject('Unknown url.');
         });
 
-        commentOnOpenedPullRequest._implementation(pullRequestFilesUrl, pullRequestCommentsUrl, headers, userName, repositoryUrl, thirdPartyFolders)
+        commentOnOpenedPullRequest._implementation(pullRequestFilesUrl, pullRequestCommentsUrl, repositorySettings, userName, repositoryUrl)
             .then(function () {
                 expect(requestPromise.post).toHaveBeenCalledWith({
                     url: pullRequestCommentsUrl,
-                    headers: headers,
+                    headers: repositorySettings.headers,
                     body: {
-                        body: commentOnOpenedPullRequest.renderMessage(userName, repositoryUrl, true, true, thirdPartyFolders)
+                        body: repositorySettings.pullRequestOpenedTemplate({
+                            userName: userName,
+                            repository_url: repositoryUrl,
+                            askAboutChanges: true,
+                            askAboutThirdParty: true,
+                            thirdPartyFolders: thirdPartyFolders.join(', ')
+                        })
+                    },
+                    json: true
+                });
+                done();
+            })
+            .catch(done.fail);
+    });
+
+    it('commentOnOpenedPullRequest._implementation posts if CHANGES.md was not updated and there are modified ThirdParty folders.', function (done) {
+        var pullRequestFilesUrl = 'pullRequestFilesUrl';
+        var pullRequestCommentsUrl = 'pullRequestCommentsUrl';
+
+        var repositorySettings = new RepositorySettings({
+            thirdPartyFolders: thirdPartyFolders.join(',')
+        });
+
+        spyOn(requestPromise, 'post');
+
+        spyOn(requestPromise, 'get').and.callFake(function (options) {
+            if (options.url === pullRequestFilesUrl) {
+                return Promise.resolve([
+                    {filename: 'ThirdParty/stuff.js'}
+                ]);
+            }
+
+            return Promise.reject('Unknown url.');
+        });
+
+        commentOnOpenedPullRequest._implementation(pullRequestFilesUrl, pullRequestCommentsUrl, repositorySettings, userName, repositoryUrl)
+            .then(function () {
+                expect(requestPromise.post).toHaveBeenCalledWith({
+                    url: pullRequestCommentsUrl,
+                    headers: repositorySettings.headers,
+                    body: {
+                        body: repositorySettings.pullRequestOpenedTemplate({
+                            userName: userName,
+                            repository_url: repositoryUrl,
+                            askAboutChanges: true,
+                            askAboutThirdParty: true,
+                            thirdPartyFolders: thirdPartyFolders.join(', ')
+                        })
                     },
                     json: true
                 });

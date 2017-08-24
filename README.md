@@ -34,7 +34,7 @@ The possible settings are:
 | `secret` | `string` | Repository secret to verify __incoming__ WebHook requests from GitHub | ✓
 | `repositories:{full_name}` | `object` | Settings specific to the repository `{full_name}`. | ✓
 | `repositories:{full_name}:gitHubToken` | `string` | Token used to verify __outgoing__ requests to GitHub repository | ✓
-| `repositories:{full_name}:thirdPartyFolders` | `string` | Comma-seperated list of folders in which to look for changed files in pull request to remind user to update License. | X
+| `repositories:{full_name}:thirdPartyFolders` | `string` | Comma-separated list of folders in which to look for changed files in pull request to remind user to update License. | X
 | `repositories:{full_name}:maxDaysSinceUpdate` | `number` | "Bump" pull requests older than this number of days ago | X
 | `port` | `number: default 5000` | Port on which to listen to incoming requests | X
 | `listenPath` | `string: default"/"` | Path on which to listen for incoming requests | X

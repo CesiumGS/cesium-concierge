@@ -71,7 +71,6 @@ describe('loadRepositoriesSettings', function () {
     it('removes `/` from `thirdPartyFolders` that begin with `/`', function (done) {
         Settings.loadRepositoriesSettings('./specs/data/config/slashWithThirdPartyFolders.json')
             .then(function () {
-                console.log(Settings.repositories);
                 expect(Settings.repositories['a/one'].thirdPartyFolders).toEqual(['ThirdParty/']);
                 done();
             })
@@ -95,35 +94,6 @@ describe('loadRepositoriesSettings', function () {
         Settings.loadRepositoriesSettings('./specs/data/config/multipleThirdPartyFolders.json')
             .then(function () {
                 expect(Settings.repositories['a/one'].thirdPartyFolders).toEqual(['ThirdParty/', 'AnotherFolder/']);
-                done();
-            })
-            .catch(function (err) {
-                done.fail(err);
-            });
-    });
-
-    it('sets `bumpStalePullRequests` `url` correctly', function (done) {
-        Settings.loadRepositoriesSettings('./specs/data/config/bumpStalePullRequests_noUrl.json')
-            .then(function () {
-                expect(Settings.repositories['a/one'].bumpStalePullRequestsUrl).toEqual('https://api.github.com/repos/a/one/pulls');
-                done();
-            })
-            .catch(function (err) {
-                done.fail(err);
-            });
-    });
-
-    it('correctly loads values', function (done) {
-        Settings.loadRepositoriesSettings('./specs/data/config/noError.json')
-            .then(function () {
-                expect(Settings.repositories['a/one'].gitHubToken).toEqual('bar');
-                expect(Settings.repositories['a/one'].someVal).toBe(true);
-                expect(Settings.repositories['a/two'].gitHubToken).toEqual('bar2');
-                expect(Settings.repositories['a/two'].someVal).toEqual(false);
-
-                expect(Settings.port).toEqual(10);
-                expect(Settings.listenPath).toEqual('/foo');
-                expect(Settings.secret).toEqual('foo');
                 done();
             })
             .catch(function (err) {
