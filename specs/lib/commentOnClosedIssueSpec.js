@@ -4,12 +4,10 @@ var Promise = require('bluebird');
 var requestPromise = require('request-promise');
 
 var commentOnClosedIssue = require('../../lib/commentOnClosedIssue');
+var RepositorySettings = require('../../lib/RepositorySettings');
 
 describe('commentOnClosedIssue', function () {
-    var headers = Object.freeze({
-        'User-Agent': 'cesium-concierge',
-        Authorization: 'token notARealToken'
-    });
+    var repositorySettings = new RepositorySettings();
 
     var issueEventJson;
     var pullRequestEventJson;
@@ -34,18 +32,18 @@ describe('commentOnClosedIssue', function () {
 
     it('throws if body is undefined', function () {
         expect(function () {
-            commentOnClosedIssue(undefined, headers);
+            commentOnClosedIssue(undefined, repositorySettings);
         }).toThrowError();
     });
 
-    it('throws if `headers` is undefined', function () {
+    it('throws if `repositorySettings` is undefined', function () {
         expect(function () {
             commentOnClosedIssue(issueEventJson, undefined);
         }).toThrowError();
     });
 
     it('rejects with unknown body type', function (done) {
-        commentOnClosedIssue({}, headers)
+        commentOnClosedIssue({}, repositorySettings)
             .then(done.fail)
             .catch(function (error) {
                 expect(error.message).toBe('Unknown body type');
@@ -55,14 +53,14 @@ describe('commentOnClosedIssue', function () {
 
     it('passes expected parameters to implementation for closed issue', function () {
         spyOn(commentOnClosedIssue, '_implementation');
-        commentOnClosedIssue(issueEventJson, headers);
-        expect(commentOnClosedIssue._implementation).toHaveBeenCalledWith(issueUrl, commentsUrl, headers);
+        commentOnClosedIssue(issueEventJson, repositorySettings);
+        expect(commentOnClosedIssue._implementation).toHaveBeenCalledWith(issueUrl, commentsUrl, repositorySettings);
     });
 
     it('passes expected parameters to implementation for closed pull request', function () {
         spyOn(commentOnClosedIssue, '_implementation');
-        commentOnClosedIssue(pullRequestEventJson, headers);
-        expect(commentOnClosedIssue._implementation).toHaveBeenCalledWith(issueUrl, commentsUrl, headers);
+        commentOnClosedIssue(pullRequestEventJson, repositorySettings);
+        expect(commentOnClosedIssue._implementation).toHaveBeenCalledWith(issueUrl, commentsUrl, repositorySettings);
     });
 
     function runTestWithLinks(forumLinks) {
@@ -87,7 +85,7 @@ describe('commentOnClosedIssue', function () {
         });
         spyOn(requestPromise, 'post');
 
-        return commentOnClosedIssue._implementation('issueUrl', 'commentsUrl', headers);
+        return commentOnClosedIssue._implementation('issueUrl', 'commentsUrl', repositorySettings);
     }
 
     it('commentOnClosedIssue._implementation posts expected message.', function (done) {
@@ -99,8 +97,14 @@ describe('commentOnClosedIssue', function () {
             .then(function () {
                 expect(requestPromise.post).toHaveBeenCalledWith({
                     url: 'commentsUrl',
-                    headers: headers,
-                    body: {body: commentOnClosedIssue.renderMessage('html_url', forumLinks)},
+                    headers: repositorySettings.headers,
+                    body: {
+                        body: repositorySettings.issueClosedTemplate({
+                            html_url: 'html_url',
+                            forum_links: forumLinks,
+                            signature: repositorySettings.signature
+                        })
+                    },
                     json: true
                 });
                 done();
@@ -136,7 +140,7 @@ describe('commentOnClosedIssue', function () {
         });
         spyOn(requestPromise, 'post');
 
-        commentOnClosedIssue._implementation('issueUrl', 'commentsUrl', headers)
+        commentOnClosedIssue._implementation('issueUrl', 'commentsUrl', repositorySettings.headers)
             .then(done.fail)
             .catch(function (error) {
                 expect(error).toEqual('Bad request');
@@ -164,7 +168,7 @@ describe('commentOnClosedIssue', function () {
         });
         spyOn(requestPromise, 'post');
 
-        commentOnClosedIssue._implementation('issueUrl', 'commentsUrl', headers)
+        commentOnClosedIssue._implementation('issueUrl', 'commentsUrl', repositorySettings.headers)
             .then(done.fail)
             .catch(function (error) {
                 expect(error).toEqual('Bad request');

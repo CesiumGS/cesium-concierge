@@ -1,9 +1,9 @@
 'use strict';
 
-var nconf = require('nconf');
 var Promise = require('bluebird');
 
 var postToGitHub = require('../../lib/postToGitHub');
+var Settings = require('../../lib/Settings');
 
 describe('postToGitHub', function () {
     var res;
@@ -17,16 +17,18 @@ describe('postToGitHub', function () {
             end: jasmine.createSpy('end')
         };
 
-        spyOn(nconf, 'get').and.returnValue({
-            'AnalyticalGraphics/cesium': {
-                gitHubToken: '123442345'
-            }
-        });
+        Settings.repositories['AnalyticalGraphics/cesium'] = {
+            gitHubToken: '123442345'
+        };
 
         headers = {
             'User-Agent': 'cesium-concierge',
             Authorization: 'token 123442345'
         };
+    });
+
+    afterEach(function(){
+        delete Settings.repositories['AnalyticalGraphics/cesium'];
     });
 
     it('errors if the specified repository is not configured', function () {
