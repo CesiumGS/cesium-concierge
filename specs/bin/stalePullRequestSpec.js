@@ -36,7 +36,7 @@ describe('stalePullRequest', function () {
         var mockPullRequest = {};
         var mockPullRequest2 = {};
         spyOn(requestPromise, 'get').and.callFake(function (options) {
-            if (options.url === 'https://api.github.com/repos/AnalyticalGraphics/cesium/pulls?state=opened&base=master') {
+            if (options.url === 'https://api.github.com/repos/AnalyticalGraphics/cesium/pulls?state=open&base=master') {
                 return Promise.resolve([mockPullRequest, mockPullRequest2]);
             }
             return Promise.reject(new Error('Unexpected Url'));

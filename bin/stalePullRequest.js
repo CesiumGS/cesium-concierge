@@ -42,7 +42,7 @@ function stalePullRequest(repositories) {
  */
 stalePullRequest._processRepository = function (repositoryName, repositorySettings) {
     return requestPromise.get({
-        url: 'https://api.github.com/repos/' + repositoryName + '/pulls?state=opened&base=master',
+        url: 'https://api.github.com/repos/' + repositoryName + '/pulls?state=open&base=master',
         headers: repositorySettings.headers,
         json: true
     })
