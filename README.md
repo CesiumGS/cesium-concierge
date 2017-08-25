@@ -35,6 +35,7 @@ The possible settings are:
 | `repositories:{full_name}` | `object` | Settings specific to the repository `{full_name}`. | ✓
 | `repositories:{full_name}:gitHubToken` | `string` | Token used to verify __outgoing__ requests to GitHub repository | ✓
 | `repositories:{full_name}:thirdPartyFolders` | `string` | Comma-separated list of folders in which to look for changed files in pull request to remind user to update License. | X
+| `repositories:{full_name}:claUrl` | `string` | The GitHub API URL to the CLA file in JSON form. If undefined it disables CLA checking. See [here](https://developer.github.com/v3/repos/contents/#get-contents) for how the URL should look. _Example:_ https://api.github.com/repos/AnalyticalGraphicsInc/cesium-concierge/contents/specs/data/config/CLA.json | X
 | `repositories:{full_name}:maxDaysSinceUpdate` | `number` | "Bump" pull requests older than this number of days ago | X
 | `port` | `number: default 5000` | Port on which to listen to incoming requests | X
 | `listenPath` | `string: default"/"` | Path on which to listen for incoming requests | X
@@ -51,6 +52,20 @@ The secret verifies that all incoming requests to your server are from GitHub an
 ### Setting `gitHubToken`
 Next, get a [Personal Access Token](https://help.github.com/articles/creating-a-personal-access-token-for-the-command-line/), which verifies with GitHub that all requests to its API come from an account
 with privileges. Set it locally by using any of the three ways listed above.
+
+### CLA Format
+The `repositories:{full_name}:claUrl` should point to a GitHub URL of a JSON file with the following format:
+```json
+[
+  {
+    "gitHub": "user1"
+  },
+  {
+    "gitHub": "user2"
+  }
+]
+```
+The `gitHub` value is the only required field, but this format provides for storing more information alongside the GitHub name.
 
 ---
 

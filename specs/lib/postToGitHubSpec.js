@@ -3,11 +3,12 @@
 var Promise = require('bluebird');
 
 var postToGitHub = require('../../lib/postToGitHub');
+var RepositorySettings = require('../../lib/RepositorySettings');
 var Settings = require('../../lib/Settings');
 
 describe('postToGitHub', function () {
     var res;
-    var headers;
+    var repositorySettings;
 
     beforeEach(function () {
         res = {
@@ -17,17 +18,11 @@ describe('postToGitHub', function () {
             end: jasmine.createSpy('end')
         };
 
-        Settings.repositories['AnalyticalGraphics/cesium'] = {
-            gitHubToken: '123442345'
-        };
-
-        headers = {
-            'User-Agent': 'cesium-concierge',
-            Authorization: 'token 123442345'
-        };
+        repositorySettings = new RepositorySettings();
+        Settings.repositories['AnalyticalGraphics/cesium'] = repositorySettings;
     });
 
-    afterEach(function(){
+    afterEach(function () {
         delete Settings.repositories['AnalyticalGraphics/cesium'];
     });
 
@@ -63,7 +58,7 @@ describe('postToGitHub', function () {
 
         postToGitHub(req, res, next)
             .then(function () {
-                expect(postToGitHub._commentOnClosedIssue).toHaveBeenCalledWith(req.body, headers);
+                expect(postToGitHub._commentOnClosedIssue).toHaveBeenCalledWith(req.body, repositorySettings);
                 expect(res.status).toHaveBeenCalledWith(204);
                 expect(res.end).toHaveBeenCalled();
                 expect(next).toHaveBeenCalledWith();
@@ -90,7 +85,7 @@ describe('postToGitHub', function () {
 
         postToGitHub(req, res, next)
             .then(function () {
-                expect(postToGitHub._commentOnClosedIssue).toHaveBeenCalledWith(req.body, headers);
+                expect(postToGitHub._commentOnClosedIssue).toHaveBeenCalledWith(req.body, repositorySettings);
                 expect(res.status).toHaveBeenCalledWith(204);
                 expect(res.end).toHaveBeenCalled();
                 expect(next).toHaveBeenCalledWith();
@@ -117,7 +112,7 @@ describe('postToGitHub', function () {
 
         postToGitHub(req, res, next)
             .then(function () {
-                expect(postToGitHub._commentOnOpenedPullRequest).toHaveBeenCalledWith(req.body, headers);
+                expect(postToGitHub._commentOnOpenedPullRequest).toHaveBeenCalledWith(req.body, repositorySettings);
                 expect(res.status).toHaveBeenCalledWith(204);
                 expect(res.end).toHaveBeenCalled();
                 expect(next).toHaveBeenCalledWith();

@@ -76,7 +76,7 @@ describe('commentOnOpenedPullRequest', function () {
         expect(commentOnOpenedPullRequest._askAboutThirdParty(['NotThirdParty/file.js'], ['ThirdParty'])).toBe(false);
     });
 
-    it('commentOnOpenedPullRequest._implementation posts CLA confirmation if CHANGES.md was updated and there are no modified ThirdParty folders', function (done) {
+    it('commentOnOpenedPullRequest._implementation posts CLA confirmation if CHANGES.md was updated and there are no modified ThirdParty folders or CLA', function (done) {
         var pullRequestFilesUrl = 'pullRequestFilesUrl';
         var pullRequestCommentsUrl = 'pullRequestCommentsUrl';
 
@@ -102,6 +102,7 @@ describe('commentOnOpenedPullRequest', function () {
                         body: repositorySettings.pullRequestOpenedTemplate({
                             userName: userName,
                             repository_url: repositoryUrl,
+                            askForCla: false,
                             askAboutChanges: false,
                             askAboutThirdParty: false,
                             thirdPartyFolders: thirdPartyFolders.join(', ')
@@ -114,7 +115,7 @@ describe('commentOnOpenedPullRequest', function () {
             .catch(done.fail);
     });
 
-    it('commentOnOpenedPullRequest._implementation posts if CHANGES.md was not updated and there are no modified ThirdParty folders', function (done) {
+    it('commentOnOpenedPullRequest._implementation posts if CHANGES.md was not updated and there are no modified ThirdParty folders or CLA', function (done) {
         var pullRequestFilesUrl = 'pullRequestFilesUrl';
         var pullRequestCommentsUrl = 'pullRequestCommentsUrl';
 
@@ -142,6 +143,7 @@ describe('commentOnOpenedPullRequest', function () {
                         body: repositorySettings.pullRequestOpenedTemplate({
                             userName: userName,
                             repository_url: repositoryUrl,
+                            askForCla: false,
                             askAboutChanges: true,
                             askAboutThirdParty: false,
                             thirdPartyFolders: thirdPartyFolders.join(', ')
@@ -183,6 +185,7 @@ describe('commentOnOpenedPullRequest', function () {
                         body: repositorySettings.pullRequestOpenedTemplate({
                             userName: userName,
                             repository_url: repositoryUrl,
+                            askForCla: false,
                             askAboutChanges: false,
                             askAboutThirdParty: true,
                             thirdPartyFolders: thirdPartyFolders.join(', ')
@@ -222,6 +225,7 @@ describe('commentOnOpenedPullRequest', function () {
                         body: repositorySettings.pullRequestOpenedTemplate({
                             userName: userName,
                             repository_url: repositoryUrl,
+                            askForCla: false,
                             askAboutChanges: true,
                             askAboutThirdParty: true,
                             thirdPartyFolders: thirdPartyFolders.join(', ')
@@ -234,12 +238,14 @@ describe('commentOnOpenedPullRequest', function () {
             .catch(done.fail);
     });
 
-    it('commentOnOpenedPullRequest._implementation posts if CHANGES.md was not updated and there are modified ThirdParty folders.', function (done) {
+    it('commentOnOpenedPullRequest._implementation posts if CHANGES.md was not updated and there are modified ThirdParty folders, and CLA check succeeded.', function (done) {
         var pullRequestFilesUrl = 'pullRequestFilesUrl';
         var pullRequestCommentsUrl = 'pullRequestCommentsUrl';
+        var claUrl = 'cla.json';
 
         var repositorySettings = new RepositorySettings({
-            thirdPartyFolders: thirdPartyFolders.join(',')
+            thirdPartyFolders: thirdPartyFolders.join(','),
+            claUrl: claUrl
         });
 
         spyOn(requestPromise, 'post');
@@ -250,7 +256,12 @@ describe('commentOnOpenedPullRequest', function () {
                     {filename: 'ThirdParty/stuff.js'}
                 ]);
             }
-
+            if (options.url === claUrl) {
+                var content = Buffer.from(JSON.stringify([{gitHub: userName}])).toString('base64');
+                return Promise.resolve({
+                    content: content
+                });
+            }
             return Promise.reject('Unknown url.');
         });
 
@@ -263,6 +274,58 @@ describe('commentOnOpenedPullRequest', function () {
                         body: repositorySettings.pullRequestOpenedTemplate({
                             userName: userName,
                             repository_url: repositoryUrl,
+                            claEnabled: true,
+                            askForCla: false,
+                            askAboutChanges: true,
+                            askAboutThirdParty: true,
+                            thirdPartyFolders: thirdPartyFolders.join(', ')
+                        })
+                    },
+                    json: true
+                });
+                done();
+            })
+            .catch(done.fail);
+    });
+
+    it('commentOnOpenedPullRequest._implementation posts if CHANGES.md was not updated and there are modified ThirdParty folders, and CLA check failed.', function (done) {
+        var pullRequestFilesUrl = 'pullRequestFilesUrl';
+        var pullRequestCommentsUrl = 'pullRequestCommentsUrl';
+        var claUrl = 'cla.json';
+
+        spyOn(requestPromise, 'post');
+
+        var repositorySettings = new RepositorySettings({
+            thirdPartyFolders: thirdPartyFolders.join(','),
+            claUrl: claUrl
+        });
+
+        spyOn(requestPromise, 'get').and.callFake(function (options) {
+            if (options.url === pullRequestFilesUrl) {
+                return Promise.resolve([
+                    {filename: 'ThirdParty/stuff.js'}
+                ]);
+            }
+            if (options.url === claUrl) {
+                var content = Buffer.from(JSON.stringify([{gitHub: 'bjones'}])).toString('base64');
+                return Promise.resolve({
+                    content: content
+                });
+            }
+            return Promise.reject('Unknown url.');
+        });
+
+        commentOnOpenedPullRequest._implementation(pullRequestFilesUrl, pullRequestCommentsUrl, repositorySettings, userName, repositoryUrl)
+            .then(function () {
+                expect(requestPromise.post).toHaveBeenCalledWith({
+                    url: pullRequestCommentsUrl,
+                    headers: repositorySettings.headers,
+                    body: {
+                        body: repositorySettings.pullRequestOpenedTemplate({
+                            userName: userName,
+                            repository_url: repositoryUrl,
+                            claEnabled: true,
+                            askForCla: true,
                             askAboutChanges: true,
                             askAboutThirdParty: true,
                             thirdPartyFolders: thirdPartyFolders.join(', ')
