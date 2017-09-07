@@ -29,14 +29,16 @@ describe('getUniqueMatch', function () {
 describe('Google Group regex', function () {
     var empty = '';
     var noLink = 'this has no google link';
-    var sslLink = 'https://groups.google.com/';
-    var noSslLink = 'http://groups.google.com/';
+    var sslLink = 'https://groups.google.com/forum/#!topic/cesium-dev/Wd0P0EnFDjA';
+    var noSslLink = 'http://groups.google.com/forum/#!topic/cesium-dev/Wd0P0EnFDjA';
     var surroundedText = 'Reported here: https://groups.google.com/forum/?hl=en#!topic/cesium-dev/fewafjdsk\n\nSeen with Chrome 59.0.3071.102. iOS version: 10.3.2. Perhaps a driver issue?\n';
     var commaAtEnd = 'https://groups.google.com/forum/?hl=en#!topic/cesium-dev/test1, fdsfoewjaf fjdsa f';
     var twoLinks = 'https://groups.google.com/forum/?hl=en#!topic/cesium-dev/test2, https://groups.google.com/forum/?hl=en#!topic/cesium-dev/test5';
     var twoSameLinks = 'https://groups.google.com/forum/?hl=en#!topic/cesium-dev/test2, https://groups.google.com/forum/?hl=en#!topic/cesium-dev/test2, https://groups.google.com/forum/?hl=en#!topic/cesium-dev/test3';
     var markdownLink = 'This fixes #5446, also see this [forum post.](https://groups.google.com/forum/#!msg/cesium-dev/Ktn8aPQmOsQ/_Dbd7igkCQAJ)\\r\\n\\r\\nThis adds';
     var returnAfterLink = 'https://groups.google.com/forum/#!msg/cesium-dev/Ktn8aPQmOsQ/_Dbd7igkCQAJ\\r\\n';
+    var baseLink = 'https://groups.google.com/forum/!forum/cesium-dev';
+    var baseLink2 = 'https://groups.google.com/forum/?hl=en#!forum/cesium-dev';
 
     it('Returns empty array for ""', function () {
         expect(getUniqueMatch([empty], googleLinkRegex)).toEqual([]);
@@ -70,5 +72,9 @@ describe('Google Group regex', function () {
 
     it('Finds link with newline after', function () {
         expect(getUniqueMatch([returnAfterLink], googleLinkRegex)).toEqual(['https://groups.google.com/forum/#!msg/cesium-dev/Ktn8aPQmOsQ/_Dbd7igkCQAJ']);
+    });
+
+    it('Doesn\'t match links to base forum', function () {
+        expect(getUniqueMatch([baseLink, baseLink2], googleLinkRegex)).toEqual([]);
     });
 });
