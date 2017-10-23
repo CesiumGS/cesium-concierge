@@ -73,6 +73,10 @@ describe('commentOnClosedIssue', function () {
             body: forumLinks[1]
         }];
 
+        spyOn(repositorySettings, 'fetchSettings').and.callFake(function() {
+           return Promise.resolve(repositorySettings);
+        });
+
         spyOn(requestPromise, 'get').and.callFake(function (options) {
             if (options.url === issueUrl) {
                 return Promise.resolve(issueResponseJson);
@@ -87,6 +91,19 @@ describe('commentOnClosedIssue', function () {
 
         return commentOnClosedIssue._implementation('issueUrl', 'commentsUrl', repositorySettings);
     }
+
+    it('commentOnClosedIssue._implementation fetches latest repository settings.', function (done) {
+        var forumLinks = [
+            '',
+            ''
+        ];
+        runTestWithLinks(forumLinks)
+            .then(function () {
+                expect(repositorySettings.fetchSettings).toHaveBeenCalled();
+                done();
+            })
+            .catch(done.fail);
+    });
 
     it('commentOnClosedIssue._implementation posts expected message.', function (done) {
         var forumLinks = [
@@ -125,9 +142,12 @@ describe('commentOnClosedIssue', function () {
             .catch(done.fail);
     });
 
-    it('commentOnClosedIssue._implementation rejects is issueUrl cannot be retrieved.', function (done) {
+    it('commentOnClosedIssue._implementation rejects if issueUrl cannot be retrieved.', function (done) {
         var commentsJson = [];
 
+        spyOn(repositorySettings, 'fetchSettings').and.callFake(function() {
+            return Promise.resolve(repositorySettings);
+        });
         spyOn(requestPromise, 'get').and.callFake(function (options) {
             if (options.url === issueUrl) {
                 return Promise.reject('Bad request');
@@ -140,7 +160,7 @@ describe('commentOnClosedIssue', function () {
         });
         spyOn(requestPromise, 'post');
 
-        commentOnClosedIssue._implementation('issueUrl', 'commentsUrl', repositorySettings.headers)
+        commentOnClosedIssue._implementation('issueUrl', 'commentsUrl', repositorySettings)
             .then(done.fail)
             .catch(function (error) {
                 expect(error).toEqual('Bad request');
@@ -149,12 +169,15 @@ describe('commentOnClosedIssue', function () {
             });
     });
 
-    it('commentOnClosedIssue._implementation rejects is commentsUrl cannot be retrieved.', function (done) {
+    it('commentOnClosedIssue._implementation rejects if commentsUrl cannot be retrieved.', function (done) {
         var issueResponseJson = {
             html_url: 'html_url',
             body: ''
         };
 
+        spyOn(repositorySettings, 'fetchSettings').and.callFake(function() {
+            return Promise.resolve(repositorySettings);
+        });
         spyOn(requestPromise, 'get').and.callFake(function (options) {
             if (options.url === issueUrl) {
                 return Promise.resolve(issueResponseJson);
@@ -168,7 +191,7 @@ describe('commentOnClosedIssue', function () {
         });
         spyOn(requestPromise, 'post');
 
-        commentOnClosedIssue._implementation('issueUrl', 'commentsUrl', repositorySettings.headers)
+        commentOnClosedIssue._implementation('issueUrl', 'commentsUrl', repositorySettings)
             .then(done.fail)
             .catch(function (error) {
                 expect(error).toEqual('Bad request');
