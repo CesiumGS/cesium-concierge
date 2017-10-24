@@ -14,7 +14,11 @@ describe('loadRepoConfig', function () {
     };
 
     var notFoundResponse = {
-        message: 'Not Found'
+        statusCode: 404
+    };
+
+    var unexpectedErrorRespomse = {
+        statusCode: 201
     };
 
     var configFileUrl = path.join(configUrl, loadRepoConfig._configFile);
@@ -107,6 +111,18 @@ describe('loadRepoConfig', function () {
                 })
                 .catch(done.fail);
         });
+
+        it ('rejects on unexpected error', function (done) {
+            spyOn(requestPromise, 'get').and.callFake(function () {
+                return Promise.reject(unexpectedErrorRespomse);
+            });
+
+            loadRepoConfig._getConfig(configUrl, {}, initialConfig)
+                .then(function () {
+                    done.fail();
+                })
+                .catch(done);
+        });
     });
 
     describe('_getTemplates', function () {
@@ -160,6 +176,18 @@ describe('loadRepoConfig', function () {
                     done();
                 })
                 .catch(done.fail);
+        });
+
+        it ('rejects on unexpected error', function (done) {
+            spyOn(requestPromise, 'get').and.callFake(function () {
+                return Promise.reject(unexpectedErrorRespomse);
+            });
+
+            loadRepoConfig._getTemplates(configUrl, {}, initialConfig)
+                .then(function () {
+                    done.fail();
+                })
+                .catch(done);
         });
     });
 
