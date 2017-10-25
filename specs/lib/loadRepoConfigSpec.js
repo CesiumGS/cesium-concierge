@@ -1,5 +1,5 @@
 'use strict';
-var path = require('path');
+var url = require('url');
 
 var Promise = require('bluebird');
 var requestPromise = require('request-promise');
@@ -7,7 +7,7 @@ var requestPromise = require('request-promise');
 var loadRepoConfig = require('../../lib/loadRepoConfig');
 
 describe('loadRepoConfig', function () {
-    var configUrl = '//config.url/';
+    var configUrl = 'https://config.url/';
     var initialConfig = {
         option: 1,
         option2: 2
@@ -21,7 +21,7 @@ describe('loadRepoConfig', function () {
         statusCode: 201
     };
 
-    var configFileUrl = path.join(configUrl, loadRepoConfig._configFile);
+    var configFileUrl = url.resolve(configUrl, loadRepoConfig._configFile);
     var sampleConfig = {
         option: 'myValue',
         optionList: [1, 2, 3]
@@ -31,7 +31,7 @@ describe('loadRepoConfig', function () {
         content: JSON.stringify(sampleConfig)
     };
 
-    var templatesUrl = path.join(configUrl, loadRepoConfig._templateDirectory);
+    var templatesUrl = url.resolve(configUrl, loadRepoConfig._templateDirectory);
     var templatesResponseJson = [{
         name: 'signature.hbs',
         url: '//file.url'
@@ -58,7 +58,7 @@ describe('loadRepoConfig', function () {
         });
 
         loadRepoConfig('Org/repo-name', {}, {}).then(function () {
-            var expectedUrl = path.join('https://api.github.com/repos/Org/repo-name/contents', loadRepoConfig._configDirectory);
+            var expectedUrl = url.resolve('https://api.github.com/repos/Org/repo-name/contents/', loadRepoConfig._configDirectory);
 
             expect(loadRepoConfig._getConfig).toHaveBeenCalledWith(expectedUrl, {}, {});
             expect(loadRepoConfig._getTemplates).toHaveBeenCalledWith(expectedUrl, {}, {});
