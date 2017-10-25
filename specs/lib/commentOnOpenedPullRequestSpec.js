@@ -76,11 +76,44 @@ describe('commentOnOpenedPullRequest', function () {
         expect(commentOnOpenedPullRequest._askAboutThirdParty(['NotThirdParty/file.js'], ['ThirdParty'])).toBe(false);
     });
 
+    it('commentOnOpenedPullRequest._implementation fetches latest repository settings.', function (done) {
+        var pullRequestFilesUrl = 'pullRequestFilesUrl';
+        var pullRequestCommentsUrl = 'pullRequestCommentsUrl';
+
+        var repositorySettings = new RepositorySettings();
+
+        spyOn(repositorySettings, 'fetchSettings').and.callFake(function() {
+            return Promise.resolve(repositorySettings);
+        });
+
+        spyOn(requestPromise, 'post');
+
+        spyOn(requestPromise, 'get').and.callFake(function (options) {
+            if (options.url === pullRequestFilesUrl) {
+                return Promise.resolve([
+                    {filename: 'CHANGES.md'}
+                ]);
+            }
+            return Promise.reject('Unknown url.');
+        });
+
+        commentOnOpenedPullRequest._implementation(pullRequestFilesUrl, pullRequestCommentsUrl, repositorySettings, userName, repositoryUrl)
+            .then(function () {
+                expect(repositorySettings.fetchSettings).toHaveBeenCalled();
+                done();
+            })
+            .catch(done.fail);
+    });
+
     it('commentOnOpenedPullRequest._implementation posts CLA confirmation if CHANGES.md was updated and there are no modified ThirdParty folders or CLA', function (done) {
         var pullRequestFilesUrl = 'pullRequestFilesUrl';
         var pullRequestCommentsUrl = 'pullRequestCommentsUrl';
 
         var repositorySettings = new RepositorySettings();
+
+        spyOn(repositorySettings, 'fetchSettings').and.callFake(function() {
+            return Promise.resolve(repositorySettings);
+        });
 
         spyOn(requestPromise, 'post');
 
@@ -121,6 +154,10 @@ describe('commentOnOpenedPullRequest', function () {
 
         var repositorySettings = new RepositorySettings({
             thirdPartyFolders: thirdPartyFolders.join(',')
+        });
+
+        spyOn(repositorySettings, 'fetchSettings').and.callFake(function() {
+            return Promise.resolve(repositorySettings);
         });
 
         spyOn(requestPromise, 'post');
@@ -164,6 +201,10 @@ describe('commentOnOpenedPullRequest', function () {
             thirdPartyFolders: thirdPartyFolders.join(',')
         });
 
+        spyOn(repositorySettings, 'fetchSettings').and.callFake(function() {
+            return Promise.resolve(repositorySettings);
+        });
+
         spyOn(requestPromise, 'post');
 
         spyOn(requestPromise, 'get').and.callFake(function (options) {
@@ -205,6 +246,11 @@ describe('commentOnOpenedPullRequest', function () {
         var repositorySettings = new RepositorySettings({
             thirdPartyFolders: thirdPartyFolders.join(',')
         });
+
+        spyOn(repositorySettings, 'fetchSettings').and.callFake(function() {
+            return Promise.resolve(repositorySettings);
+        });
+
         spyOn(requestPromise, 'post');
 
         spyOn(requestPromise, 'get').and.callFake(function (options) {
@@ -246,6 +292,10 @@ describe('commentOnOpenedPullRequest', function () {
         var repositorySettings = new RepositorySettings({
             thirdPartyFolders: thirdPartyFolders.join(','),
             claUrl: claUrl
+        });
+
+        spyOn(repositorySettings, 'fetchSettings').and.callFake(function() {
+            return Promise.resolve(repositorySettings);
         });
 
         spyOn(requestPromise, 'post');
@@ -293,12 +343,16 @@ describe('commentOnOpenedPullRequest', function () {
         var pullRequestCommentsUrl = 'pullRequestCommentsUrl';
         var claUrl = 'cla.json';
 
-        spyOn(requestPromise, 'post');
-
         var repositorySettings = new RepositorySettings({
             thirdPartyFolders: thirdPartyFolders.join(','),
             claUrl: claUrl
         });
+
+        spyOn(repositorySettings, 'fetchSettings').and.callFake(function() {
+            return Promise.resolve(repositorySettings);
+        });
+
+        spyOn(requestPromise, 'post');
 
         spyOn(requestPromise, 'get').and.callFake(function (options) {
             if (options.url === pullRequestFilesUrl) {
