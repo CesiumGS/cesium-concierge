@@ -43,10 +43,12 @@ describe('loadRepoConfig', function () {
         url: '//file.url'
     }];
 
-    var templateUrl = '//template.url';
+    var templateUrl = 'https://config.url/templates/';
+    var templateContents = 'Here is a template.';
     var templateFileResponseJson = {
         name: 'signature.hbs',
-        content: 'Here is a template'
+        content: Buffer.from(templateContents, 'ascii').toString('base64'),
+        encoding: 'base64'
     };
 
     it('populates configuration option based on supplied config file and template directory', function (done) {
@@ -129,7 +131,7 @@ describe('loadRepoConfig', function () {
         it('requests the expected url', function (done) {
             spyOn(requestPromise, 'get').and.callFake(function (options) {
                 if (options.url === templatesUrl) {
-                    return Promise.resolve(templatesResponseJson);
+                    return Promise.resolve([]);
                 }
 
                 return Promise.reject();
@@ -150,7 +152,7 @@ describe('loadRepoConfig', function () {
             spyOn(loadRepoConfig, '_getTemplate').and.callFake(function (url, headers) {
                 expect(url).toBeDefined();
                 expect(headers).toBe(sampleHeaders);
-                return 'A template';
+                return Promise.resolve('A template');
             });
 
             loadRepoConfig._getTemplates(configUrl, sampleHeaders, initialConfig)
@@ -202,7 +204,7 @@ describe('loadRepoConfig', function () {
 
         loadRepoConfig._getTemplate(templateUrl, {})
             .then(function (content) {
-                expect(content).toEqual(templateFileResponseJson.content);
+                expect(content).toEqual(templateContents);
                 done();
             })
             .catch(done.fail);

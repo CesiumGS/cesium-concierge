@@ -118,8 +118,7 @@ describe('commentOnClosedIssue', function () {
                     body: {
                         body: repositorySettings.issueClosedTemplate({
                             html_url: 'html_url',
-                            forum_links: forumLinks,
-                            signature: repositorySettings.signature
+                            forum_links: forumLinks
                         })
                     },
                     json: true
