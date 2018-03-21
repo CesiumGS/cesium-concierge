@@ -148,6 +148,57 @@ describe('commentOnOpenedPullRequest', function () {
             .catch(done.fail);
     });
 
+    it('commentOnOpenedPullRequest._implementation catches errors processing CLA.json', function (done) {
+        var pullRequestFilesUrl = 'pullRequestFilesUrl';
+        var pullRequestCommentsUrl = 'pullRequestCommentsUrl';
+        var claUrl = 'cla.json';
+
+        var repositorySettings = new RepositorySettings({
+            claUrl: claUrl
+        });
+
+        spyOn(repositorySettings, 'fetchSettings').and.callFake(function() {
+            return Promise.resolve(repositorySettings);
+        });
+
+        spyOn(requestPromise, 'post');
+
+        spyOn(requestPromise, 'get').and.callFake(function (options) {
+            if (options.url === pullRequestFilesUrl) {
+                return Promise.resolve([
+                    {filename: 'CHANGES.md'}
+                ]);
+            }
+
+            if (options.url === claUrl) {
+                return Promise.reject(new SyntaxError('Unexpected token a in JSON at position 15045'));
+            }
+            return Promise.reject('Unknown url.');
+        });
+
+        commentOnOpenedPullRequest._implementation(pullRequestFilesUrl, pullRequestCommentsUrl, repositorySettings, userName, repositoryUrl)
+            .then(function () {
+                expect(requestPromise.post).toHaveBeenCalledWith({
+                    url: pullRequestCommentsUrl,
+                    headers: repositorySettings.headers,
+                    body: {
+                        body: repositorySettings.pullRequestOpenedTemplate({
+                            userName: userName,
+                            repository_url: repositoryUrl,
+                            claEnabled: true,
+                            askForCla: false,
+                            askAboutChanges: false,
+                            askAboutThirdParty: false,
+                            thirdPartyFolders: thirdPartyFolders.join(', ')
+                        })
+                    },
+                    json: true
+                });
+                done();
+            })
+            .catch(done.fail);
+    });
+
     it('commentOnOpenedPullRequest._implementation posts if CHANGES.md was not updated and there are no modified ThirdParty folders or CLA', function (done) {
         var pullRequestFilesUrl = 'pullRequestFilesUrl';
         var pullRequestCommentsUrl = 'pullRequestCommentsUrl';
