@@ -148,10 +148,11 @@ describe('commentOnOpenedPullRequest', function () {
             .catch(done.fail);
     });
 
-    it('commentOnOpenedPullRequest._implementation catches errors processing CLA.json', function (done) {
+    it('commentOnOpenedPullRequest._implementation catches and reports errors processing CLA.json', function (done) {
         var pullRequestFilesUrl = 'pullRequestFilesUrl';
         var pullRequestCommentsUrl = 'pullRequestCommentsUrl';
         var claUrl = 'cla.json';
+        var errorCla = new SyntaxError('Unexpected token a in JSON at position 15045');
 
         var repositorySettings = new RepositorySettings({
             claUrl: claUrl
@@ -171,7 +172,7 @@ describe('commentOnOpenedPullRequest', function () {
             }
 
             if (options.url === claUrl) {
-                return Promise.reject(new SyntaxError('Unexpected token a in JSON at position 15045'));
+                return Promise.reject(errorCla);
             }
             return Promise.reject('Unknown url.');
         });
@@ -187,6 +188,7 @@ describe('commentOnOpenedPullRequest', function () {
                             repository_url: repositoryUrl,
                             claEnabled: true,
                             askForCla: false,
+                            errorCla: errorCla.toString(),
                             askAboutChanges: false,
                             askAboutThirdParty: false,
                             thirdPartyFolders: thirdPartyFolders.join(', ')
