@@ -15,6 +15,7 @@ describe('commentOnOpenedPullRequest', function () {
     var repositoryName = 'AnalyticalGraphics/cesium';
     var repositoryUrl = 'https://github.com/AnalyticalGraphicsInc/cesium';
     var thirdPartyFolders = ['ThirdParty/', 'Source/ThirdParty/'];
+    var baseBranch = 'master';
 
     var pullRequestJson = {
         pull_request: {
@@ -22,6 +23,12 @@ describe('commentOnOpenedPullRequest', function () {
             comments_url: commentsUrl,
             user: {
                 login: userName
+            },
+            head: {
+                ref: 'feature'
+            },
+            base: {
+                ref: 'master'
             }
         },
         repository: {
@@ -56,16 +63,18 @@ describe('commentOnOpenedPullRequest', function () {
 
         commentOnOpenedPullRequest(pullRequestJson, repositorySettings);
 
-        expect(commentOnOpenedPullRequest._implementation).toHaveBeenCalledWith(filesUrl, commentsUrl, repositorySettings, userName, repositoryUrl);
+        expect(commentOnOpenedPullRequest._implementation).toHaveBeenCalledWith(filesUrl, commentsUrl, repositorySettings, userName, repositoryUrl, baseBranch);
     });
 
     it('commentOnOpenedPullRequest._askAboutChanges works', function () {
-        expect(commentOnOpenedPullRequest._askAboutChanges(['CHANGES.md'])).toBe(false);
+        expect(commentOnOpenedPullRequest._askAboutChanges(['CHANGES.md'],'master')).toBe(false);
+        expect(commentOnOpenedPullRequest._askAboutChanges(['file.txt'],'feature-branch')).toBe(false);
+        expect(commentOnOpenedPullRequest._askAboutChanges([])).toBe(false);
 
-        expect(commentOnOpenedPullRequest._askAboutChanges([])).toBe(true);
-        expect(commentOnOpenedPullRequest._askAboutChanges(['CHANGES.MD'])).toBe(true);
-        expect(commentOnOpenedPullRequest._askAboutChanges(['leadingCHANGES.md'])).toBe(true);
-        expect(commentOnOpenedPullRequest._askAboutChanges(['CHANGES.mdtrailing'])).toBe(true);
+        expect(commentOnOpenedPullRequest._askAboutChanges(['file.txt'],'master')).toBe(true);
+        expect(commentOnOpenedPullRequest._askAboutChanges(['CHANGES.MD'],'master')).toBe(true);
+        expect(commentOnOpenedPullRequest._askAboutChanges(['leadingCHANGES.md'],'master')).toBe(true);
+        expect(commentOnOpenedPullRequest._askAboutChanges(['CHANGES.mdtrailing'],'master')).toBe(true);
     });
 
     it('commentOnOpenedPullRequest._askAboutThirdParty works', function () {
@@ -224,7 +233,7 @@ describe('commentOnOpenedPullRequest', function () {
             return Promise.reject('Unknown url.');
         });
 
-        commentOnOpenedPullRequest._implementation(pullRequestFilesUrl, pullRequestCommentsUrl, repositorySettings, userName, repositoryUrl)
+        commentOnOpenedPullRequest._implementation(pullRequestFilesUrl, pullRequestCommentsUrl, repositorySettings, userName, repositoryUrl, baseBranch)
             .then(function () {
                 expect(requestPromise.post).toHaveBeenCalledWith({
                     url: pullRequestCommentsUrl,
@@ -235,6 +244,51 @@ describe('commentOnOpenedPullRequest', function () {
                             repository_url: repositoryUrl,
                             askForCla: false,
                             askAboutChanges: true,
+                            askAboutThirdParty: false,
+                            thirdPartyFolders: thirdPartyFolders.join(', ')
+                        })
+                    },
+                    json: true
+                });
+                done();
+            })
+            .catch(done.fail);
+    });
+
+    it('commentOnOpenedPullRequest._implementation does not post when the target branch is not master', function (done) {
+        var pullRequestFilesUrl = 'pullRequestFilesUrl';
+        var pullRequestCommentsUrl = 'pullRequestCommentsUrl';
+
+        var repositorySettings = new RepositorySettings({
+            thirdPartyFolders: thirdPartyFolders.join(',')
+        });
+
+        spyOn(repositorySettings, 'fetchSettings').and.callFake(function() {
+            return Promise.resolve(repositorySettings);
+        });
+
+        spyOn(requestPromise, 'post');
+
+        spyOn(requestPromise, 'get').and.callFake(function (options) {
+            if (options.url === pullRequestFilesUrl) {
+                return Promise.resolve([
+                    {filename: 'notCHANGES.md'}
+                ]);
+            }
+            return Promise.reject('Unknown url.');
+        });
+
+        commentOnOpenedPullRequest._implementation(pullRequestFilesUrl, pullRequestCommentsUrl, repositorySettings, userName, repositoryUrl, 'feature-branch')
+            .then(function () {
+                expect(requestPromise.post).toHaveBeenCalledWith({
+                    url: pullRequestCommentsUrl,
+                    headers: repositorySettings.headers,
+                    body: {
+                        body: repositorySettings.pullRequestOpenedTemplate({
+                            userName: userName,
+                            repository_url: repositoryUrl,
+                            askForCla: false,
+                            askAboutChanges: false,
                             askAboutThirdParty: false,
                             thirdPartyFolders: thirdPartyFolders.join(', ')
                         })
@@ -315,7 +369,7 @@ describe('commentOnOpenedPullRequest', function () {
             return Promise.reject('Unknown url.');
         });
 
-        commentOnOpenedPullRequest._implementation(pullRequestFilesUrl, pullRequestCommentsUrl, repositorySettings, userName, repositoryUrl)
+        commentOnOpenedPullRequest._implementation(pullRequestFilesUrl, pullRequestCommentsUrl, repositorySettings, userName, repositoryUrl, baseBranch)
             .then(function () {
                 expect(requestPromise.post).toHaveBeenCalledWith({
                     url: pullRequestCommentsUrl,
@@ -368,7 +422,7 @@ describe('commentOnOpenedPullRequest', function () {
             return Promise.reject('Unknown url.');
         });
 
-        commentOnOpenedPullRequest._implementation(pullRequestFilesUrl, pullRequestCommentsUrl, repositorySettings, userName, repositoryUrl)
+        commentOnOpenedPullRequest._implementation(pullRequestFilesUrl, pullRequestCommentsUrl, repositorySettings, userName, repositoryUrl, baseBranch)
             .then(function () {
                 expect(requestPromise.post).toHaveBeenCalledWith({
                     url: pullRequestCommentsUrl,
@@ -422,7 +476,7 @@ describe('commentOnOpenedPullRequest', function () {
             return Promise.reject('Unknown url.');
         });
 
-        commentOnOpenedPullRequest._implementation(pullRequestFilesUrl, pullRequestCommentsUrl, repositorySettings, userName, repositoryUrl)
+        commentOnOpenedPullRequest._implementation(pullRequestFilesUrl, pullRequestCommentsUrl, repositorySettings, userName, repositoryUrl, baseBranch)
             .then(function () {
                 expect(requestPromise.post).toHaveBeenCalledWith({
                     url: pullRequestCommentsUrl,
