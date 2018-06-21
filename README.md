@@ -36,6 +36,7 @@ The possible settings are:
 | `repositories:{full_name}:gitHubToken` | `string` | Token used to verify __outgoing__ requests to GitHub repository | ✓
 | `repositories:{full_name}:thirdPartyFolders` | `string` | Comma-separated list of folders in which to look for changed files in pull request to remind user to update License. | X
 | `repositories:{full_name}:claUrl` | `string` | The GitHub API URL to the CLA file in JSON form. If undefined it disables CLA checking. See [here](https://developer.github.com/v3/repos/contents/#get-contents) for how the URL should look. _Example:_ https://api.github.com/repos/AnalyticalGraphicsInc/cesium-concierge/contents/specs/data/config/CLA.json | X
+| `repositories:{full_name}:contributorsUrl` | `string` | The GitHub API URL to the `CONTRIBUTORS.md` file in JSON form. If undefined it disables checking for first time contributors. | X
 | `repositories:{full_name}:maxDaysSinceUpdate` | `number` | "Bump" pull requests older than this number of days ago | X
 | `port` | `number: default 5000` | Port on which to listen to incoming requests | X
 | `listenPath` | `string: default"/"` | Path on which to listen for incoming requests | X
