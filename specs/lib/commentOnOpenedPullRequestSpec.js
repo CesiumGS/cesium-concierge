@@ -69,8 +69,8 @@ describe('commentOnOpenedPullRequest', function () {
     it('commentOnOpenedPullRequest._askAboutChanges works', function () {
         expect(commentOnOpenedPullRequest._askAboutChanges(['CHANGES.md'],'master')).toBe(false);
         expect(commentOnOpenedPullRequest._askAboutChanges(['file.txt'],'feature-branch')).toBe(false);
-        expect(commentOnOpenedPullRequest._askAboutChanges([])).toBe(false);
 
+        expect(commentOnOpenedPullRequest._askAboutChanges([],'master')).toBe(true);
         expect(commentOnOpenedPullRequest._askAboutChanges(['file.txt'],'master')).toBe(true);
         expect(commentOnOpenedPullRequest._askAboutChanges(['CHANGES.MD'],'master')).toBe(true);
         expect(commentOnOpenedPullRequest._askAboutChanges(['leadingCHANGES.md'],'master')).toBe(true);
