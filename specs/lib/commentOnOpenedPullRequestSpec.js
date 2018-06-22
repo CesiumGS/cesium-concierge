@@ -520,7 +520,7 @@ describe('commentOnOpenedPullRequest', function () {
                     {filename: 'file.txt'}
                 ]);
             }
-            if (options.url === contributorsUrl) {
+            if (options.url === repositorySettings.contributorsUrl) {
                 var content = Buffer.from('* [Jane Doe](https://github.com/JaneDoe)\n* [Boomer Jones](https://github.com/' + userName + ')').toString('base64');
                 return Promise.resolve({
                     content: content
@@ -571,7 +571,7 @@ describe('commentOnOpenedPullRequest', function () {
                     {filename: 'file.txt'}
                 ]);
             }
-            if (options.url === contributorsUrl) {
+            if (options.url === repositorySettings.contributorsUrl) {
                 var content = Buffer.from('* [Jane Doe](https://github.com/JaneDoe)\n* [Boomer Jones](https://github.com/' + userName + ')').toString('base64');
                 return Promise.resolve({
                     content: content
