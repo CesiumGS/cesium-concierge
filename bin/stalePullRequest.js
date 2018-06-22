@@ -25,7 +25,7 @@ if (require.main === module) {
  * @returns {Promise} A promise that resolves when the process is complete.
  */
 function stalePullRequest(repositories) {
-    dateLog("Initiating `stalePullRequest` job.");
+    dateLog('Initiating `stalePullRequest` job.');
     return Promise.each(Object.keys(repositories), function (repositoryName) {
         var repositorySettings = repositories[repositoryName];
         return stalePullRequest._processRepository(repositoryName, repositorySettings)
@@ -43,7 +43,7 @@ function stalePullRequest(repositories) {
  * @return {Promise<Array<http.IncomingMessage | undefined>>} Promise to an array of incoming messages
  */
 stalePullRequest._processRepository = function (repositoryName, repositorySettings) {
-    dateLog("Checking " + repositoryName);
+    dateLog('Checking ' + repositoryName);
     return requestPromise.get({
         url: 'https://api.github.com/repos/' + repositoryName + '/pulls?state=open&base=master',
         headers: repositorySettings.headers,
@@ -66,8 +66,8 @@ stalePullRequest._processPullRequest = function (pullRequest, repositorySettings
         .then(function (commentsJsonResponse) {
             var lastComment = commentsJsonResponse[commentsJsonResponse.length - 1];
             if (stalePullRequest.daysSince(new Date(lastComment.created_at)) >= repositorySettings.maxDaysSinceUpdate) {
-                dateLog("Bumping " + pullRequest.url + " because it hasn't been updated in " + String(stalePullRequest.daysSince(new Date(lastComment.created_at))) + " days.");
-                var alreadyBumped = (lastComment.user.login == 'cesium-concierge');
+                dateLog('Bumping ' + pullRequest.url + ' because it hasn\'t been updated in ' + String(stalePullRequest.daysSince(new Date(lastComment.created_at))) + ' days.');
+                var alreadyBumped = (lastComment.user.login === 'cesium-concierge');
                 var template = alreadyBumped ? repositorySettings.secondaryStalePullRequestTemplate : repositorySettings.initialStalePullRequestTemplate;
 
                 return requestPromise.post({
