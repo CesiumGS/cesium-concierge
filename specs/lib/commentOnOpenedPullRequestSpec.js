@@ -521,7 +521,7 @@ describe('commentOnOpenedPullRequest', function () {
                 ]);
             }
             if (options.url === contributorsUrl) {
-                var content = Buffer.from('* [Jane Doe](https://github.com/JaneDoe)\n* [Boomer Jones](https://github.com/'+userName+')').toString('base64');
+                var content = Buffer.from('* [Jane Doe](https://github.com/JaneDoe)\n* [Boomer Jones](https://github.com/' + userName + ')').toString('base64');
                 return Promise.resolve({
                     content: content
                 });
@@ -572,7 +572,7 @@ describe('commentOnOpenedPullRequest', function () {
                 ]);
             }
             if (options.url === contributorsUrl) {
-                var content = Buffer.from('* [Jane Doe](https://github.com/JaneDoe)\n* [Boomer Jones](https://github.com/'+userName+')').toString('base64');
+                var content = Buffer.from('* [Jane Doe](https://github.com/JaneDoe)\n* [Boomer Jones](https://github.com/' + userName + ')').toString('base64');
                 return Promise.resolve({
                     content: content
                 });
