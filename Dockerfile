@@ -5,7 +5,7 @@ ENV NODE_ENV production
 EXPOSE 5000
 
 RUN apt-get update \
-  && apt-get -y install cron supervisor --no-install-recommends \
+  && apt-get -y install cron supervisor nano --no-install-recommends \
   && rm -rf /var/lib/apt/lists/*
 
 COPY . /var/app
