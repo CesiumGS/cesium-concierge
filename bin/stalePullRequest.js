@@ -36,9 +36,9 @@ function stalePullRequest(repositories) {
     });
 }
 
-/** 
+/**
  * Implementation
- * 
+ *
  * @param {String} repositoryName Base url to list pull requests https://developer.github.com/v3/pulls/#list-pull-requests
  * @param {RepositorySettings} repositorySettings The repository settings
  * @return {Promise<Array<http.IncomingMessage | undefined>>} Promise to an array of incoming messages
@@ -66,9 +66,9 @@ stalePullRequest._processPullRequest = function (pullRequest, repositorySettings
     })
         .then(function (commentsJsonResponse) {
             var lastComment = commentsJsonResponse[commentsJsonResponse.length - 1];
-            if (stalePullRequest.daysSince(new Date(lastComment.created_at)) >= repositorySettings.maxDaysSinceUpdate) {
-                var alreadyBumped = (lastComment.user.login === 'cesium-concierge');
-                var template = alreadyBumped ? repositorySettings.secondaryStalePullRequestTemplate : repositorySettings.initialStalePullRequestTemplate;
+            var foundStop = stalePullRequest.foundStopComment(commentsJsonResponse);
+            if (!foundStop && stalePullRequest.daysSince(new Date(lastComment.created_at)) >= repositorySettings.maxDaysSinceUpdate) {
+                var template = repositorySettings.stalePullRequestTemplate;
 
                 return requestPromise.post({
                     url: commentsUrl,
@@ -87,4 +87,15 @@ stalePullRequest._processPullRequest = function (pullRequest, repositorySettings
 stalePullRequest.daysSince = function (date) {
     var msPerDay = 24 * 60 * 60 * 1000;
     return (Date.now() - date.getTime()) / msPerDay;
+};
+
+stalePullRequest.foundStopComment = function (commentsJsonResponse) {
+    for(var i = 0; i < commentsJsonResponse.length; i++){
+        var comment = commentsJsonResponse[i].body.toLowerCase();
+        if (comment.indexOf('@cesium-concierge stop') !== -1) {
+            return true;
+        }
+    }
+
+    return false;
 };

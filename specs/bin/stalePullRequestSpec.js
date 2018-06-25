@@ -71,6 +71,9 @@ describe('stalePullRequest', function () {
             return Promise.reject(new Error('Unexpected Url'));
         });
         spyOn(requestPromise, 'post');
+        spyOn(stalePullRequest, 'foundStopComment').and.callFake(function () {
+            return false;
+        });
 
         stalePullRequest._processPullRequest(pullRequest, repositorySettings)
             .then(function () {
@@ -80,7 +83,7 @@ describe('stalePullRequest', function () {
             .catch(done.fail);
     });
 
-    it('stalePullRequest._processPullRequest posts expected message for initial stale pull request', function (done) {
+    it('stalePullRequest._processPullRequest posts expected message for stale pull request', function (done) {
         var repositorySettings = new RepositorySettings();
         var commentsUrl = 'commentsUrl';
         var pullRequest = {
@@ -99,6 +102,9 @@ describe('stalePullRequest', function () {
             return Promise.reject(new Error('Unexpected Url'));
         });
         spyOn(requestPromise, 'post');
+        spyOn(stalePullRequest, 'foundStopComment').and.callFake(function () {
+            return false;
+        });
 
         stalePullRequest._processPullRequest(pullRequest, repositorySettings)
             .then(function () {
@@ -106,7 +112,7 @@ describe('stalePullRequest', function () {
                     url: commentsUrl,
                     headers: repositorySettings.headers,
                     body: {
-                        body: repositorySettings.initialStalePullRequestTemplate({
+                        body: repositorySettings.stalePullRequestTemplate({
                             maxDaysSinceUpdate: repositorySettings.maxDaysSinceUpdate
                         })
                     },
@@ -117,7 +123,7 @@ describe('stalePullRequest', function () {
             .catch(done.fail);
     });
 
-    it('stalePullRequest._processPullRequest posts expected message for secondary stale pull request', function (done) {
+    it('stalePullRequest._processPullRequest does not post when asked to stop', function (done) {
         var repositorySettings = new RepositorySettings();
         var commentsUrl = 'commentsUrl';
         var pullRequest = {
@@ -130,25 +136,19 @@ describe('stalePullRequest', function () {
                 timestamp.setDate(timestamp.getDate() - repositorySettings.maxDaysSinceUpdate);
                 return Promise.resolve([{
                     created_at: timestamp,
-                    user: {login: 'cesium-concierge'}
+                    user: {login: 'boomerjones'}
                 }]);
             }
             return Promise.reject(new Error('Unexpected Url'));
         });
         spyOn(requestPromise, 'post');
+        spyOn(stalePullRequest, 'foundStopComment').and.callFake(function () {
+            return true;
+        });
 
         stalePullRequest._processPullRequest(pullRequest, repositorySettings)
             .then(function () {
-                expect(requestPromise.post).toHaveBeenCalledWith({
-                    url: commentsUrl,
-                    headers: repositorySettings.headers,
-                    body: {
-                        body: repositorySettings.secondaryStalePullRequestTemplate({
-                            maxDaysSinceUpdate: repositorySettings.maxDaysSinceUpdate
-                        })
-                    },
-                    json: true
-                });
+                expect(requestPromise.post).not.toHaveBeenCalled();
                 done();
             })
             .catch(done.fail);
