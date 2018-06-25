@@ -66,7 +66,6 @@ stalePullRequest._processPullRequest = function (pullRequest, repositorySettings
         .then(function (commentsJsonResponse) {
             var lastComment = commentsJsonResponse[commentsJsonResponse.length - 1];
             if (stalePullRequest.daysSince(new Date(lastComment.created_at)) >= repositorySettings.maxDaysSinceUpdate) {
-                dateLog('Bumping ' + pullRequest.url + ' because it hasn\'t been updated in ' + String(stalePullRequest.daysSince(new Date(lastComment.created_at))) + ' days.');
                 var alreadyBumped = (lastComment.user.login === 'cesium-concierge');
                 var template = alreadyBumped ? repositorySettings.secondaryStalePullRequestTemplate : repositorySettings.initialStalePullRequestTemplate;
 
