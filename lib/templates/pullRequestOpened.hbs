@@ -1,31 +1,32 @@
+{{#if firstTimeContributor }} 
+Thank you so much for the pull request @{{ userName }}! I noticed this is your first pull request and I wanted to say welcome to the Cesium community!
+
+The [Pull Request Guidelines](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/CONTRIBUTING.md#pull-request-guidelines) is a handy reference for making sure your PR gets accepted quickly, so make sure to skim that.
+
+Let's see if this is ready for review.
+{{else}}
+Thanks for the pull request @{{ userName }}! Let's see if this is ready for review.
+{{/if}}
 {{#if claEnabled}}
 {{#if errorCla}}
-@{{ userName }}, thanks for the pull request!
-
-If this is your first contribution, please send in a [Contributor License Agreement](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/CONTRIBUTING.md#contributor-license-agreement-cla) (CLA) so that we can review and merge this pull request.
-
-Maintainers, there was an error processing the CLA, resolve it to continue CLA checking.
-```
-{{ errorCla }}
-```
+* ⚠ There was an error checking the CLA! If this is your first contribution, please send in a [Contributor License Agreement](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/CONTRIBUTING.md#contributor-license-agreement-cla).
+  * Maintainers, this was the error I ran into while attempting to process the CLA check. Please resolve it to continue CLA checking.
+  ```
+  {{ errorCla }}
+  ```
 {{else}}
 {{#if askForCla}}
-Welcome to the Cesium community @{{ userName }}!
-
-Can you please send in a [Contributor License Agreement](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/CONTRIBUTING.md#contributor-license-agreement-cla) (CLA) so that we can review and merge this pull request?
+* ❌ Missing CLA. 
+  * Please send in a [Contributor License Agreement](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/CONTRIBUTING.md#contributor-license-agreement-cla) (CLA) and comment back here to let us know to check this!
 {{else}}
-@{{ userName }}, thanks for the pull request! Maintainers, we have a signed CLA from @{{ userName }}, so you can review this at any time.
+* ✔ Signed CLA found. 
 {{/if}}
 {{/if}}
-{{else}}
-@{{ userName }}, thanks for the pull request!
-{{/if}}
-
 {{#if askAboutChanges}}
-I noticed that [CHANGES.md]({{ repository_url }}/blob/master/CHANGES.md) has not been updated. If this change updates the public API in any way, fixes a bug, or makes any non-trivial update, please add a bullet point to `CHANGES.md` and comment on this pull request so we know it was updated. For more info, see the [Pull Request Guidelines]( https://github.com/AnalyticalGraphicsInc/cesium/blob/master/CONTRIBUTING.md#pull-request-guidelines).
-
+* ❔ [CHANGES.md]({{ repository_url }}/blob/master/CHANGES.md) was not updated.
+  * If this change updates the public API in any way, please add a bullet point to `CHANGES.md`.
 {{/if}}
 {{#if askAboutThirdParty}}
-I noticed that a file in one of our ThirdParty folders (`{{ thirdPartyFolders }}`) has been added or modified. Please verify that it has a section in [LICENSE.md]({{ repository_url }}/blob/master/LICENSE.md) and that its license information is up to date with this new version. Once you do, please confirm by commenting on this pull request.
-
+* ❔ Third party change was made. 
+  * Looks like a file in one of our ThirdParty folders (`{{ thirdPartyFolders }}`) has been added or modified. Please verify that it has a section in [LICENSE.md]({{ repository_url }}/blob/master/LICENSE.md) and that its license information is up to date with this new version. Once that's done, please comment back here to let us know!.
 {{/if}}
