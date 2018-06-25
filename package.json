@@ -32,7 +32,8 @@
     "handlebars": "^4.0.10",
     "nconf": "^0.8.4",
     "request": "^2.81.0",
-    "request-promise": "^4.2.1"
+    "request-promise": "^4.2.1",
+    "parse-link-header": "^1.0.1"
   },
   "devDependencies": {
     "eslint": "^4.0.0",

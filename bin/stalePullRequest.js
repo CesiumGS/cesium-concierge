@@ -2,6 +2,7 @@
 
 var Promise = require('bluebird');
 var requestPromise = require('request-promise');
+var parseLink = require('parse-link-header');
 
 var Settings = require('../lib/Settings');
 var dateLog = require('../lib/dateLog');
@@ -62,25 +63,32 @@ stalePullRequest._processPullRequest = function (pullRequest, repositorySettings
     return requestPromise.get({
         url: commentsUrl,
         headers: repositorySettings.headers,
-        json: true
+        json: true,
+        resolveWithFullResponse: true
     })
-        .then(function (commentsJsonResponse) {
-            var lastComment = commentsJsonResponse[commentsJsonResponse.length - 1];
-            var foundStop = stalePullRequest.foundStopComment(commentsJsonResponse);
-            if (!foundStop && stalePullRequest.daysSince(new Date(lastComment.created_at)) >= repositorySettings.maxDaysSinceUpdate) {
-                var template = repositorySettings.stalePullRequestTemplate;
-
-                return requestPromise.post({
-                    url: commentsUrl,
-                    headers: repositorySettings.headers,
-                    body: {
-                        body: template({
-                            maxDaysSinceUpdate: repositorySettings.maxDaysSinceUpdate
-                        })
-                    },
-                    json: true
-                });
-            }
+        .then(function (response) {
+            var lastPage = parseLink(response.headers.link).last.page;
+            return requestPromise.get({
+                url: commentsUrl + '?page=' + lastPage,
+                headers: repositorySettings.headers,
+                json: true,
+            }).then(function (commentsJsonResponse) {
+                var lastComment = commentsJsonResponse[commentsJsonResponse.length - 1];
+                var foundStop = stalePullRequest.foundStopComment(commentsJsonResponse);
+                if (!foundStop && stalePullRequest.daysSince(new Date(lastComment.created_at)) >= repositorySettings.maxDaysSinceUpdate) {
+                    var template = repositorySettings.stalePullRequestTemplate;
+                    return requestPromise.post({
+                        url: commentsUrl,
+                        headers: repositorySettings.headers,
+                        body: {
+                            body: template({
+                                maxDaysSinceUpdate: repositorySettings.maxDaysSinceUpdate
+                            })
+                        },
+                        json: true
+                    });
+                }
+            });
         });
 };
 
@@ -92,7 +100,8 @@ stalePullRequest.daysSince = function (date) {
 stalePullRequest.foundStopComment = function (commentsJsonResponse) {
     for(var i = 0; i < commentsJsonResponse.length; i++){
         var comment = commentsJsonResponse[i].body.toLowerCase();
-        if (comment.indexOf('@cesium-concierge stop') !== -1) {
+        var userName = commentsJsonResponse[i].user.login;
+        if (userName !== 'cesium-concierge' && comment.indexOf('@cesium-concierge stop') !== -1) {
             return true;
         }
     }
