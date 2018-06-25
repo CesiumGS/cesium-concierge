@@ -36,8 +36,9 @@ function stalePullRequest(repositories) {
     });
 }
 
-/** Implementation
- *
+/** 
+ * Implementation
+ * 
  * @param {String} repositoryName Base url to list pull requests https://developer.github.com/v3/pulls/#list-pull-requests
  * @param {RepositorySettings} repositorySettings The repository settings
  * @return {Promise<Array<http.IncomingMessage | undefined>>} Promise to an array of incoming messages
