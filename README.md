@@ -21,24 +21,24 @@ $ npm start
 ```
 
 ## Setup
-`cesium-concierge` requires a few settings before working. These can be set in three ways:
-- As environment variables
-- As keys in `./config.json`
+`cesium-concierge` requires a few configuration settings before working. These are loaded, in the following order of priority, from:
 
-> Note: These settings take effect hierarchically, with environment variables > arguments > `config.json`
+* The repository's `.concierge/config.json` file.
+* Environment variables.
+* Built-in defaults.
 
-The possible settings are:
+The table below describes all the possible configuration variables, as well as their default values if any. 
 
-| Name | Type | Description | Required? |
-| --- | --- | --- | --- |
-| `secret` | `string` | Repository secret to verify __incoming__ WebHook requests from GitHub | ✓
-| `repositories:{full_name}` | `object` | Settings specific to the repository `{full_name}`. | ✓
-| `repositories:{full_name}:gitHubToken` | `string` | Token used to verify __outgoing__ requests to GitHub repository | ✓
-| `repositories:{full_name}:thirdPartyFolders` | `string` | Comma-separated list of folders in which to look for changed files in pull request to remind user to update License. | X
-| `repositories:{full_name}:claUrl` | `string` | The GitHub API URL to the CLA file in JSON form. If undefined it disables CLA checking. See [here](https://developer.github.com/v3/repos/contents/#get-contents) for how the URL should look. _Example:_ https://api.github.com/repos/AnalyticalGraphicsInc/cesium-concierge/contents/specs/data/config/CLA.json | X
-| `repositories:{full_name}:maxDaysSinceUpdate` | `number` | "Bump" pull requests older than this number of days ago. If not set, gets a default value in [RepositorySettings.js](https://github.com/AnalyticalGraphicsInc/cesium-concierge/blob/master/lib/RepositorySettings.js). | X
-| `port` | `number: default 5000` | Port on which to listen to incoming requests | X
-| `listenPath` | `string: default"/"` | Path on which to listen for incoming requests | X
+| Name | Type | Description | Required? | Default
+| --- | --- | --- | --- | --- |
+| `secret` | `string` | Repository secret to verify __incoming__ WebHook requests from GitHub | ✓ | 
+| `repositories:{full_name}` | `object` | Settings specific to the repository `{full_name}`. | ✓ | 
+| `repositories:{full_name}:gitHubToken` | `string` | Token used to verify __outgoing__ requests to GitHub repository | ✓ | 
+| `repositories:{full_name}:thirdPartyFolders` | `string` | Comma-separated list of folders in which to look for changed files in pull request to remind user to update License. | X | `[]`
+| `repositories:{full_name}:claUrl` | `string` | The GitHub API URL to the CLA file in JSON form. See [here](https://developer.github.com/v3/repos/contents/#get-contents) for what the URL should look like. _Example:_ https://api.github.com/repos/AnalyticalGraphicsInc/cesium-concierge/contents/specs/data/config/CLA.json | X | _Disabled if not set._
+| `repositories:{full_name}:maxDaysSinceUpdate` | `number` | "Bump" pull requests older than this number of days ago. | X | `30`
+| `port` | `number` | Port on which to listen to incoming requests | X | `5000`
+| `listenPath` | `string` | Path on which to listen for incoming requests | X | `"/"`
 
 > Note: `full_name` is the repository name in the form `{organization}/{repository}`. For example: `AnalyticalGraphicsInc/cesium`
 
