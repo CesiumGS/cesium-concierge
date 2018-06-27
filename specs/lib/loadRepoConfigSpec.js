@@ -28,7 +28,7 @@ describe('loadRepoConfig', function () {
     };
     var configFileResponseJson = {
         name: loadRepoConfig.configFile,
-        content: JSON.stringify(sampleConfig)
+        content: Buffer.from(JSON.stringify(sampleConfig)).toString('base64')
     };
 
     var templatesUrl = url.resolve(configUrl, loadRepoConfig._templateDirectory);

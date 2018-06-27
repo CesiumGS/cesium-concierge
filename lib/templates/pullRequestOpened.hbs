@@ -7,6 +7,10 @@ Let's see if this is ready for review.
 {{else}}
 Thanks for the pull request @{{ userName }}! Let's see if this is ready for review.
 {{/if}}
+{{#if askAboutContributors}}
+* ❌ Missing `CONTRIBUTORS.md` entry.
+  * Please add yourself to the [contributors](@{{ contributorsUrl }}) file! 
+{{/if}}
 {{#if claEnabled}}
 {{#if errorCla}}
 * ⚠ There was an error checking the CLA! If this is your first contribution, please send in a [Contributor License Agreement](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/CONTRIBUTING.md#contributor-license-agreement-cla).

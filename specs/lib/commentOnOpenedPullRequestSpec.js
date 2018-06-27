@@ -498,4 +498,105 @@ describe('commentOnOpenedPullRequest', function () {
             })
             .catch(done.fail);
     });
+
+    it('commentOnOpenedPullRequest._implementation reminds user to add to CONTRIBUTORS.md.', function (done) {
+        var pullRequestFilesUrl = 'pullRequestFilesUrl';
+        var pullRequestCommentsUrl = 'pullRequestCommentsUrl';
+        var contributorsUrl = 'contributors.json';
+
+        var repositorySettings = new RepositorySettings({
+            contributorsUrl: contributorsUrl
+        });
+
+        spyOn(repositorySettings, 'fetchSettings').and.callFake(function() {
+            return Promise.resolve(repositorySettings);
+        });
+
+        spyOn(requestPromise, 'post');
+
+        spyOn(requestPromise, 'get').and.callFake(function (options) {
+            if (options.url === pullRequestFilesUrl) {
+                return Promise.resolve([
+                    {filename: 'file.txt'}
+                ]);
+            }
+            if (options.url === repositorySettings.contributorsUrl) {
+                var content = Buffer.from('* [Jane Doe](https://github.com/JaneDoe)\n* [Boomer Jones](https://github.com/' + userName + ')').toString('base64');
+                return Promise.resolve({
+                    content: content
+                });
+            }
+            return Promise.reject('Unknown url.');
+        });
+
+        var newContributorUsername = 'NewBob';
+        commentOnOpenedPullRequest._implementation(pullRequestFilesUrl, pullRequestCommentsUrl, repositorySettings, newContributorUsername, repositoryUrl, baseBranch)
+            .then(function () {
+                expect(requestPromise.post).toHaveBeenCalledWith({
+                    url: pullRequestCommentsUrl,
+                    headers: repositorySettings.headers,
+                    body: {
+                        body: repositorySettings.pullRequestOpenedTemplate({
+                            userName: newContributorUsername,
+                            repository_url: repositoryUrl,
+                            askAboutContributors: true,
+                            askAboutChanges: true
+                        })
+                    },
+                    json: true
+                });
+                done();
+            })
+            .catch(done.fail);
+    });
+
+    it('commentOnOpenedPullRequest._implementation does not post reminder about CONTRIBUTORS.md if user is already in there.', function (done) {
+        var pullRequestFilesUrl = 'pullRequestFilesUrl';
+        var pullRequestCommentsUrl = 'pullRequestCommentsUrl';
+        var contributorsUrl = 'contributors.json';
+
+        var repositorySettings = new RepositorySettings({
+            contributorsUrl: contributorsUrl
+        });
+
+        spyOn(repositorySettings, 'fetchSettings').and.callFake(function() {
+            return Promise.resolve(repositorySettings);
+        });
+
+        spyOn(requestPromise, 'post');
+
+        spyOn(requestPromise, 'get').and.callFake(function (options) {
+            if (options.url === pullRequestFilesUrl) {
+                return Promise.resolve([
+                    {filename: 'file.txt'}
+                ]);
+            }
+            if (options.url === repositorySettings.contributorsUrl) {
+                var content = Buffer.from('* [Jane Doe](https://github.com/JaneDoe)\n* [Boomer Jones](https://github.com/' + userName + ')').toString('base64');
+                return Promise.resolve({
+                    content: content
+                });
+            }
+            return Promise.reject('Unknown url.');
+        });
+
+        commentOnOpenedPullRequest._implementation(pullRequestFilesUrl, pullRequestCommentsUrl, repositorySettings, userName, repositoryUrl, baseBranch)
+            .then(function () {
+                expect(requestPromise.post).toHaveBeenCalledWith({
+                    url: pullRequestCommentsUrl,
+                    headers: repositorySettings.headers,
+                    body: {
+                        body: repositorySettings.pullRequestOpenedTemplate({
+                            userName: userName,
+                            repository_url: repositoryUrl,
+                            askAboutContributors: false,
+                            askAboutChanges: true
+                        })
+                    },
+                    json: true
+                });
+                done();
+            })
+            .catch(done.fail);
+    });
 });
