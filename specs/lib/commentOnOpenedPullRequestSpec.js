@@ -540,6 +540,7 @@ describe('commentOnOpenedPullRequest', function () {
                             userName: newContributorUsername,
                             repository_url: repositoryUrl,
                             askAboutContributors: true,
+                            contributorsUrl: repositorySettings.contributorsUrl,
                             askAboutChanges: true
                         })
                     },
