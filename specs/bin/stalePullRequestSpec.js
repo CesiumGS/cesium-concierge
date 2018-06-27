@@ -53,7 +53,7 @@ describe('stalePullRequest', function () {
                 return Promise.resolve(firstResponse);
             }
             else if (options.url === 'https://url?page=2') {
-                return Promise.resolve(secondResponse);    
+                return Promise.resolve(secondResponse);
             }
             return Promise.reject(new Error('Unexpected Url'));
         });
