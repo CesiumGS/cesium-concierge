@@ -21,6 +21,11 @@ Can you please send in a [Contributor License Agreement](https://github.com/Anal
 @{{ userName }}, thanks for the pull request!
 {{/if}}
 
+{{#if askAboutContributors}}
+I noticed you haven't added yourself to `CONTRIBUTORS.md`. Please add yourself to that file and comment back here to let us know it's ready! 
+
+{{/if}}
+
 {{#if askAboutChanges}}
 I noticed that [CHANGES.md]({{ repository_url }}/blob/master/CHANGES.md) has not been updated. If this change updates the public API in any way, fixes a bug, or makes any non-trivial update, please add a bullet point to `CHANGES.md` and comment on this pull request so we know it was updated. For more info, see the [Pull Request Guidelines]( https://github.com/AnalyticalGraphicsInc/cesium/blob/master/CONTRIBUTING.md#pull-request-guidelines).
 
