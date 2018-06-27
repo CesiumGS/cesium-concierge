@@ -35,9 +35,25 @@ describe('stalePullRequest', function () {
     it('calls stalePullRequest._processPullRequest once for each returned pull request', function (done) {
         var mockPullRequest = {};
         var mockPullRequest2 = {};
+        var firstResponse = {
+            headers : {
+                link : '<https://url?page=2>; rel="next",<https://url?page=2>; rel="last"'
+            },
+            body: [mockPullRequest]
+        };
+        var secondResponse = {
+            headers : {
+                link : '<https://url?page=1>; rel="first",<https://url?page=2>; rel="prev"'
+            },
+            body: [mockPullRequest2]
+        };
+
         spyOn(requestPromise, 'get').and.callFake(function (options) {
             if (options.url === 'https://api.github.com/repos/AnalyticalGraphics/cesium/pulls?state=open&base=master') {
-                return Promise.resolve([mockPullRequest, mockPullRequest2]);
+                return Promise.resolve(firstResponse);
+            }
+            else if (options.url === 'https://url?page=2') {
+                return Promise.resolve(secondResponse);    
             }
             return Promise.reject(new Error('Unexpected Url'));
         });
@@ -56,7 +72,7 @@ describe('stalePullRequest', function () {
 
     it('stalePullRequest._processPullRequest does not post non-stale pull request', function (done) {
         var repositorySettings = new RepositorySettings();
-        var commentsUrl = 'commentsUrl';
+        var commentsUrl = 'https://url';
         var pullRequest = {
             comments_url: commentsUrl
         };
@@ -88,7 +104,7 @@ describe('stalePullRequest', function () {
 
     it('stalePullRequest._processPullRequest posts expected message for stale pull request', function (done) {
         var repositorySettings = new RepositorySettings();
-        var commentsUrl = 'commentsUrl';
+        var commentsUrl = 'https://url';
         var pullRequest = {
             comments_url: commentsUrl
         };
@@ -115,7 +131,7 @@ describe('stalePullRequest', function () {
         stalePullRequest._processPullRequest(pullRequest, repositorySettings)
             .then(function () {
                 expect(requestPromise.post).toHaveBeenCalledWith({
-                    url: commentsUrl,
+                    url: commentsUrl + '?page=3',
                     headers: repositorySettings.headers,
                     body: {
                         body: repositorySettings.stalePullRequestTemplate({
@@ -131,7 +147,7 @@ describe('stalePullRequest', function () {
 
     it('stalePullRequest._processPullRequest does not post when asked to stop', function (done) {
         var repositorySettings = new RepositorySettings();
-        var commentsUrl = 'commentsUrl';
+        var commentsUrl = 'https://url';
         var pullRequest = {
             comments_url: commentsUrl
         };
