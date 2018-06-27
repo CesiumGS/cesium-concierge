@@ -1,5 +1,6 @@
 'use strict';
 
+var Cesium = require('cesium');
 var Promise = require('bluebird');
 var requestPromise = require('request-promise');
 var parseLink = require('parse-link-header');
@@ -38,7 +39,8 @@ function stalePullRequest(repositories) {
 }
 
 /**
- * Implementation
+ * Get all pull requests for the given repository by going sequentially requesting all pages
+ * from the GitHub API.
  *
  * @param {String} repositoryName Base url to list pull requests https://developer.github.com/v3/pulls/#list-pull-requests
  * @param {RepositorySettings} repositorySettings The repository settings
@@ -46,16 +48,32 @@ function stalePullRequest(repositories) {
  */
 stalePullRequest._processRepository = function (repositoryName, repositorySettings) {
     dateLog('Checking ' + repositoryName);
+    var pullRequests = [];
+
+    function processPage(response) {
+        var linkData = parseLink(response.headers.link);
+        pullRequests = pullRequests.concat(response.body);
+        // If we're at the last page
+        if (!Cesium.defined(linkData) || !Cesium.defined(linkData.next)) {
+            return Promise.each(pullRequests, function (pullRequest) {
+                return stalePullRequest._processPullRequest(pullRequest, repositorySettings);
+            });
+        }
+        // Otherwise, request the next page
+        return requestPromise.get({
+            url: linkData.next.url,
+            headers: repositorySettings.headers,
+            json: true,
+            resolveWithFullResponse: true
+        }).then(processPage);
+    }
+
     return requestPromise.get({
         url: 'https://api.github.com/repos/' + repositoryName + '/pulls?state=open&base=master',
         headers: repositorySettings.headers,
-        json: true
-    })
-        .then(function (pullRequestsJsonResponse) {
-            return Promise.each(pullRequestsJsonResponse, function (pullRequest) {
-                return stalePullRequest._processPullRequest(pullRequest, repositorySettings);
-            });
-        });
+        json: true,
+        resolveWithFullResponse: true
+    }).then(processPage);
 };
 
 stalePullRequest._processPullRequest = function (pullRequest, repositorySettings) {
@@ -67,9 +85,12 @@ stalePullRequest._processPullRequest = function (pullRequest, repositorySettings
         resolveWithFullResponse: true
     })
         .then(function (response) {
-            var lastPage = parseLink(response.headers.link).last.page;
+            var linkData = parseLink(response.headers.link);
+            if (Cesium.defined(linkData)) {
+                commentsUrl = linkData.last.url;
+            }
             return requestPromise.get({
-                url: commentsUrl + '?page=' + lastPage,
+                url: commentsUrl,
                 headers: repositorySettings.headers,
                 json: true,
             }).then(function (commentsJsonResponse) {
