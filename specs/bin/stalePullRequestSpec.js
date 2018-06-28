@@ -84,7 +84,7 @@ describe('stalePullRequest', function () {
             else if (options.url === commentsUrl + '?page=3') {
                 var timestamp = new Date(Date.now());
                 return Promise.resolve([{
-                    created_at: timestamp
+                    updated_at: timestamp
                 }]);
             }
             return Promise.reject(new Error('Unexpected Url'));
@@ -117,7 +117,7 @@ describe('stalePullRequest', function () {
                 var timestamp = new Date(Date.now());
                 timestamp.setDate(timestamp.getDate() - repositorySettings.maxDaysSinceUpdate);
                 return Promise.resolve([{
-                    created_at: timestamp,
+                    updated_at: timestamp,
                     user: {login: 'boomerjones'}
                 }]);
             }
@@ -160,7 +160,7 @@ describe('stalePullRequest', function () {
                 var timestamp = new Date(Date.now());
                 timestamp.setDate(timestamp.getDate() - repositorySettings.maxDaysSinceUpdate);
                 return Promise.resolve([{
-                    created_at: timestamp,
+                    updated_at: timestamp,
                     user: {login: 'boomerjones'}
                 }]);
             }

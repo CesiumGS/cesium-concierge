@@ -77,7 +77,7 @@ stalePullRequest._processRepository = function (repositoryName, repositorySettin
 };
 
 stalePullRequest._processPullRequest = function (pullRequest, repositorySettings) {
-    var commentsUrl = pullRequest.comments_url;
+    var commentsUrl = pullRequest.comments_url + '?sort=updated';
     return requestPromise.get({
         url: commentsUrl,
         headers: repositorySettings.headers,
@@ -96,7 +96,7 @@ stalePullRequest._processPullRequest = function (pullRequest, repositorySettings
             }).then(function (commentsJsonResponse) {
                 var lastComment = commentsJsonResponse[commentsJsonResponse.length - 1];
                 var foundStop = stalePullRequest.foundStopComment(commentsJsonResponse);
-                if (!foundStop && stalePullRequest.daysSince(new Date(lastComment.created_at)) >= repositorySettings.maxDaysSinceUpdate) {
+                if (!foundStop && stalePullRequest.daysSince(new Date(lastComment.updated_at)) >= repositorySettings.maxDaysSinceUpdate) {
                     var template = repositorySettings.stalePullRequestTemplate;
                     return requestPromise.post({
                         url: commentsUrl,
