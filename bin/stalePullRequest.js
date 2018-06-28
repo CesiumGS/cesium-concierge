@@ -78,6 +78,25 @@ stalePullRequest._processRepository = function (repositoryName, repositorySettin
 
 stalePullRequest._processPullRequest = function (pullRequest, repositorySettings) {
     var commentsUrl = pullRequest.comments_url + '?sort=updated';
+
+    function processComments(commentsJsonResponse) {
+        var lastComment = commentsJsonResponse[commentsJsonResponse.length - 1];
+        var foundStop = stalePullRequest.foundStopComment(commentsJsonResponse);
+        if (!foundStop && stalePullRequest.daysSince(new Date(lastComment.updated_at)) >= repositorySettings.maxDaysSinceUpdate) {
+            var template = repositorySettings.stalePullRequestTemplate;
+            return requestPromise.post({
+                url: commentsUrl,
+                headers: repositorySettings.headers,
+                body: {
+                    body: template({
+                        maxDaysSinceUpdate: repositorySettings.maxDaysSinceUpdate
+                    })
+                },
+                json: true
+            });
+        }
+    }
+
     return requestPromise.get({
         url: commentsUrl,
         headers: repositorySettings.headers,
@@ -88,28 +107,13 @@ stalePullRequest._processPullRequest = function (pullRequest, repositorySettings
             var linkData = parseLink(response.headers.link);
             if (Cesium.defined(linkData)) {
                 commentsUrl = linkData.last.url;
+                return requestPromise.get({
+                    url: commentsUrl,
+                    headers: repositorySettings.headers,
+                    json: true,
+                }).then(processComments);
             }
-            return requestPromise.get({
-                url: commentsUrl,
-                headers: repositorySettings.headers,
-                json: true,
-            }).then(function (commentsJsonResponse) {
-                var lastComment = commentsJsonResponse[commentsJsonResponse.length - 1];
-                var foundStop = stalePullRequest.foundStopComment(commentsJsonResponse);
-                if (!foundStop && stalePullRequest.daysSince(new Date(lastComment.updated_at)) >= repositorySettings.maxDaysSinceUpdate) {
-                    var template = repositorySettings.stalePullRequestTemplate;
-                    return requestPromise.post({
-                        url: commentsUrl,
-                        headers: repositorySettings.headers,
-                        body: {
-                            body: template({
-                                maxDaysSinceUpdate: repositorySettings.maxDaysSinceUpdate
-                            })
-                        },
-                        json: true
-                    });
-                }
-            });
+            return processComments(response.body);
         });
 };
 
