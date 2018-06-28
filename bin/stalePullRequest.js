@@ -89,7 +89,8 @@ stalePullRequest._processPullRequest = function (pullRequest, repositorySettings
                 headers: repositorySettings.headers,
                 body: {
                     body: template({
-                        maxDaysSinceUpdate: repositorySettings.maxDaysSinceUpdate
+                        maxDaysSinceUpdate: repositorySettings.maxDaysSinceUpdate,
+                        userName: pullRequest.user.login
                     })
                 },
                 json: true
