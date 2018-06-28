@@ -51,8 +51,7 @@ describe('stalePullRequest', function () {
         spyOn(requestPromise, 'get').and.callFake(function (options) {
             if (options.url === 'https://api.github.com/repos/AnalyticalGraphics/cesium/pulls?state=open&base=master') {
                 return Promise.resolve(firstResponse);
-            }
-            else if (options.url === 'https://url?page=2') {
+            } else if (options.url === 'https://url?page=2') {
                 return Promise.resolve(secondResponse);
             }
             return Promise.reject(new Error('Unexpected Url'));
@@ -80,8 +79,7 @@ describe('stalePullRequest', function () {
         spyOn(requestPromise, 'get').and.callFake(function (options) {
             if (options.resolveWithFullResponse === true) {
                 return Promise.resolve({headers: {link: '<https://url?page=2>; rel="next",<https://url?page=3>; rel="last"'}});
-            }
-            else if (options.url === commentsUrl + '?page=3') {
+            } else if (options.url === commentsUrl + '?page=3') {
                 var timestamp = new Date(Date.now());
                 return Promise.resolve([{
                     updated_at: timestamp
@@ -113,8 +111,7 @@ describe('stalePullRequest', function () {
         spyOn(requestPromise, 'get').and.callFake(function (options) {
             if (options.resolveWithFullResponse === true) {
                 return Promise.resolve({headers: {link: '<https://url?page=2>; rel="next",<https://url?page=3>; rel="last"'}});
-            }
-            else if (options.url === commentsUrl + '?page=3') {
+            } else if (options.url === commentsUrl + '?page=3') {
                 var timestamp = new Date(Date.now());
                 timestamp.setDate(timestamp.getDate() - repositorySettings.maxDaysSinceUpdate);
                 return Promise.resolve([{
