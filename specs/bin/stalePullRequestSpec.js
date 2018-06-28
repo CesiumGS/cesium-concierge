@@ -106,7 +106,8 @@ describe('stalePullRequest', function () {
         var repositorySettings = new RepositorySettings();
         var commentsUrl = 'https://url';
         var pullRequest = {
-            comments_url: commentsUrl
+            comments_url: commentsUrl,
+            user: {login: 'boomerjones'}
         };
 
         spyOn(requestPromise, 'get').and.callFake(function (options) {
@@ -135,7 +136,8 @@ describe('stalePullRequest', function () {
                     headers: repositorySettings.headers,
                     body: {
                         body: repositorySettings.stalePullRequestTemplate({
-                            maxDaysSinceUpdate: repositorySettings.maxDaysSinceUpdate
+                            maxDaysSinceUpdate: repositorySettings.maxDaysSinceUpdate,
+                            userName: pullRequest.user.login
                         })
                     },
                     json: true
