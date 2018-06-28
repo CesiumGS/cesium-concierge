@@ -25,7 +25,7 @@ Thanks for the pull request @{{ userName }}!
 {{/if}}
 {{/if}}
 {{#if askAboutChanges}}
-:grey_question: [CHANGES.md]({{ repository_url }}/blob/master/CHANGES.md) was not updated.
+:grey_question: [CHANGES.md]({{ repository_url }}/blob/{{ headBranch }}/CHANGES.md) was not updated.
   * If this change updates the public API in any way, please add a bullet point to `CHANGES.md`.
 {{/if}}
 {{#if askAboutThirdParty}}
