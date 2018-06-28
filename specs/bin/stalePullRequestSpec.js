@@ -179,4 +179,17 @@ describe('stalePullRequest', function () {
             })
             .catch(done.fail);
     });
+
+    it('stalePullRequest.foundStopComment works', function () {
+        var conciergeUser = {login: 'cesium-concierge'};
+        var otherUser = {login: 'BobDylan'};
+
+        expect(stalePullRequest.foundStopComment([{ body: '', user: otherUser }])).toBe(false);
+        expect(stalePullRequest.foundStopComment([{ body: '', user: conciergeUser }])).toBe(false);
+        expect(stalePullRequest.foundStopComment([{ body: '@cesium-concierge stop', user: conciergeUser }])).toBe(false);
+        expect(stalePullRequest.foundStopComment([{ body: 'This is a profound PR.', user: otherUser }])).toBe(false);
+
+        expect(stalePullRequest.foundStopComment([{ body: '@cesium-concierge stop', user: otherUser }])).toBe(true);
+        expect(stalePullRequest.foundStopComment([{ body: '', user: conciergeUser }, { body: '@cesium-concierge stop', user: otherUser }])).toBe(true);
+    });
 });
