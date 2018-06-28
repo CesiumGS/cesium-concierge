@@ -5,32 +5,32 @@ The [Pull Request Guidelines](https://github.com/AnalyticalGraphicsInc/cesium/bl
 
 Let's see if this is ready for review.
 
-* ❌ Missing `CONTRIBUTORS.md` entry.
+:x: Missing `CONTRIBUTORS.md` entry.
   * Please add yourself to the [contributors]({{ contributorsUrl }}) file! 
 {{else}}
 Thanks for the pull request @{{ userName }}! Let's see if this is ready for review.
 {{/if}}
 {{#if claEnabled}}
 {{#if errorCla}}
-* ⚠ There was an error checking the CLA! If this is your first contribution, please send in a [Contributor License Agreement](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/CONTRIBUTING.md#contributor-license-agreement-cla).
+:grey_exclamation: There was an error checking the CLA! If this is your first contribution, please send in a [Contributor License Agreement](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/CONTRIBUTING.md#contributor-license-agreement-cla).
   * Maintainers, this was the error I ran into while attempting to process the CLA check. Please resolve it to continue CLA checking.
   ```
   {{ errorCla }}
   ```
 {{else}}
 {{#if askForCla}}
-* ❌ Missing CLA. 
+:x: Missing CLA. 
   * Please send in a [Contributor License Agreement](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/CONTRIBUTING.md#contributor-license-agreement-cla) (CLA) and comment back here to let us know to check this!
 {{else}}
-* ✔ Signed CLA found. 
+:heavy_check_mark: Signed CLA found. 
 {{/if}}
 {{/if}}
 {{/if}}
 {{#if askAboutChanges}}
-* ❔ [CHANGES.md]({{ repository_url }}/blob/master/CHANGES.md) was not updated.
+:grey_question: [CHANGES.md]({{ repository_url }}/blob/master/CHANGES.md) was not updated.
   * If this change updates the public API in any way, please add a bullet point to `CHANGES.md`.
 {{/if}}
 {{#if askAboutThirdParty}}
-* ❔ Third party change was made. 
+:grey_question: Third party change was made. 
   * Looks like a file in one of our ThirdParty folders (`{{ thirdPartyFolders }}`) has been added or modified. Please verify that it has a section in [LICENSE.md]({{ repository_url }}/blob/master/LICENSE.md) and that its license information is up to date with this new version. Once that's done, please comment back here to let us know!.
 {{/if}}
