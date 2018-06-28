@@ -123,7 +123,7 @@ stalePullRequest.daysSince = function (date) {
 };
 
 stalePullRequest.foundStopComment = function (commentsJsonResponse) {
-    for(var i = 0; i < commentsJsonResponse.length; i++){
+    for (var i = 0; i < commentsJsonResponse.length; i++){
         var comment = commentsJsonResponse[i].body.toLowerCase();
         var userName = commentsJsonResponse[i].user.login;
         if (userName !== 'cesium-concierge' && comment.indexOf('@cesium-concierge stop') !== -1) {
