@@ -16,6 +16,7 @@ describe('commentOnOpenedPullRequest', function () {
     var repositoryUrl = 'https://github.com/AnalyticalGraphicsInc/cesium';
     var thirdPartyFolders = ['ThirdParty/', 'Source/ThirdParty/'];
     var baseBranch = 'master';
+    var headBranch = 'feature';
 
     var pullRequestJson = {
         pull_request: {
@@ -63,7 +64,7 @@ describe('commentOnOpenedPullRequest', function () {
 
         commentOnOpenedPullRequest(pullRequestJson, repositorySettings);
 
-        expect(commentOnOpenedPullRequest._implementation).toHaveBeenCalledWith(filesUrl, commentsUrl, repositorySettings, userName, repositoryUrl, baseBranch);
+        expect(commentOnOpenedPullRequest._implementation).toHaveBeenCalledWith(filesUrl, commentsUrl, repositorySettings, userName, repositoryUrl, baseBranch, headBranch);
     });
 
     it('commentOnOpenedPullRequest._askAboutChanges works', function () {
@@ -147,7 +148,8 @@ describe('commentOnOpenedPullRequest', function () {
                             askForCla: false,
                             askAboutChanges: false,
                             askAboutThirdParty: false,
-                            thirdPartyFolders: thirdPartyFolders.join(', ')
+                            thirdPartyFolders: thirdPartyFolders.join(', '),
+                            headBranch: headBranch
                         })
                     },
                     json: true
@@ -200,7 +202,8 @@ describe('commentOnOpenedPullRequest', function () {
                             errorCla: errorCla.toString(),
                             askAboutChanges: false,
                             askAboutThirdParty: false,
-                            thirdPartyFolders: thirdPartyFolders.join(', ')
+                            thirdPartyFolders: thirdPartyFolders.join(', '),
+                            headBranch: headBranch
                         })
                     },
                     json: true
@@ -233,7 +236,7 @@ describe('commentOnOpenedPullRequest', function () {
             return Promise.reject('Unknown url.');
         });
 
-        commentOnOpenedPullRequest._implementation(pullRequestFilesUrl, pullRequestCommentsUrl, repositorySettings, userName, repositoryUrl, baseBranch)
+        commentOnOpenedPullRequest._implementation(pullRequestFilesUrl, pullRequestCommentsUrl, repositorySettings, userName, repositoryUrl, baseBranch, headBranch)
             .then(function () {
                 expect(requestPromise.post).toHaveBeenCalledWith({
                     url: pullRequestCommentsUrl,
@@ -245,7 +248,8 @@ describe('commentOnOpenedPullRequest', function () {
                             askForCla: false,
                             askAboutChanges: true,
                             askAboutThirdParty: false,
-                            thirdPartyFolders: thirdPartyFolders.join(', ')
+                            thirdPartyFolders: thirdPartyFolders.join(', '),
+                            headBranch: headBranch
                         })
                     },
                     json: true
@@ -290,7 +294,8 @@ describe('commentOnOpenedPullRequest', function () {
                             askForCla: false,
                             askAboutChanges: false,
                             askAboutThirdParty: false,
-                            thirdPartyFolders: thirdPartyFolders.join(', ')
+                            thirdPartyFolders: thirdPartyFolders.join(', '),
+                            headBranch: headBranch
                         })
                     },
                     json: true
@@ -336,7 +341,8 @@ describe('commentOnOpenedPullRequest', function () {
                             askForCla: false,
                             askAboutChanges: false,
                             askAboutThirdParty: true,
-                            thirdPartyFolders: thirdPartyFolders.join(', ')
+                            thirdPartyFolders: thirdPartyFolders.join(', '),
+                            headBranch: headBranch
                         })
                     },
                     json: true
@@ -369,7 +375,7 @@ describe('commentOnOpenedPullRequest', function () {
             return Promise.reject('Unknown url.');
         });
 
-        commentOnOpenedPullRequest._implementation(pullRequestFilesUrl, pullRequestCommentsUrl, repositorySettings, userName, repositoryUrl, baseBranch)
+        commentOnOpenedPullRequest._implementation(pullRequestFilesUrl, pullRequestCommentsUrl, repositorySettings, userName, repositoryUrl, baseBranch, headBranch)
             .then(function () {
                 expect(requestPromise.post).toHaveBeenCalledWith({
                     url: pullRequestCommentsUrl,
@@ -381,7 +387,8 @@ describe('commentOnOpenedPullRequest', function () {
                             askForCla: false,
                             askAboutChanges: true,
                             askAboutThirdParty: true,
-                            thirdPartyFolders: thirdPartyFolders.join(', ')
+                            thirdPartyFolders: thirdPartyFolders.join(', '),
+                            headBranch: headBranch
                         })
                     },
                     json: true
@@ -422,7 +429,7 @@ describe('commentOnOpenedPullRequest', function () {
             return Promise.reject('Unknown url.');
         });
 
-        commentOnOpenedPullRequest._implementation(pullRequestFilesUrl, pullRequestCommentsUrl, repositorySettings, userName, repositoryUrl, baseBranch)
+        commentOnOpenedPullRequest._implementation(pullRequestFilesUrl, pullRequestCommentsUrl, repositorySettings, userName, repositoryUrl, baseBranch, headBranch)
             .then(function () {
                 expect(requestPromise.post).toHaveBeenCalledWith({
                     url: pullRequestCommentsUrl,
@@ -435,7 +442,8 @@ describe('commentOnOpenedPullRequest', function () {
                             askForCla: false,
                             askAboutChanges: true,
                             askAboutThirdParty: true,
-                            thirdPartyFolders: thirdPartyFolders.join(', ')
+                            thirdPartyFolders: thirdPartyFolders.join(', '),
+                            headBranch: headBranch
                         })
                     },
                     json: true
@@ -476,7 +484,7 @@ describe('commentOnOpenedPullRequest', function () {
             return Promise.reject('Unknown url.');
         });
 
-        commentOnOpenedPullRequest._implementation(pullRequestFilesUrl, pullRequestCommentsUrl, repositorySettings, userName, repositoryUrl, baseBranch)
+        commentOnOpenedPullRequest._implementation(pullRequestFilesUrl, pullRequestCommentsUrl, repositorySettings, userName, repositoryUrl, baseBranch, headBranch)
             .then(function () {
                 expect(requestPromise.post).toHaveBeenCalledWith({
                     url: pullRequestCommentsUrl,
@@ -489,7 +497,8 @@ describe('commentOnOpenedPullRequest', function () {
                             askForCla: true,
                             askAboutChanges: true,
                             askAboutThirdParty: true,
-                            thirdPartyFolders: thirdPartyFolders.join(', ')
+                            thirdPartyFolders: thirdPartyFolders.join(', '),
+                            headBranch: headBranch
                         })
                     },
                     json: true
@@ -530,7 +539,7 @@ describe('commentOnOpenedPullRequest', function () {
         });
 
         var newContributorUsername = 'NewBob';
-        commentOnOpenedPullRequest._implementation(pullRequestFilesUrl, pullRequestCommentsUrl, repositorySettings, newContributorUsername, repositoryUrl, baseBranch)
+        commentOnOpenedPullRequest._implementation(pullRequestFilesUrl, pullRequestCommentsUrl, repositorySettings, newContributorUsername, repositoryUrl, baseBranch, headBranch)
             .then(function () {
                 expect(requestPromise.post).toHaveBeenCalledWith({
                     url: pullRequestCommentsUrl,
@@ -540,7 +549,9 @@ describe('commentOnOpenedPullRequest', function () {
                             userName: newContributorUsername,
                             repository_url: repositoryUrl,
                             askAboutContributors: true,
-                            askAboutChanges: true
+                            contributorsUrl: repositorySettings.contributorsUrl,
+                            askAboutChanges: true,
+                            headBranch: headBranch
                         })
                     },
                     json: true
@@ -580,7 +591,7 @@ describe('commentOnOpenedPullRequest', function () {
             return Promise.reject('Unknown url.');
         });
 
-        commentOnOpenedPullRequest._implementation(pullRequestFilesUrl, pullRequestCommentsUrl, repositorySettings, userName, repositoryUrl, baseBranch)
+        commentOnOpenedPullRequest._implementation(pullRequestFilesUrl, pullRequestCommentsUrl, repositorySettings, userName, repositoryUrl, baseBranch, headBranch)
             .then(function () {
                 expect(requestPromise.post).toHaveBeenCalledWith({
                     url: pullRequestCommentsUrl,
@@ -590,7 +601,8 @@ describe('commentOnOpenedPullRequest', function () {
                             userName: userName,
                             repository_url: repositoryUrl,
                             askAboutContributors: false,
-                            askAboutChanges: true
+                            askAboutChanges: true,
+                            headBranch: headBranch
                         })
                     },
                     json: true
