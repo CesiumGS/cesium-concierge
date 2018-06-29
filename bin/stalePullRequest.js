@@ -1,9 +1,12 @@
 'use strict';
 
+var Cesium = require('cesium');
 var Promise = require('bluebird');
 var requestPromise = require('request-promise');
+var parseLink = require('parse-link-header');
 
 var Settings = require('../lib/Settings');
+var dateLog = require('../lib/dateLog');
 
 module.exports = stalePullRequest;
 
@@ -24,6 +27,7 @@ if (require.main === module) {
  * @returns {Promise} A promise that resolves when the process is complete.
  */
 function stalePullRequest(repositories) {
+    dateLog('Initiating `stalePullRequest` job.');
     return Promise.each(Object.keys(repositories), function (repositoryName) {
         var repositorySettings = repositories[repositoryName];
         return stalePullRequest._processRepository(repositoryName, repositorySettings)
@@ -34,59 +38,99 @@ function stalePullRequest(repositories) {
     });
 }
 
-/** Implementation
+/**
+ * Get all pull requests for the given repository by going sequentially requesting all pages
+ * from the GitHub API.
  *
  * @param {String} repositoryName Base url to list pull requests https://developer.github.com/v3/pulls/#list-pull-requests
  * @param {RepositorySettings} repositorySettings The repository settings
  * @return {Promise<Array<http.IncomingMessage | undefined>>} Promise to an array of incoming messages
  */
 stalePullRequest._processRepository = function (repositoryName, repositorySettings) {
+    dateLog('Checking ' + repositoryName);
+    var pullRequests = [];
+
+    function processPage(response) {
+        var linkData = parseLink(response.headers.link);
+        pullRequests = pullRequests.concat(response.body);
+        // If we're at the last page
+        if (!Cesium.defined(linkData) || !Cesium.defined(linkData.next)) {
+            return Promise.each(pullRequests, function (pullRequest) {
+                return stalePullRequest._processPullRequest(pullRequest, repositorySettings);
+            });
+        }
+        // Otherwise, request the next page
+        return requestPromise.get({
+            url: linkData.next.url,
+            headers: repositorySettings.headers,
+            json: true,
+            resolveWithFullResponse: true
+        }).then(processPage);
+    }
+
     return requestPromise.get({
         url: 'https://api.github.com/repos/' + repositoryName + '/pulls?state=open&base=master',
         headers: repositorySettings.headers,
-        json: true
-    })
-        .then(function (pullRequestsJsonResponse) {
-            return Promise.each(pullRequestsJsonResponse, function (pullRequest) {
-                return stalePullRequest._processPullRequest(pullRequest, repositorySettings);
-            });
-        });
+        json: true,
+        resolveWithFullResponse: true
+    }).then(processPage);
 };
 
 stalePullRequest._processPullRequest = function (pullRequest, repositorySettings) {
-    var commentsUrl = pullRequest.comments_url;
-    // Check if last post was cesium-concierge
+    var commentsUrl = pullRequest.comments_url + '?sort=updated';
+
+    function processComments(commentsJsonResponse) {
+        var lastComment = commentsJsonResponse[commentsJsonResponse.length - 1];
+        var foundStop = stalePullRequest.foundStopComment(commentsJsonResponse);
+        if (!foundStop && stalePullRequest.daysSince(new Date(lastComment.updated_at)) >= repositorySettings.maxDaysSinceUpdate) {
+            var template = repositorySettings.stalePullRequestTemplate;
+            return requestPromise.post({
+                url: commentsUrl,
+                headers: repositorySettings.headers,
+                body: {
+                    body: template({
+                        maxDaysSinceUpdate: repositorySettings.maxDaysSinceUpdate,
+                        userName: pullRequest.user.login
+                    })
+                },
+                json: true
+            });
+        }
+    }
+
     return requestPromise.get({
         url: commentsUrl,
         headers: repositorySettings.headers,
-        json: true
+        json: true,
+        resolveWithFullResponse: true
     })
-        .then(function (commentsJsonResponse) {
-            var latestCommentCreatedAt = commentsJsonResponse[commentsJsonResponse.length - 1].created_at;
-            if (stalePullRequest.daysSince(new Date(latestCommentCreatedAt)) >= repositorySettings.maxDaysSinceUpdate) {
-                var alreadyBumped = false;
-                commentsJsonResponse.forEach(function (comment) {
-                    if (comment.user.login === 'cesium-concierge') {
-                        alreadyBumped = true;
-                    }
-                });
-                var template = alreadyBumped ? repositorySettings.secondaryStalePullRequestTemplate : repositorySettings.initialStalePullRequestTemplate;
-
-                return requestPromise.post({
+        .then(function (response) {
+            var linkData = parseLink(response.headers.link);
+            if (Cesium.defined(linkData)) {
+                commentsUrl = linkData.last.url;
+                return requestPromise.get({
                     url: commentsUrl,
                     headers: repositorySettings.headers,
-                    body: {
-                        body: template({
-                            maxDaysSinceUpdate: repositorySettings.maxDaysSinceUpdate
-                        })
-                    },
-                    json: true
-                });
+                    json: true,
+                }).then(processComments);
             }
+            return processComments(response.body);
         });
 };
 
 stalePullRequest.daysSince = function (date) {
     var msPerDay = 24 * 60 * 60 * 1000;
     return (Date.now() - date.getTime()) / msPerDay;
+};
+
+stalePullRequest.foundStopComment = function (commentsJsonResponse) {
+    for (var i = 0; i < commentsJsonResponse.length; i++){
+        var comment = commentsJsonResponse[i].body.toLowerCase();
+        var userName = commentsJsonResponse[i].user.login;
+        if (userName !== 'cesium-concierge' && comment.indexOf('@cesium-concierge stop') !== -1) {
+            return true;
+        }
+    }
+
+    return false;
 };

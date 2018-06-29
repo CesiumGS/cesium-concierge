@@ -35,9 +35,24 @@ describe('stalePullRequest', function () {
     it('calls stalePullRequest._processPullRequest once for each returned pull request', function (done) {
         var mockPullRequest = {};
         var mockPullRequest2 = {};
+        var firstResponse = {
+            headers : {
+                link : '<https://url?page=2>; rel="next",<https://url?page=2>; rel="last"'
+            },
+            body: [mockPullRequest]
+        };
+        var secondResponse = {
+            headers : {
+                link : '<https://url?page=1>; rel="first",<https://url?page=2>; rel="prev"'
+            },
+            body: [mockPullRequest2]
+        };
+
         spyOn(requestPromise, 'get').and.callFake(function (options) {
             if (options.url === 'https://api.github.com/repos/AnalyticalGraphics/cesium/pulls?state=open&base=master') {
-                return Promise.resolve([mockPullRequest, mockPullRequest2]);
+                return Promise.resolve(firstResponse);
+            } else if (options.url === 'https://url?page=2') {
+                return Promise.resolve(secondResponse);
             }
             return Promise.reject(new Error('Unexpected Url'));
         });
@@ -56,21 +71,26 @@ describe('stalePullRequest', function () {
 
     it('stalePullRequest._processPullRequest does not post non-stale pull request', function (done) {
         var repositorySettings = new RepositorySettings();
-        var commentsUrl = 'commentsUrl';
+        var commentsUrl = 'https://url';
         var pullRequest = {
             comments_url: commentsUrl
         };
 
         spyOn(requestPromise, 'get').and.callFake(function (options) {
-            if (options.url === commentsUrl) {
+            if (options.resolveWithFullResponse === true) {
+                return Promise.resolve({headers: {link: '<https://url?page=2>; rel="next",<https://url?page=3>; rel="last"'}});
+            } else if (options.url === commentsUrl + '?page=3') {
                 var timestamp = new Date(Date.now());
                 return Promise.resolve([{
-                    created_at: timestamp
+                    updated_at: timestamp
                 }]);
             }
             return Promise.reject(new Error('Unexpected Url'));
         });
         spyOn(requestPromise, 'post');
+        spyOn(stalePullRequest, 'foundStopComment').and.callFake(function () {
+            return false;
+        });
 
         stalePullRequest._processPullRequest(pullRequest, repositorySettings)
             .then(function () {
@@ -80,34 +100,41 @@ describe('stalePullRequest', function () {
             .catch(done.fail);
     });
 
-    it('stalePullRequest._processPullRequest posts expected message for initial stale pull request', function (done) {
+    it('stalePullRequest._processPullRequest posts expected message for stale pull request', function (done) {
         var repositorySettings = new RepositorySettings();
-        var commentsUrl = 'commentsUrl';
+        var commentsUrl = 'https://url';
         var pullRequest = {
-            comments_url: commentsUrl
+            comments_url: commentsUrl,
+            user: {login: 'boomerjones'}
         };
 
         spyOn(requestPromise, 'get').and.callFake(function (options) {
-            if (options.url === commentsUrl) {
+            if (options.resolveWithFullResponse === true) {
+                return Promise.resolve({headers: {link: '<https://url?page=2>; rel="next",<https://url?page=3>; rel="last"'}});
+            } else if (options.url === commentsUrl + '?page=3') {
                 var timestamp = new Date(Date.now());
                 timestamp.setDate(timestamp.getDate() - repositorySettings.maxDaysSinceUpdate);
                 return Promise.resolve([{
-                    created_at: timestamp,
+                    updated_at: timestamp,
                     user: {login: 'boomerjones'}
                 }]);
             }
             return Promise.reject(new Error('Unexpected Url'));
         });
         spyOn(requestPromise, 'post');
+        spyOn(stalePullRequest, 'foundStopComment').and.callFake(function () {
+            return false;
+        });
 
         stalePullRequest._processPullRequest(pullRequest, repositorySettings)
             .then(function () {
                 expect(requestPromise.post).toHaveBeenCalledWith({
-                    url: commentsUrl,
+                    url: commentsUrl + '?page=3',
                     headers: repositorySettings.headers,
                     body: {
-                        body: repositorySettings.initialStalePullRequestTemplate({
-                            maxDaysSinceUpdate: repositorySettings.maxDaysSinceUpdate
+                        body: repositorySettings.stalePullRequestTemplate({
+                            maxDaysSinceUpdate: repositorySettings.maxDaysSinceUpdate,
+                            userName: pullRequest.user.login
                         })
                     },
                     json: true
@@ -117,40 +144,49 @@ describe('stalePullRequest', function () {
             .catch(done.fail);
     });
 
-    it('stalePullRequest._processPullRequest posts expected message for secondary stale pull request', function (done) {
+    it('stalePullRequest._processPullRequest does not post when asked to stop', function (done) {
         var repositorySettings = new RepositorySettings();
-        var commentsUrl = 'commentsUrl';
+        var commentsUrl = 'https://url';
         var pullRequest = {
             comments_url: commentsUrl
         };
 
         spyOn(requestPromise, 'get').and.callFake(function (options) {
-            if (options.url === commentsUrl) {
+            if (options.resolveWithFullResponse === true) {
+                return Promise.resolve({headers: {link: '<https://url?page=2>; rel="next",<https://url?page=3>; rel="last"'}});
+            } else if (options.url === commentsUrl + '?page=3') {
                 var timestamp = new Date(Date.now());
                 timestamp.setDate(timestamp.getDate() - repositorySettings.maxDaysSinceUpdate);
                 return Promise.resolve([{
-                    created_at: timestamp,
-                    user: {login: 'cesium-concierge'}
+                    updated_at: timestamp,
+                    user: {login: 'boomerjones'}
                 }]);
             }
             return Promise.reject(new Error('Unexpected Url'));
         });
         spyOn(requestPromise, 'post');
+        spyOn(stalePullRequest, 'foundStopComment').and.callFake(function () {
+            return true;
+        });
 
         stalePullRequest._processPullRequest(pullRequest, repositorySettings)
             .then(function () {
-                expect(requestPromise.post).toHaveBeenCalledWith({
-                    url: commentsUrl,
-                    headers: repositorySettings.headers,
-                    body: {
-                        body: repositorySettings.secondaryStalePullRequestTemplate({
-                            maxDaysSinceUpdate: repositorySettings.maxDaysSinceUpdate
-                        })
-                    },
-                    json: true
-                });
+                expect(requestPromise.post).not.toHaveBeenCalled();
                 done();
             })
             .catch(done.fail);
+    });
+
+    it('stalePullRequest.foundStopComment works', function () {
+        var conciergeUser = {login: 'cesium-concierge'};
+        var otherUser = {login: 'BobDylan'};
+
+        expect(stalePullRequest.foundStopComment([{ body: '', user: otherUser }])).toBe(false);
+        expect(stalePullRequest.foundStopComment([{ body: '', user: conciergeUser }])).toBe(false);
+        expect(stalePullRequest.foundStopComment([{ body: '@cesium-concierge stop', user: conciergeUser }])).toBe(false);
+        expect(stalePullRequest.foundStopComment([{ body: 'This is a profound PR.', user: otherUser }])).toBe(false);
+
+        expect(stalePullRequest.foundStopComment([{ body: '@cesium-concierge stop', user: otherUser }])).toBe(true);
+        expect(stalePullRequest.foundStopComment([{ body: '', user: conciergeUser }, { body: '@cesium-concierge stop', user: otherUser }])).toBe(true);
     });
 });
