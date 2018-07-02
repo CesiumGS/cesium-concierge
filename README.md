@@ -38,6 +38,7 @@ The table below describes all the possible configuration variables, as well as t
 | `repositories:{full_name}:claUrl` | `string` | The GitHub API URL to the CLA file in JSON form. See [here](https://developer.github.com/v3/repos/contents/#get-contents) for what the URL should look like. _Example:_ https://api.github.com/repos/AnalyticalGraphicsInc/cesium-concierge/contents/specs/data/config/CLA.json | X | _Disabled if not set._
 | `repositories:{full_name}:contributorsUrl` | `string` |  The GitHub API URL to `CONTRIBUTORS.md`. | X | _Disabled if not set._
 | `repositories:{full_name}:maxDaysSinceUpdate` | `number` | "Bump" pull requests older than this number of days ago. | X | `30`
+| `repositories:{full_name}:labelsToBump` | `object` | Dictionary in the form `<label>:<number of days>`. Issues and PR's with these labels will be bumped `N` days prior to the first day of the month. | X | _Disabled if not set._
 | `port` | `number` | Port on which to listen to incoming requests | X | `5000`
 | `listenPath` | `string` | Path on which to listen for incoming requests | X | `"/"`
 
