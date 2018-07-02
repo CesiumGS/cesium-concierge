@@ -79,15 +79,12 @@ describe('commentOnOpenedPullRequest', function () {
     });
 
     it('commentOnOpenedPullRequest._askAboutTests works', function () {
-        var checkEnabledSettings = new RepositorySettings({ unitTestPath: 'Specs/' });
-        var checkDisabledSettings = new RepositorySettings();
+        expect(commentOnOpenedPullRequest._askAboutTests(['file.txt'])).toBe(false);
+        expect(commentOnOpenedPullRequest._askAboutTests(['Specs/lib/testSpec.js'])).toBe(false);
+        expect(commentOnOpenedPullRequest._askAboutTests(['Specs/lib/testSpec.js'], 'Specs/')).toBe(false);
+        expect(commentOnOpenedPullRequest._askAboutTests(['specs/lib/testSpec.js'], 'Specs/')).toBe(false);
 
-        expect(commentOnOpenedPullRequest._askAboutTests(['file.txt'], checkDisabledSettings)).toBe(false);
-        expect(commentOnOpenedPullRequest._askAboutTests(['Specs/lib/testSpec.js'], checkDisabledSettings)).toBe(false);
-        expect(commentOnOpenedPullRequest._askAboutTests(['Specs/lib/testSpec.js'], checkEnabledSettings)).toBe(false);
-        expect(commentOnOpenedPullRequest._askAboutTests(['specs/lib/testSpec.js'], checkEnabledSettings)).toBe(false);
-
-        expect(commentOnOpenedPullRequest._askAboutTests(['file.txt'], checkEnabledSettings)).toBe(true);
+        expect(commentOnOpenedPullRequest._askAboutTests(['file.txt'], 'Specs/')).toBe(true);
     });
 
     it('commentOnOpenedPullRequest._askAboutThirdParty works', function () {
