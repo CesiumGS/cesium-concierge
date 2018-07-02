@@ -5,6 +5,7 @@ var requestPromise = require('request-promise');
 
 var stalePullRequest = require('../../bin/stalePullRequest');
 var RepositorySettings = require('../../lib/RepositorySettings');
+var checkStopCondition = require('../../lib/checkStopCondition');
 
 describe('stalePullRequest', function () {
     var repositories;
@@ -82,15 +83,14 @@ describe('stalePullRequest', function () {
             } else if (options.url === commentsUrl + '?page=3') {
                 var timestamp = new Date(Date.now());
                 return Promise.resolve([{
-                    updated_at: timestamp
+                    updated_at: timestamp,
+                    user: {login: 'boomerjons'},
+                    body: ''
                 }]);
             }
             return Promise.reject(new Error('Unexpected Url'));
         });
         spyOn(requestPromise, 'post');
-        spyOn(stalePullRequest, 'foundStopComment').and.callFake(function () {
-            return false;
-        });
 
         stalePullRequest._processPullRequest(pullRequest, repositorySettings)
             .then(function () {
@@ -116,15 +116,13 @@ describe('stalePullRequest', function () {
                 timestamp.setDate(timestamp.getDate() - repositorySettings.maxDaysSinceUpdate);
                 return Promise.resolve([{
                     updated_at: timestamp,
-                    user: {login: 'boomerjones'}
+                    user: {login: 'boomerjones'},
+                    body: ''
                 }]);
             }
             return Promise.reject(new Error('Unexpected Url'));
         });
         spyOn(requestPromise, 'post');
-        spyOn(stalePullRequest, 'foundStopComment').and.callFake(function () {
-            return false;
-        });
 
         stalePullRequest._processPullRequest(pullRequest, repositorySettings)
             .then(function () {
@@ -157,17 +155,16 @@ describe('stalePullRequest', function () {
             } else if (options.url === commentsUrl + '?page=3') {
                 var timestamp = new Date(Date.now());
                 timestamp.setDate(timestamp.getDate() - repositorySettings.maxDaysSinceUpdate);
+                
                 return Promise.resolve([{
                     updated_at: timestamp,
-                    user: {login: 'boomerjones'}
+                    user: {login: 'boomerjones'},
+                    body: '@cesium-concierge stop'
                 }]);
             }
             return Promise.reject(new Error('Unexpected Url'));
         });
         spyOn(requestPromise, 'post');
-        spyOn(stalePullRequest, 'foundStopComment').and.callFake(function () {
-            return true;
-        });
 
         stalePullRequest._processPullRequest(pullRequest, repositorySettings)
             .then(function () {
@@ -177,16 +174,16 @@ describe('stalePullRequest', function () {
             .catch(done.fail);
     });
 
-    it('stalePullRequest.foundStopComment works', function () {
+    it('checkStopCondition works', function () {
         var conciergeUser = {login: 'cesium-concierge'};
         var otherUser = {login: 'BobDylan'};
 
-        expect(stalePullRequest.foundStopComment([{ body: '', user: otherUser }])).toBe(false);
-        expect(stalePullRequest.foundStopComment([{ body: '', user: conciergeUser }])).toBe(false);
-        expect(stalePullRequest.foundStopComment([{ body: '@cesium-concierge stop', user: conciergeUser }])).toBe(false);
-        expect(stalePullRequest.foundStopComment([{ body: 'This is a profound PR.', user: otherUser }])).toBe(false);
+        expect(checkStopCondition([{ body: '', user: otherUser }])).toBe(false);
+        expect(checkStopCondition([{ body: '', user: conciergeUser }])).toBe(false);
+        expect(checkStopCondition([{ body: '@cesium-concierge stop', user: conciergeUser }])).toBe(false);
+        expect(checkStopCondition([{ body: 'This is a profound PR.', user: otherUser }])).toBe(false);
 
-        expect(stalePullRequest.foundStopComment([{ body: '@cesium-concierge stop', user: otherUser }])).toBe(true);
-        expect(stalePullRequest.foundStopComment([{ body: '', user: conciergeUser }, { body: '@cesium-concierge stop', user: otherUser }])).toBe(true);
+        expect(checkStopCondition([{ body: '@cesium-concierge stop', user: otherUser }])).toBe(true);
+        expect(checkStopCondition([{ body: '', user: conciergeUser }, { body: '@cesium-concierge stop', user: otherUser }])).toBe(true);
     });
 });

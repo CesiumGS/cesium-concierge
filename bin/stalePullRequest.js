@@ -7,6 +7,7 @@ var parseLink = require('parse-link-header');
 
 var Settings = require('../lib/Settings');
 var dateLog = require('../lib/dateLog');
+var checkStopCondition = require('../lib/checkStopCondition');
 
 module.exports = stalePullRequest;
 
@@ -81,7 +82,7 @@ stalePullRequest._processPullRequest = function (pullRequest, repositorySettings
 
     function processComments(commentsJsonResponse) {
         var lastComment = commentsJsonResponse[commentsJsonResponse.length - 1];
-        var foundStop = stalePullRequest.foundStopComment(commentsJsonResponse);
+        var foundStop = checkStopCondition(commentsJsonResponse);
         if (!foundStop && stalePullRequest.daysSince(new Date(lastComment.updated_at)) >= repositorySettings.maxDaysSinceUpdate) {
             var template = repositorySettings.stalePullRequestTemplate;
             return requestPromise.post({
@@ -121,16 +122,4 @@ stalePullRequest._processPullRequest = function (pullRequest, repositorySettings
 stalePullRequest.daysSince = function (date) {
     var msPerDay = 24 * 60 * 60 * 1000;
     return (Date.now() - date.getTime()) / msPerDay;
-};
-
-stalePullRequest.foundStopComment = function (commentsJsonResponse) {
-    for (var i = 0; i < commentsJsonResponse.length; i++){
-        var comment = commentsJsonResponse[i].body.toLowerCase();
-        var userName = commentsJsonResponse[i].user.login;
-        if (userName !== 'cesium-concierge' && comment.indexOf('@cesium-concierge stop') !== -1) {
-            return true;
-        }
-    }
-
-    return false;
 };
