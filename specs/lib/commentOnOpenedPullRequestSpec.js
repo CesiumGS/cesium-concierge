@@ -78,6 +78,18 @@ describe('commentOnOpenedPullRequest', function () {
         expect(commentOnOpenedPullRequest._askAboutChanges(['CHANGES.mdtrailing'],'master')).toBe(true);
     });
 
+    it('commentOnOpenedPullRequest._askAboutTests works', function () {
+        var checkEnabledSettings = new RepositorySettings({ unitTestPath: 'Specs/' });
+        var checkDisabledSettings = new RepositorySettings();
+
+        expect(commentOnOpenedPullRequest._askAboutTests(['file.txt'], checkDisabledSettings)).toBe(false);
+        expect(commentOnOpenedPullRequest._askAboutTests(['Specs/lib/testSpec.js'], checkDisabledSettings)).toBe(false);
+        expect(commentOnOpenedPullRequest._askAboutTests(['Specs/lib/testSpec.js'], checkEnabledSettings)).toBe(false);
+        expect(commentOnOpenedPullRequest._askAboutTests(['specs/lib/testSpec.js'], checkEnabledSettings)).toBe(false);
+
+        expect(commentOnOpenedPullRequest._askAboutTests(['file.txt'], checkEnabledSettings)).toBe(true);
+    });
+
     it('commentOnOpenedPullRequest._askAboutThirdParty works', function () {
         expect(commentOnOpenedPullRequest._askAboutThirdParty(['ThirdParty/file.js'], ['ThirdParty'])).toBe(true);
 
