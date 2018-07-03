@@ -78,6 +78,15 @@ describe('commentOnOpenedPullRequest', function () {
         expect(commentOnOpenedPullRequest._askAboutChanges(['CHANGES.mdtrailing'],'master')).toBe(true);
     });
 
+    it('commentOnOpenedPullRequest._askAboutTests works', function () {
+        expect(commentOnOpenedPullRequest._askAboutTests(['file.txt'])).toBe(false);
+        expect(commentOnOpenedPullRequest._askAboutTests(['Specs/lib/testSpec.js'])).toBe(false);
+        expect(commentOnOpenedPullRequest._askAboutTests(['Specs/lib/testSpec.js'], 'Specs/')).toBe(false);
+        expect(commentOnOpenedPullRequest._askAboutTests(['specs/lib/testSpec.js'], 'Specs/')).toBe(false);
+
+        expect(commentOnOpenedPullRequest._askAboutTests(['file.txt'], 'Specs/')).toBe(true);
+    });
+
     it('commentOnOpenedPullRequest._askAboutThirdParty works', function () {
         expect(commentOnOpenedPullRequest._askAboutThirdParty(['ThirdParty/file.js'], ['ThirdParty'])).toBe(true);
 
