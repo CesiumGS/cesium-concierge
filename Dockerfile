@@ -15,4 +15,6 @@ RUN npm install
 
 RUN crontab crontab
 
+RUN env > saved_env
+
 ENTRYPOINT ["/usr/bin/supervisord", "-c", "/var/app/supervisord.conf"]
