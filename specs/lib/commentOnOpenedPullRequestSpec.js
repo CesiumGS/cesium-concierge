@@ -538,7 +538,7 @@ describe('commentOnOpenedPullRequest', function () {
                     {filename: 'file.txt'}
                 ]);
             }
-            if (options.url === repositorySettings.contributorsUrl + '?ref=' + headBranch) {
+            if (options.url === repositorySettings.contributorsUrl) {
                 var content = Buffer.from('* [Jane Doe](https://github.com/JaneDoe)\n* [Boomer Jones](https://github.com/' + userName + ')').toString('base64');
                 return Promise.resolve({
                     content: content
@@ -574,8 +574,6 @@ describe('commentOnOpenedPullRequest', function () {
         var pullRequestFilesUrl = 'pullRequestFilesUrl';
         var pullRequestCommentsUrl = 'pullRequestCommentsUrl';
         var contributorsUrl = 'contributors.json';
-        var headContributors = '* [Jane Doe](https://github.com/JaneDoe)\n* [Boomer Jones](https://github.com/' + userName + ')';
-        var baseContributors = '* [Jane Doe](https://github.com/JaneDoe)';
 
         var repositorySettings = new RepositorySettings({
             contributorsUrl: contributorsUrl
@@ -593,20 +591,12 @@ describe('commentOnOpenedPullRequest', function () {
                     {filename: 'file.txt'}
                 ]);
             }
-            var content;
-            if (options.url === contributorsUrl + '?ref=' + baseBranch || options.url === contributorsUrl) {
-                content = Buffer.from(baseContributors).toString('base64');
+            if (options.url === repositorySettings.contributorsUrl) {
+                var content = Buffer.from('* [Jane Doe](https://github.com/JaneDoe)\n* [Boomer Jones](https://github.com/' + userName + ')').toString('base64');
                 return Promise.resolve({
                     content: content
                 });
             }
-            if (options.url === contributorsUrl + '?ref=' + headBranch) {
-                content = Buffer.from(headContributors).toString('base64');
-                return Promise.resolve({
-                    content: content
-                });
-            }
-
             return Promise.reject('Unknown url.');
         });
 
