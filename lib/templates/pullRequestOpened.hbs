@@ -1,10 +1,11 @@
-{{#if askAboutContributors}} 
+{{#if firstTimeContributor}} 
 Thank you so much for the pull request @{{ userName }}! I noticed this is your first pull request and I wanted to say welcome to the Cesium community!
 
 The [Pull Request Guidelines](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/CONTRIBUTING.md#pull-request-guidelines) is a handy reference for making sure your PR gets accepted quickly, so make sure to skim that.
-
+{{#if askAboutContributors}}
 * :x: Missing `CONTRIBUTORS.md` entry.
     * Please add yourself to the [contributors]({{ repository_url }}/blob/{{ headBranch }}/CONTRIBUTORS.md) file!
+{{/if}}
 {{else}}
 Thanks for the pull request @{{ userName }}! 
 {{/if}}
