@@ -41,6 +41,7 @@ The table below describes all the possible configuration variables, as well as t
 | `repositories:{full_name}:unitTestPath` | `string` |  Relative path to the directory containing unit tests. _Example:`Specs/`_ | X | _Disabled if not set._
 | `port` | `number` | Port on which to listen to incoming requests | X | `5000`
 | `listenPath` | `string` | Path on which to listen for incoming requests | X | `"/"`
+| `slackToken` | `string` | Slack API token for posting release reminders and fun stats to the Slack team. | X | _Disabled if not set._
 
 > Note: `full_name` is the repository name in the form `{organization}/{repository}`. For example: `AnalyticalGraphicsInc/cesium`
 
@@ -54,6 +55,9 @@ The secret verifies that all incoming requests to your server are from GitHub an
 ### Setting `gitHubToken`
 Next, get a [Personal Access Token](https://help.github.com/articles/creating-a-personal-access-token-for-the-command-line/), which verifies with GitHub that all requests to its API come from an account
 with privileges. Set it locally by using any of the three ways listed above.
+
+### Setting `slackToken`
+See "installing a bot" on Slack's [Enabling interactions with bots](https://api.slack.com/bot-users) guide.
 
 ### CLA Format
 The `repositories:{full_name}:claUrl` should point to a GitHub URL of a JSON file with the following format:

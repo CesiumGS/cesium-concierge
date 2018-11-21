@@ -25,6 +25,7 @@
     "node": ">=6.0.0"
   },
   "dependencies": {
+    "@slack/client": "^4.8.0",
     "bluebird": "^3.0.0",
     "body-parser": "^1.0.0",
     "cesium": "^1.35.1",
