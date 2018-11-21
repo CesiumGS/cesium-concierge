@@ -3,16 +3,14 @@
 var bodyParser = require('body-parser');
 var express = require('express');
 var schedule = require('node-schedule');
-var Cesium = require('cesium');
 
 var stalePullRequest = require('./lib/stalePullRequest');
 var checkWebHook = require('./lib/checkWebHook');
 var dateLog = require('./lib/dateLog');
 var postToGitHub = require('./lib/postToGitHub');
 var Settings = require('./lib/Settings');
-var initSlackBot = require('./lib/initSlackBot');
+var SlackBot = require('./lib/SlackBot');
 
-var defined = Cesium.defined;
 
 Settings.loadRepositoriesSettings('./config.json')
     .then(function () {
@@ -34,9 +32,10 @@ Settings.loadRepositoriesSettings('./config.json')
             });
         });
 
-        if (defined(Settings.slackToken)) {
-            initSlackBot(Settings.slackToken);
-        }
+        SlackBot.init({
+            token: Settings.slackToken,
+            configUrl: Settings.slackConfigUrl
+        });
     })
     .catch(function (err) {
         dateLog('Could not parse environment settings: ' + err);

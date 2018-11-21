@@ -42,6 +42,7 @@ The table below describes all the possible configuration variables, as well as t
 | `port` | `number` | Port on which to listen to incoming requests | X | `5000`
 | `listenPath` | `string` | Path on which to listen for incoming requests | X | `"/"`
 | `slackToken` | `string` | Slack API token for posting release reminders and fun stats to the Slack team. | X | _Disabled if not set._
+| `slackConfigUrl` | `string` | The GitHub API URL to a YAML file containing the release schedule and other SlackBot config. | X | `""`
 
 > Note: `full_name` is the repository name in the form `{organization}/{repository}`. For example: `AnalyticalGraphicsInc/cesium`
 
