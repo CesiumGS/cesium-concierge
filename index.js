@@ -2,7 +2,9 @@
 
 var bodyParser = require('body-parser');
 var express = require('express');
+var schedule = require('node-schedule');
 
+var stalePullRequest = require('./lib/stalePullRequest');
 var checkWebHook = require('./lib/checkWebHook');
 var dateLog = require('./lib/dateLog');
 var postToGitHub = require('./lib/postToGitHub');
@@ -18,6 +20,14 @@ Settings.loadRepositoriesSettings('./config.json')
         // Start server on port specified by env.PORT
         app.listen(Settings.port, function () {
             dateLog('cesium-concierge listening on port ' + Settings.port);
+        });
+
+        // Run every night.
+        schedule.scheduleJob('0 22 * * *', function () {
+            stalePullRequest(Settings.repositories)
+                .catch(function (err) {
+                    console.error(err);
+                });
         });
     })
     .catch(function (err) {
