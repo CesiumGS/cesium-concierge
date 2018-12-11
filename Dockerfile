@@ -1,4 +1,4 @@
-FROM node:6
+FROM node:10
 
 ENV NODE_ENV production
 
@@ -12,5 +12,7 @@ COPY . /var/app
 WORKDIR /var/app
 
 RUN npm install
+
+RUN npm config set script-shell /bin/bash
 
 ENTRYPOINT ["/usr/bin/supervisord", "-c", "/var/app/supervisord.conf"]
