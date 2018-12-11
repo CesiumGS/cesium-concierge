@@ -63,8 +63,6 @@ gulp.task('create-zip', function () {
             'bin/**',
             'lib/**',
             'Dockerfile',
-            'supervisord.conf',
-            'crontab',
             'index.js'],
         {
             base: '.'
