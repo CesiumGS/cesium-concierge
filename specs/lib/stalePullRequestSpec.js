@@ -3,7 +3,7 @@
 var Promise = require('bluebird');
 var requestPromise = require('request-promise');
 
-var stalePullRequest = require('../../bin/stalePullRequest');
+var stalePullRequest = require('../../lib/stalePullRequest');
 var RepositorySettings = require('../../lib/RepositorySettings');
 
 describe('stalePullRequest', function () {
