@@ -527,7 +527,7 @@ describe('commentOnOpenedPullRequest', function () {
         var pullRequestFilesUrl = 'pullRequestFilesUrl';
         var pullRequestCommentsUrl = 'pullRequestCommentsUrl';
         var contributorsPath = 'CONTRIBUTORS.md';
-        var apiUrl = headApiUrl + '/contents/' + contributorsPath;
+        var apiUrl = headApiUrl + '/contents/' + contributorsPath + '?ref=' + headBranch;;
         var htmlUrl =  headHtmlUrl + '/blob/' + headBranch + '/' + contributorsPath;
 
         var repositorySettings = new RepositorySettings({
@@ -582,7 +582,7 @@ describe('commentOnOpenedPullRequest', function () {
         var pullRequestFilesUrl = 'pullRequestFilesUrl';
         var pullRequestCommentsUrl = 'pullRequestCommentsUrl';
         var contributorsPath = 'CONTRIBUTORS.md';
-        var apiUrl = headApiUrl + '/contents/' + contributorsPath;
+        var apiUrl = headApiUrl + '/contents/' + contributorsPath + '?ref=' + headBranch;
 
         var repositorySettings = new RepositorySettings({
             contributorsPath: contributorsPath
@@ -600,6 +600,7 @@ describe('commentOnOpenedPullRequest', function () {
                     {filename: 'file.txt'}
                 ]);
             }
+
             if (options.url === apiUrl) {
                 var content = Buffer.from('* [Jane Doe](https://github.com/JaneDoe)\n* [Boomer Jones](https://github.com/' + userName + ')').toString('base64');
                 return Promise.resolve({
