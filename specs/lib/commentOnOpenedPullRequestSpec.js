@@ -527,7 +527,7 @@ describe('commentOnOpenedPullRequest', function () {
         var pullRequestFilesUrl = 'pullRequestFilesUrl';
         var pullRequestCommentsUrl = 'pullRequestCommentsUrl';
         var contributorsPath = 'CONTRIBUTORS.md';
-        var apiUrl = headApiUrl + '/contents/' + contributorsPath + '?ref=' + headBranch;;
+        var apiUrl = headApiUrl + '/contents/' + contributorsPath + '?ref=' + headBranch;
         var htmlUrl =  headHtmlUrl + '/blob/' + headBranch + '/' + contributorsPath;
 
         var repositorySettings = new RepositorySettings({
