@@ -583,7 +583,6 @@ describe('commentOnOpenedPullRequest', function () {
         var pullRequestCommentsUrl = 'pullRequestCommentsUrl';
         var contributorsPath = 'CONTRIBUTORS.md';
         var apiUrl = headApiUrl + '/contents/' + contributorsPath;
-        var htmlUrl =  headHtmlUrl + '/blob/' + headBranch + '/' + contributorsPath;
 
         var repositorySettings = new RepositorySettings({
             contributorsPath: contributorsPath
