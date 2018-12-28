@@ -17,6 +17,8 @@ describe('commentOnOpenedPullRequest', function () {
     var thirdPartyFolders = ['ThirdParty/', 'Source/ThirdParty/'];
     var baseBranch = 'master';
     var headBranch = 'feature';
+    var headHtmlUrl = repositoryUrl;
+    var headApiUrl = 'https://api.github.com/repos/AnalyticalGraphicsInc/cesium';
 
     var pullRequestJson = {
         pull_request: {
@@ -26,7 +28,11 @@ describe('commentOnOpenedPullRequest', function () {
                 login: userName
             },
             head: {
-                ref: 'feature'
+                ref: 'feature',
+                repo: {
+                    url: headApiUrl,
+                    html_url: headHtmlUrl
+                }
             },
             base: {
                 ref: 'master'
@@ -64,7 +70,7 @@ describe('commentOnOpenedPullRequest', function () {
 
         commentOnOpenedPullRequest(pullRequestJson, repositorySettings);
 
-        expect(commentOnOpenedPullRequest._implementation).toHaveBeenCalledWith(filesUrl, commentsUrl, repositorySettings, userName, repositoryUrl, baseBranch, headBranch);
+        expect(commentOnOpenedPullRequest._implementation).toHaveBeenCalledWith(filesUrl, commentsUrl, repositorySettings, userName, repositoryUrl, baseBranch, headBranch, headHtmlUrl, headApiUrl);
     });
 
     it('commentOnOpenedPullRequest._askAboutChanges works', function () {
@@ -520,10 +526,12 @@ describe('commentOnOpenedPullRequest', function () {
     it('commentOnOpenedPullRequest._implementation reminds user to add to CONTRIBUTORS.md.', function (done) {
         var pullRequestFilesUrl = 'pullRequestFilesUrl';
         var pullRequestCommentsUrl = 'pullRequestCommentsUrl';
-        var contributorsUrl = 'contributors.json';
+        var contributorsPath = 'CONTRIBUTORS.md';
+        var apiUrl = headApiUrl + '/contents/' + contributorsPath;
+        var htmlUrl =  headHtmlUrl + '/blob/' + headBranch + '/' + contributorsPath;
 
         var repositorySettings = new RepositorySettings({
-            contributorsUrl: contributorsUrl
+            contributorsPath: contributorsPath,
         });
 
         spyOn(repositorySettings, 'fetchSettings').and.callFake(function() {
@@ -538,17 +546,17 @@ describe('commentOnOpenedPullRequest', function () {
                     {filename: 'file.txt'}
                 ]);
             }
-            if (options.url === repositorySettings.contributorsUrl) {
+            if (options.url === apiUrl) {
                 var content = Buffer.from('* [Jane Doe](https://github.com/JaneDoe)\n* [Boomer Jones](https://github.com/' + userName + ')').toString('base64');
                 return Promise.resolve({
                     content: content
                 });
             }
-            return Promise.reject('Unknown url.');
+            return Promise.reject('Unknown url: ' + options.url);
         });
 
         var newContributorUsername = 'NewBob';
-        commentOnOpenedPullRequest._implementation(pullRequestFilesUrl, pullRequestCommentsUrl, repositorySettings, newContributorUsername, repositoryUrl, baseBranch, headBranch)
+        commentOnOpenedPullRequest._implementation(pullRequestFilesUrl, pullRequestCommentsUrl, repositorySettings, newContributorUsername, repositoryUrl, baseBranch, headBranch, headHtmlUrl, headApiUrl)
             .then(function () {
                 expect(requestPromise.post).toHaveBeenCalledWith({
                     url: pullRequestCommentsUrl,
@@ -558,7 +566,7 @@ describe('commentOnOpenedPullRequest', function () {
                             userName: newContributorUsername,
                             repository_url: repositoryUrl,
                             askAboutContributors: true,
-                            contributorsUrl: repositorySettings.contributorsUrl,
+                            contributorsUrl: htmlUrl,
                             askAboutChanges: true,
                             headBranch: headBranch
                         })
@@ -573,10 +581,12 @@ describe('commentOnOpenedPullRequest', function () {
     it('commentOnOpenedPullRequest._implementation does not post reminder about CONTRIBUTORS.md if user is already in there.', function (done) {
         var pullRequestFilesUrl = 'pullRequestFilesUrl';
         var pullRequestCommentsUrl = 'pullRequestCommentsUrl';
-        var contributorsUrl = 'contributors.json';
+        var contributorsPath = 'CONTRIBUTORS.md';
+        var apiUrl = headApiUrl + '/contents/' + contributorsPath;
+        var htmlUrl =  headHtmlUrl + '/blob/' + headBranch + '/' + contributorsPath;
 
         var repositorySettings = new RepositorySettings({
-            contributorsUrl: contributorsUrl
+            contributorsPath: contributorsPath
         });
 
         spyOn(repositorySettings, 'fetchSettings').and.callFake(function() {
@@ -591,16 +601,16 @@ describe('commentOnOpenedPullRequest', function () {
                     {filename: 'file.txt'}
                 ]);
             }
-            if (options.url === repositorySettings.contributorsUrl) {
+            if (options.url === apiUrl) {
                 var content = Buffer.from('* [Jane Doe](https://github.com/JaneDoe)\n* [Boomer Jones](https://github.com/' + userName + ')').toString('base64');
                 return Promise.resolve({
                     content: content
                 });
             }
-            return Promise.reject('Unknown url.');
+            return Promise.reject('Unknown url: ' + options.url);
         });
 
-        commentOnOpenedPullRequest._implementation(pullRequestFilesUrl, pullRequestCommentsUrl, repositorySettings, userName, repositoryUrl, baseBranch, headBranch)
+        commentOnOpenedPullRequest._implementation(pullRequestFilesUrl, pullRequestCommentsUrl, repositorySettings, userName, repositoryUrl, baseBranch, headBranch, headHtmlUrl, headApiUrl)
             .then(function () {
                 expect(requestPromise.post).toHaveBeenCalledWith({
                     url: pullRequestCommentsUrl,
