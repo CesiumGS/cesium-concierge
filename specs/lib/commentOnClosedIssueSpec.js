@@ -71,9 +71,9 @@ describe('commentOnClosedIssue', function () {
         spyOn(commentOnClosedIssue, '_implementation');
         commentOnClosedIssue(issueEventJson, repositorySettings, outreachUsers);
         expect(commentOnClosedIssue._implementation).toHaveBeenCalledWith({
-            url: issueUrl, 
-            commentsUrl: commentsUrl, 
-            isPullRequest: isPullRequest, 
+            url: issueUrl,
+            commentsUrl: commentsUrl,
+            isPullRequest: isPullRequest,
             repositorySettings: repositorySettings,
             outreachUsers: outreachUsers
         });
@@ -123,8 +123,8 @@ describe('commentOnClosedIssue', function () {
         spyOn(requestPromise, 'post');
 
         return commentOnClosedIssue._implementation({
-            url: issueUrl, 
-            commentsUrl: commentsUrl, 
+            url: issueUrl,
+            commentsUrl: commentsUrl,
             repositorySettings: repositorySettings,
             outreachUsers: outreachUsers
         });
