@@ -34,8 +34,11 @@ Settings.loadRepositoriesSettings('./config.json')
 
         SlackBot.init({
             token: Settings.slackToken,
-            configUrl: Settings.slackConfigUrl
+            configUrl: Settings.slackConfigUrl,
+            repositories: Settings.repositories
         });
+
+        SlackBot.initializeScheduledJobs();
     })
     .catch(function (err) {
         dateLog('Could not parse environment settings: ' + err);
