@@ -21,11 +21,13 @@ fdescribe('SlackBot', function () {
     function setupFakeIDs() {
         SlackBot._userIDs = {};
         SlackBot._userData = {};
+        SlackBot._channelIDs = {};
 
         SlackBot._userIDs[user] = ID;
         SlackBot._userData[ID] = {
             real_name: realName
         };
+        SlackBot._channelIDs['general'] = 1;
     }
 
     function getMessage(templateName) {
@@ -34,7 +36,7 @@ fdescribe('SlackBot', function () {
 
         return handlebars.compile(template)({
             name : firstName
-        });;
+        });
     }
 
     beforeEach(function () {
@@ -151,7 +153,47 @@ fdescribe('SlackBot', function () {
     });
 
     it('posts weekly statistics message.', function () {
-        expect(true).toBe(true);
+        var yesterday = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 1);
+        var lastWeek = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 7);
+
+        var promiseArray = [];
+        var issues = [];
+        issues.push({
+            pull_request: {},
+            closed_at: yesterday,
+            created_at: lastWeek
+        });
+        issues.push({
+            pull_request: {},
+            closed_at: yesterday,
+            created_at: yesterday
+        });
+        promiseArray.push(Promise.resolve(issues));
+
+        spyOn(SlackBot, '_getAllIssuesLastWeek').and.callFake(function() {
+            return promiseArray;
+        });
+
+        setupFakeIDs();
+
+        spyOn(SlackBot, 'postMessage');
+
+        SlackBot._sendWeeklyStats(true)
+        .then(function() {
+            var templateName = 'weeklyStats';
+            var template = fs.readFileSync(path.join(__dirname, '../../lib/templates', templateName + '.hbs')).toString();
+            var messageText = handlebars.compile(template)({
+                greeting : 'Happy Friday everyone!',
+                averageMergeTime : '3.0',
+                numberOfPullRequests : issues.length,
+                unusuallyLongPRMessage : ''
+            });
+            expect(SlackBot.postMessage).toHaveBeenCalledWith(SlackBot._channelIDs['general'], messageText);
+        })
+        .catch(function(error) {
+            throw Error(error);
+        });
+
     });
 
 });
