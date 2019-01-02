@@ -1,9 +1,9 @@
 # Cesium Concierge
 
 __Hello! I'm Cesium Concierge, a GitHub bot for [Cesium](https://github.com/AnalyticalGraphicsInc/cesium). I automate
-common GitHub tasks such as welcoming first time contributors and reminding you to write tests (I'm great fun at parties).__
+common GitHub tasks such as welcoming first time contributors and reminding you to write tests. (I'm great fun at parties!)__
 
-You'll find repository-specific settings for each repository I watch under a `.concierge` directory. For example, here's CesiumJS's concierge settings:
+You'll find repository-specific settings in each repository I watch under a `.concierge` directory. For example, here's CesiumJS's concierge settings:
 
 https://github.com/AnalyticalGraphicsInc/cesium/tree/master/.concierge 
 
