@@ -9,7 +9,6 @@ var Settings = require('../../lib/Settings');
 describe('postToGitHub', function () {
     var res;
     var repositorySettings;
-    var outreachUsers = Settings.outreachUsers;
 
     beforeEach(function () {
         res = {
@@ -59,7 +58,7 @@ describe('postToGitHub', function () {
 
         postToGitHub(req, res, next)
             .then(function () {
-                expect(postToGitHub._commentOnClosedIssue).toHaveBeenCalledWith(req.body, repositorySettings, outreachUsers);
+                expect(postToGitHub._commentOnClosedIssue).toHaveBeenCalledWith(req.body, repositorySettings);
                 expect(res.status).toHaveBeenCalledWith(204);
                 expect(res.end).toHaveBeenCalled();
                 expect(next).toHaveBeenCalledWith();
@@ -86,7 +85,7 @@ describe('postToGitHub', function () {
 
         postToGitHub(req, res, next)
             .then(function () {
-                expect(postToGitHub._commentOnClosedIssue).toHaveBeenCalledWith(req.body, repositorySettings, outreachUsers);
+                expect(postToGitHub._commentOnClosedIssue).toHaveBeenCalledWith(req.body, repositorySettings);
                 expect(res.status).toHaveBeenCalledWith(204);
                 expect(res.end).toHaveBeenCalled();
                 expect(next).toHaveBeenCalledWith();

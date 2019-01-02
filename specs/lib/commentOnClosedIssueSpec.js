@@ -17,7 +17,6 @@ describe('commentOnClosedIssue', function () {
     var baseBranch = 'master';
     var baseApiUrl = 'https://api.github.com/repos/AnalyticalGraphicsInc/cesium';
     var userName = 'Joan';
-    var outreachUsers = '@OmarShehata';
 
     beforeEach(function () {
         issueEventJson = {
@@ -46,18 +45,18 @@ describe('commentOnClosedIssue', function () {
 
     it('throws if body is undefined', function () {
         expect(function () {
-            commentOnClosedIssue(undefined, repositorySettings, outreachUsers);
+            commentOnClosedIssue(undefined, repositorySettings);
         }).toThrowError();
     });
 
     it('throws if `repositorySettings` is undefined', function () {
         expect(function () {
-            commentOnClosedIssue(issueEventJson, undefined, outreachUsers);
+            commentOnClosedIssue(issueEventJson);
         }).toThrowError();
     });
 
     it('rejects with unknown body type', function (done) {
-        commentOnClosedIssue({}, repositorySettings, outreachUsers)
+        commentOnClosedIssue({}, repositorySettings)
             .then(done.fail)
             .catch(function (error) {
                 expect(error.message).toBe('Unknown body type');
@@ -69,13 +68,12 @@ describe('commentOnClosedIssue', function () {
         var isPullRequest = false;
 
         spyOn(commentOnClosedIssue, '_implementation');
-        commentOnClosedIssue(issueEventJson, repositorySettings, outreachUsers);
+        commentOnClosedIssue(issueEventJson, repositorySettings);
         expect(commentOnClosedIssue._implementation).toHaveBeenCalledWith({
             url: issueUrl,
             commentsUrl: commentsUrl,
             isPullRequest: isPullRequest,
-            repositorySettings: repositorySettings,
-            outreachUsers: outreachUsers
+            repositorySettings: repositorySettings
         });
     });
 
@@ -83,7 +81,7 @@ describe('commentOnClosedIssue', function () {
         var isPullRequest = true;
 
         spyOn(commentOnClosedIssue, '_implementation');
-        commentOnClosedIssue(pullRequestEventJson, repositorySettings, outreachUsers);
+        commentOnClosedIssue(pullRequestEventJson, repositorySettings);
         expect(commentOnClosedIssue._implementation).toHaveBeenCalledWith({
             url: issueUrl,
             commentsUrl: commentsUrl,
@@ -91,8 +89,7 @@ describe('commentOnClosedIssue', function () {
             baseBranch: baseBranch,
             baseApiUrl: baseApiUrl,
             userName: userName,
-            repositorySettings: repositorySettings,
-            outreachUsers: outreachUsers
+            repositorySettings: repositorySettings
         });
     });
 
@@ -125,8 +122,7 @@ describe('commentOnClosedIssue', function () {
         return commentOnClosedIssue._implementation({
             url: issueUrl,
             commentsUrl: commentsUrl,
-            repositorySettings: repositorySettings,
-            outreachUsers: outreachUsers
+            repositorySettings: repositorySettings
         });
     }
 
@@ -157,8 +153,7 @@ describe('commentOnClosedIssue', function () {
                         body: repositorySettings.issueClosedTemplate({
                             html_url: 'html_url',
                             forum_links: forumLinks,
-                            foundForumLinks: true,
-                            outreachUsers: outreachUsers
+                            foundForumLinks: true
                         })
                     },
                     json: true
@@ -202,8 +197,7 @@ describe('commentOnClosedIssue', function () {
         var options = {
             url: issueUrl,
             commentsUrl: commentsUrl,
-            repositorySettings: repositorySettings,
-            outreachUsers: outreachUsers
+            repositorySettings: repositorySettings
         };
 
         commentOnClosedIssue._implementation(options)
@@ -240,8 +234,7 @@ describe('commentOnClosedIssue', function () {
         var options = {
             url: issueUrl,
             commentsUrl: commentsUrl,
-            repositorySettings: repositorySettings,
-            outreachUsers: outreachUsers
+            repositorySettings: repositorySettings
         };
 
         commentOnClosedIssue._implementation(options)
@@ -286,8 +279,7 @@ describe('commentOnClosedIssue', function () {
             baseBranch: baseBranch,
             baseApiUrl: baseApiUrl,
             userName: userName,
-            repositorySettings: repositorySettings,
-            outreachUsers: outreachUsers
+            repositorySettings: repositorySettings
         };
 
         commentOnClosedIssue._implementation(options)
@@ -298,7 +290,6 @@ describe('commentOnClosedIssue', function () {
                     body: {
                         body: repositorySettings.issueClosedTemplate({
                             isFirstContribution: true,
-                            outreachUsers: outreachUsers,
                             userName: userName
                         })
                     },
