@@ -299,4 +299,48 @@ describe('commentOnClosedIssue', function () {
             })
             .catch(done.fail);
     });
+
+    it('commentOnClosedIssue._implementation does not post first timers message if not first time.', function (done) {
+        var contributorsUrl = baseApiUrl + '/contents/' + repositorySettings.contributorsPath + '?ref=' + baseBranch;
+
+        spyOn(repositorySettings, 'fetchSettings').and.callFake(function() {
+            return Promise.resolve(repositorySettings);
+        });
+        spyOn(requestPromise, 'get').and.callFake(function (options) {
+            if (options.url === issueUrl) {
+                return Promise.resolve(pullRequestEventJson);
+            }
+
+            if (options.url === contributorsUrl) {
+                var content = Buffer.from('* [Jane Doe](https://github.com/JaneDoe)\n* [Boomer Jones](https://github.com/' + userName + ')').toString('base64');
+                return Promise.resolve({
+                    content: content
+                });
+            }
+
+            if (options.url === commentsUrl) {
+                return Promise.resolve([]);
+            }
+
+            return Promise.reject('Unknown url: ' + options.url);
+        });
+        spyOn(requestPromise, 'post');
+
+        var options = {
+            url: issueUrl,
+            commentsUrl: commentsUrl,
+            isPullRequest: true,
+            baseBranch: baseBranch,
+            baseApiUrl: baseApiUrl,
+            userName: userName,
+            repositorySettings: repositorySettings
+        };
+
+        commentOnClosedIssue._implementation(options)
+            .then(function () {
+                expect(requestPromise.post).not.toHaveBeenCalled();
+                done();
+            })
+            .catch(done.fail);
+    });
 });
