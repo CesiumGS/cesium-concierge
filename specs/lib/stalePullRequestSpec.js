@@ -10,16 +10,6 @@ describe('stalePullRequest', function () {
     var repositories;
     var commitsData;
 
-    beforeAll(function () {
-        commitsData = [{
-            commit: {
-                author: {
-                    date: new Date(Date.now())
-                }
-            }
-        }];
-    });
-
     beforeEach(function () {
         repositories = {
             'AnalyticalGraphics/cesium': new RepositorySettings({
@@ -29,6 +19,14 @@ describe('stalePullRequest', function () {
                 gitHubToken: 'token2'
             })
         };
+
+        commitsData = [{
+            commit: {
+                author: {
+                    date: new Date(Date.now())
+                }
+            }
+        }];
     });
 
     it('calls stalePullRequest._processRepository once for each repository', function (done) {
@@ -123,7 +121,9 @@ describe('stalePullRequest', function () {
         var pullRequest = {
             comments_url: commentsUrl,
             commits_url: commitsUrl,
-            user: {login: 'boomerjones'}
+            user: {
+                login: 'boomerjones'
+            }
         };
 
         var timestamp = new Date(Date.now());
@@ -185,7 +185,9 @@ describe('stalePullRequest', function () {
                 timestamp.setDate(timestamp.getDate() - repositorySettings.maxDaysSinceUpdate);
                 return Promise.resolve([{
                     updated_at: timestamp,
-                    user: {login: 'boomerjones'}
+                    user: {
+                        login: 'boomerjones'
+                    }
                 }]);
             } else if (options.url === commitsUrl) {
                 return Promise.resolve(commitsData);
