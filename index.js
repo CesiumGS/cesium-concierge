@@ -25,11 +25,11 @@ Settings.loadRepositoriesSettings('./config.json')
         });
 
         // Run every night.
-        schedule.scheduleJob('0 22 * * *', function(){
+        schedule.scheduleJob('0 22 * * *', function () {
             stalePullRequest(Settings.repositories)
-            .catch(function (err) {
-                console.error(err);
-            });
+                .catch(function (err) {
+                    console.error(err);
+                });
         });
 
         SlackBot.init({
