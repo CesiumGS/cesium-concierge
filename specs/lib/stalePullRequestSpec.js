@@ -135,7 +135,9 @@ describe('stalePullRequest', function () {
             } else if (options.url === commentsUrl + '?page=3') {
                 return Promise.resolve([{
                     updated_at: timestamp,
-                    user: {login: 'boomerjones'}
+                    user: {
+                        login: 'boomerjones'
+                    }
                 }]);
             } else if (options.url === commitsUrl) {
                 var commitsDataOld = JSON.parse(JSON.stringify(commitsData));
@@ -152,7 +154,7 @@ describe('stalePullRequest', function () {
         stalePullRequest._processPullRequest(pullRequest, repositorySettings)
             .then(function () {
                 expect(requestPromise.post).toHaveBeenCalledWith({
-                    url: commentsUrl + '?page=3',
+                    url: commentsUrl,
                     headers: repositorySettings.headers,
                     body: {
                         body: repositorySettings.stalePullRequestTemplate({
@@ -174,7 +176,9 @@ describe('stalePullRequest', function () {
         var pullRequest = {
             comments_url: commentsUrl,
             commits_url: commitsUrl,
-            user: {login: 'boomerjones'}
+            user: {
+                login: 'boomerjones'
+            }
         };
 
         spyOn(requestPromise, 'get').and.callFake(function (options) {
@@ -224,7 +228,9 @@ describe('stalePullRequest', function () {
                 timestamp.setDate(timestamp.getDate() - repositorySettings.maxDaysSinceUpdate);
                 return Promise.resolve([{
                     updated_at: timestamp,
-                    user: {login: 'boomerjones'}
+                    user: {
+                        login: 'boomerjones'
+                    }
                 }]);
             } else if (options.url === commitsUrl) {
                 return Promise.resolve(commitsData);
