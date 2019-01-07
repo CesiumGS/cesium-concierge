@@ -102,7 +102,7 @@ describe('stalePullRequest', function () {
             return Promise.reject(new Error('Unexpected Url: ' + options.url));
         });
         spyOn(requestPromise, 'post');
-        spyOn(stalePullRequest, 'foundStopComment').and.callFake(function () {
+        spyOn(stalePullRequest, '_foundStopComment').and.callFake(function () {
             return false;
         });
 
@@ -147,7 +147,7 @@ describe('stalePullRequest', function () {
             return Promise.reject(new Error('Unexpected Url: ' + options.url));
         });
         spyOn(requestPromise, 'post');
-        spyOn(stalePullRequest, 'foundStopComment').and.callFake(function () {
+        spyOn(stalePullRequest, '_foundStopComment').and.callFake(function () {
             return false;
         });
 
@@ -199,7 +199,7 @@ describe('stalePullRequest', function () {
             return Promise.reject(new Error('Unexpected Url: ' + options.url));
         });
         spyOn(requestPromise, 'post');
-        spyOn(stalePullRequest, 'foundStopComment').and.callFake(function () {
+        spyOn(stalePullRequest, '_foundStopComment').and.callFake(function () {
             return false;
         });
 
@@ -238,7 +238,7 @@ describe('stalePullRequest', function () {
             return Promise.reject(new Error('Unexpected Url: ' + options.url));
         });
         spyOn(requestPromise, 'post');
-        spyOn(stalePullRequest, 'foundStopComment').and.callFake(function () {
+        spyOn(stalePullRequest, '_foundStopComment').and.callFake(function () {
             return true;
         });
 
@@ -254,13 +254,13 @@ describe('stalePullRequest', function () {
         var conciergeUser = {login: 'cesium-concierge'};
         var otherUser = {login: 'BobDylan'};
 
-        expect(stalePullRequest.foundStopComment([{ body: '', user: otherUser }])).toBe(false);
-        expect(stalePullRequest.foundStopComment([{ body: '', user: conciergeUser }])).toBe(false);
-        expect(stalePullRequest.foundStopComment([{ body: '@cesium-concierge stop', user: conciergeUser }])).toBe(false);
-        expect(stalePullRequest.foundStopComment([{ body: 'This is a profound PR.', user: otherUser }])).toBe(false);
+        expect(stalePullRequest._foundStopComment([{ body: '', user: otherUser }])).toBe(false);
+        expect(stalePullRequest._foundStopComment([{ body: '', user: conciergeUser }])).toBe(false);
+        expect(stalePullRequest._foundStopComment([{ body: '@cesium-concierge stop', user: conciergeUser }])).toBe(false);
+        expect(stalePullRequest._foundStopComment([{ body: 'This is a profound PR.', user: otherUser }])).toBe(false);
 
-        expect(stalePullRequest.foundStopComment([{ body: '@cesium-concierge stop', user: otherUser }])).toBe(true);
-        expect(stalePullRequest.foundStopComment([{ body: '', user: conciergeUser }, { body: '@cesium-concierge stop', user: otherUser }])).toBe(true);
+        expect(stalePullRequest._foundStopComment([{ body: '@cesium-concierge stop', user: otherUser }])).toBe(true);
+        expect(stalePullRequest._foundStopComment([{ body: '', user: conciergeUser }, { body: '@cesium-concierge stop', user: otherUser }])).toBe(true);
     });
 
 });
