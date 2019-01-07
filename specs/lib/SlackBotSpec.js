@@ -46,6 +46,8 @@ describe('SlackBot', function () {
             'owner/repo' : new RepositorySettings(),
             'owner2/repo2' : new RepositorySettings()
         };
+
+        SlackBot._repositories = repositories;
     });
 
     afterEach(function () {
@@ -98,7 +100,9 @@ describe('SlackBot', function () {
         spyOn(SlackBot, '_getConfig').and.callFake(function() {
             var releaseSchedule = {};
             releaseSchedule[user] = earlyDate;
-            return Promise.resolve(releaseSchedule);
+            return Promise.resolve({
+                releaseSchedule: releaseSchedule
+            });
         });
 
         setupFakeIDs();
@@ -118,7 +122,9 @@ describe('SlackBot', function () {
         spyOn(SlackBot, '_getConfig').and.callFake(function() {
             var releaseSchedule = {};
             releaseSchedule[user] = mediumDate;
-            return Promise.resolve(releaseSchedule);
+            return Promise.resolve({
+                releaseSchedule: releaseSchedule
+            });
         });
 
         setupFakeIDs();
@@ -138,7 +144,9 @@ describe('SlackBot', function () {
         spyOn(SlackBot, '_getConfig').and.callFake(function() {
             var releaseSchedule = {};
             releaseSchedule[user] = lateDate;
-            return Promise.resolve(releaseSchedule);
+            return Promise.resolve({
+                releaseSchedule: releaseSchedule
+            });
         });
 
         setupFakeIDs();
@@ -158,7 +166,9 @@ describe('SlackBot', function () {
         spyOn(SlackBot, '_getConfig').and.callFake(function() {
             var releaseSchedule = {};
             releaseSchedule[user] = today;
-            return Promise.resolve(releaseSchedule);
+            return Promise.resolve({
+                releaseSchedule: releaseSchedule
+            });
         });
 
         setupFakeIDs();
@@ -200,7 +210,11 @@ describe('SlackBot', function () {
 
         spyOn(SlackBot, 'postMessage');
 
-        SlackBot._sendWeeklyStats(true)
+        spyOn(SlackBot, '_getConfig').and.callFake(function() {
+            return Promise.resolve({});
+        });
+
+        SlackBot._sendWeeklyStats()
         .then(function() {
             var templateName = 'weeklyStats';
             var template = fs.readFileSync(path.join(__dirname, '../../lib/templates', templateName + '.hbs')).toString();

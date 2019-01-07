@@ -1,4 +1,4 @@
-release-schedule:
+releaseSchedule:
   tfili: 2/4/2019
   ggetz: 3/4/2019
   hpinkos: 4/1/2019
@@ -6,3 +6,10 @@ release-schedule:
   gary: 6/3/2019
   mamato: 7/1/2019
   dbagnell: 8/1/2019
+
+greetings:
+  - Happy Friday everyone!
+  - Can you believe Friday is already here?
+  - I hope you all had awesome week!
+  - I skipped breakfast, so I hope Gary baked something good today...
+  - Good morning everyone!
