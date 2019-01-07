@@ -15,7 +15,7 @@ describe('SlackBot', function () {
     var today = new Date();
     var earlyDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 14);
     var mediumDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 7);
-    var lateDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
+    var tomorrow = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
     var user = 'omar';
     var ID = '1';
     var realName = 'Omar Shehata';
@@ -143,7 +143,7 @@ describe('SlackBot', function () {
     it('posts late release reminder.', function () {
         spyOn(SlackBot, '_getConfig').and.callFake(function() {
             var releaseSchedule = {};
-            releaseSchedule[user] = lateDate;
+            releaseSchedule[user] = today;
             return Promise.resolve({
                 releaseSchedule: releaseSchedule
             });
@@ -165,7 +165,7 @@ describe('SlackBot', function () {
     it('does not post release reminder on other days.', function () {
         spyOn(SlackBot, '_getConfig').and.callFake(function() {
             var releaseSchedule = {};
-            releaseSchedule[user] = today;
+            releaseSchedule[user] = tomorrow;
             return Promise.resolve({
                 releaseSchedule: releaseSchedule
             });
