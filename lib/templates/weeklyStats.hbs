@@ -1,5 +1,5 @@
-{{greeting}} We merged *{{ numberOfPullRequests }}* PR's this week, with an average merge time of *{{ averageMergeTime }} days*. {{ unusuallyLongPRMessage }}
+{{greeting}} We merged *{{ numberOfPullRequests }}* PR's this week, with an average merge time of *{{ averageMergeTime }} days*. {{#if longMergeTitle}} The PR <{{ longMergeURL }}|{{ longMergeTitle }}> took an unusually long amount of time to get merged ({{ longMergeTime }} days).{{/if}}
 
-Check out the live dashboard with more stats:
+Check out the live dashboard with more CesiumJS stats:
 
 https://app.databox.com/datawall/36dd3b071819692357099f6f52e6223205be31189

@@ -220,8 +220,64 @@ describe('SlackBot', function () {
             var messageText = handlebars.compile(template)({
                 greeting : 'Happy Friday everyone!',
                 averageMergeTime : '3.0',
+                numberOfPullRequests : issues.length
+            });
+            expect(SlackBot.postMessage).toHaveBeenCalledWith(SlackBot._channelIDs['general'], messageText);
+        })
+        .catch(function(error) {
+            throw Error(error);
+        });
+
+    });
+
+    it('posts about unusually long PR times.', function () {
+        var yesterday = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 1);
+        var foreverAgo = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 701);
+
+        var promiseArray = [];
+        var issues = [];
+        var title = 'Old Pull Request';
+        var url = 'url';
+        issues.push({
+            pull_request: {},
+            title: title,
+            html_url: url,
+            closed_at: yesterday,
+            created_at: foreverAgo
+        });
+        for(var i = 0; i < 10; ++i) {
+            issues.push({
+                pull_request: {},
+                closed_at: yesterday,
+                created_at: yesterday
+            });
+        }
+        
+        promiseArray.push(Promise.resolve(issues));
+
+        spyOn(SlackBot, '_getAllIssuesLastWeek').and.callFake(function() {
+            return promiseArray;
+        });
+
+        setupFakeIDs();
+
+        spyOn(SlackBot, 'postMessage');
+
+        spyOn(SlackBot, '_getConfig').and.callFake(function() {
+            return Promise.resolve({});
+        });
+
+        SlackBot._sendWeeklyStats()
+        .then(function() {
+            var templateName = 'weeklyStats';
+            var template = fs.readFileSync(path.join(__dirname, '../../lib/templates', templateName + '.hbs')).toString();
+            var messageText = handlebars.compile(template)({
+                greeting : 'Happy Friday everyone!',
+                averageMergeTime : '63.6',
                 numberOfPullRequests : issues.length,
-                unusuallyLongPRMessage : ''
+                longMergeTitle : title,
+                longMergeURL : url,
+                longMergeTime : '700.0'
             });
             expect(SlackBot.postMessage).toHaveBeenCalledWith(SlackBot._channelIDs['general'], messageText);
         })
