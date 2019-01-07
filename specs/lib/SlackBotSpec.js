@@ -18,7 +18,7 @@ describe('SlackBot', function () {
     var tomorrow = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
     var user = 'omar';
     var ID = '1';
-    var realName = 'Omar Shehata';
+    var displayName = 'Omar';
 
     function setupFakeIDs() {
         SlackBot._userIDs = {};
@@ -27,17 +27,16 @@ describe('SlackBot', function () {
 
         SlackBot._userIDs[user] = ID;
         SlackBot._userData[ID] = {
-            real_name: realName
+            display_name: displayName
         };
         SlackBot._channelIDs['general'] = 1;
     }
 
     function getMessage(templateName) {
         var template = fs.readFileSync(path.join(__dirname, '../../lib/templates', templateName + '.hbs')).toString();
-        var firstName = realName.split(' ')[0];
 
         return handlebars.compile(template)({
-            name : firstName
+            name : displayName
         });
     }
 
