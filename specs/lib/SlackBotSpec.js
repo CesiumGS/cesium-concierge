@@ -4,6 +4,8 @@ var Promise = require('bluebird');
 var fs = require('fs');
 var handlebars = require('handlebars');
 var path = require('path');
+var Cesium = require('cesium');
+var RuntimeError = Cesium.RuntimeError;
 
 var SlackBot = require('../../lib/SlackBot');
 var RepositorySettings = require('../../lib/RepositorySettings');
@@ -60,7 +62,9 @@ fdescribe('SlackBot', function () {
 
     it('authenticates and gets Slack metadata.', function () {
         spyOn(SlackBot, '_authenticateGitHub');
-        spyOn(SlackBot, '_getSlackMetadata');
+        spyOn(SlackBot, '_getSlackMetadata').and.callFake(function() {
+            return Promise.resolve();
+        });
 
         SlackBot.init({
             token: 'token',
@@ -70,6 +74,24 @@ fdescribe('SlackBot', function () {
 
         expect(SlackBot._authenticateGitHub).toHaveBeenCalled();
         expect(SlackBot._getSlackMetadata).toHaveBeenCalled();
+    });
+
+    it('throws if postMessage is called without the required metadata.', function () {
+        spyOn(SlackBot, '_authenticateGitHub');
+        spyOn(SlackBot, '_getSlackMetadata').and.callFake(function() {
+            return Promise.reject(new Error('Failed to obtain Slack metadata.'));
+        });
+
+        SlackBot.init({
+            token: 'token',
+            configUrl: 'slackConfigUrl',
+            repositories: repositories
+        });
+
+        spyOn(SlackBot, 'postMessage').and.callThrough();
+        expect(function () {
+            SlackBot.postMessage('ID', 'message');
+        }).toThrowError(RuntimeError);
     });
 
     it('posts early release reminder.', function () {
@@ -84,12 +106,12 @@ fdescribe('SlackBot', function () {
         spyOn(SlackBot, 'postMessage');
 
         return SlackBot._sendReleaseReminders()
-        .then(function() {
-            expect(SlackBot.postMessage).toHaveBeenCalledWith(ID, getMessage('releaseReminderEarly'));
-        })
-        .catch(function(error) {
-            throw Error(error);
-        });
+            .then(function() {
+                expect(SlackBot.postMessage).toHaveBeenCalledWith(ID, getMessage('releaseReminderEarly'));
+            })
+            .catch(function(error) {
+                throw Error(error);
+            });
     });
 
     it('posts release reminder.', function () {
