@@ -10,7 +10,7 @@ var RuntimeError = Cesium.RuntimeError;
 var SlackBot = require('../../lib/SlackBot');
 var RepositorySettings = require('../../lib/RepositorySettings');
 
-fdescribe('SlackBot', function () {
+describe('SlackBot', function () {
     var repositories;
     var today = new Date();
     var earlyDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 14);
