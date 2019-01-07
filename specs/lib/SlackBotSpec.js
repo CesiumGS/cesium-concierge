@@ -4,6 +4,7 @@ var Promise = require('bluebird');
 var fs = require('fs');
 var handlebars = require('handlebars');
 var path = require('path');
+var moment = require('moment');
 var Cesium = require('cesium');
 var RuntimeError = Cesium.RuntimeError;
 
@@ -12,10 +13,10 @@ var RepositorySettings = require('../../lib/RepositorySettings');
 
 describe('SlackBot', function () {
     var repositories;
-    var today = new Date();
-    var earlyDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 14);
-    var mediumDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 7);
-    var tomorrow = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
+    var today = moment();
+    var tomorrow = moment().add(1, 'days').startOf('day');
+    var earlyDate = moment().add(14, 'days').startOf('day');
+    var mediumDate = moment().add(7, 'days').startOf('day');
     var user = 'omar';
     var ID = '1';
     var displayName = 'Omar';
@@ -184,8 +185,8 @@ describe('SlackBot', function () {
     });
 
     it('posts weekly statistics message.', function () {
-        var yesterday = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 1);
-        var lastWeek = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 7);
+        var yesterday = moment().subtract(1, 'days').startOf('day');
+        var lastWeek = moment().subtract(7, 'days').startOf('day');
 
         var promiseArray = [];
         var issues = [];
@@ -231,8 +232,8 @@ describe('SlackBot', function () {
     });
 
     it('posts about unusually long PR times.', function () {
-        var yesterday = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 1);
-        var foreverAgo = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 701);
+        var yesterday = moment().subtract(1, 'days').startOf('day');
+        var foreverAgo = moment().subtract(701, 'days').startOf('day');
 
         var promiseArray = [];
         var issues = [];
