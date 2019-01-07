@@ -6,6 +6,7 @@ var handlebars = require('handlebars');
 var path = require('path');
 var moment = require('moment');
 var Cesium = require('cesium');
+var requestPromise = require('request-promise');
 var RuntimeError = Cesium.RuntimeError;
 
 var SlackBot = require('../../lib/SlackBot');
@@ -20,6 +21,8 @@ describe('SlackBot', function () {
     var user = 'omar';
     var ID = '1';
     var displayName = 'Omar';
+    var configUrl = 'https://api.github.com/repos/owner/repo/contents/.slackbot.yml';
+    var mockYAML;
 
     function setupFakeIDs() {
         SlackBot._userIDs = {};
@@ -48,6 +51,8 @@ describe('SlackBot', function () {
         };
 
         SlackBot._repositories = repositories;
+
+        mockYAML = fs.readFileSync('./specs/data/slackbot.yml').toString();
     });
 
     afterEach(function () {
@@ -56,7 +61,7 @@ describe('SlackBot', function () {
 
     it('is disabled if no Slack token is found.', function () {
         SlackBot.init({
-            configUrl: 'slackConfigUrl'
+            configUrl: configUrl
         });
 
         expect(SlackBot._isDisabled).toBe(true);
@@ -70,7 +75,7 @@ describe('SlackBot', function () {
 
         SlackBot.init({
             token: 'token',
-            configUrl: 'slackConfigUrl',
+            configUrl: configUrl,
             repositories: repositories
         });
 
@@ -86,7 +91,7 @@ describe('SlackBot', function () {
 
         SlackBot.init({
             token: 'token',
-            configUrl: 'slackConfigUrl',
+            configUrl: configUrl,
             repositories: repositories
         });
 
@@ -286,6 +291,80 @@ describe('SlackBot', function () {
             throw Error(error);
         });
 
+    });
+
+    it('_getConfig works.', function () {
+        spyOn(SlackBot, '_authenticateGitHub');
+        spyOn(SlackBot, '_getSlackMetadata').and.callFake(function() {
+            return Promise.resolve();
+        });
+
+        SlackBot.init({
+            token: 'token',
+            configUrl: configUrl,
+            repositories: repositories
+        });
+
+        spyOn(requestPromise, 'get').and.callFake(function (options) {
+            if (options.url === configUrl) {
+                return Promise.resolve({
+                    content: Buffer.from(mockYAML).toString('base64')
+                });
+            }
+            return Promise.reject(new Error('Unexpected Url: ' + options.url));
+        });
+
+        SlackBot._getConfig()
+            .then(function (slackBotSettings) {
+                var date = moment('2/4/2019', 'MM/DD/YYYY').startOf('day');
+                expect(slackBotSettings.releaseSchedule['oshehata'].format()).toBe(date.format());
+            })
+            .catch(function(error) {
+                throw Error(error);
+            });
+    });
+
+    it('_getSlackMetadata works.', function () {
+        var channels = [];
+        channels.push({
+            name: 'channel1',
+            id: '1'
+        });
+        channels.push({
+            name: 'channel2',
+            id: '2'
+        });
+
+        var members = [];
+        members.push({
+            name: 'member1',
+            id: '1'
+        });
+        members.push({
+            name: 'member2',
+            id: '2'
+        });
+
+        spyOn(SlackBot, '_getAllChannels').and.callFake(function() {
+            return Promise.resolve(channels);
+        });
+        spyOn(SlackBot, '_getAllUsers').and.callFake(function() {
+            return Promise.resolve(members);
+        });
+
+        SlackBot._userIDs = {};
+        SlackBot._userData = {};
+        SlackBot._channelIDs = {};
+
+        SlackBot._getSlackMetadata()
+            .then(function () {
+                expect(SlackBot._userIDs['member1']).toBe('1');
+                expect(SlackBot._userData['2']).toBe(members[1]);
+                expect(SlackBot._channelIDs['channel2']).toBe('2');
+            })
+            .catch(function(error) {
+                throw Error(error);
+            });
     });
 
 });
