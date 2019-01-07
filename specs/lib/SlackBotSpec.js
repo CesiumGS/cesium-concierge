@@ -252,7 +252,7 @@ describe('SlackBot', function () {
                 created_at: yesterday
             });
         }
-        
+
         promiseArray.push(Promise.resolve(issues));
 
         spyOn(SlackBot, '_getAllIssuesLastWeek').and.callFake(function() {
