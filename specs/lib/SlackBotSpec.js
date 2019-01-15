@@ -5,9 +5,8 @@ var fs = require('fs');
 var handlebars = require('handlebars');
 var path = require('path');
 var moment = require('moment');
-var Cesium = require('cesium');
 var requestPromise = require('request-promise');
-var RuntimeError = Cesium.RuntimeError;
+var octokit = require('@octokit/rest')();
 
 var SlackBot = require('../../lib/SlackBot');
 var RepositorySettings = require('../../lib/RepositorySettings');
@@ -83,7 +82,7 @@ describe('SlackBot', function () {
         expect(SlackBot._getSlackMetadata).toHaveBeenCalled();
     });
 
-    it('throws if postMessage is called without the required metadata.', function () {
+    it('postMessage rejects if required metadata fails.', function (done) {
         spyOn(SlackBot, '_authenticateGitHub');
         spyOn(SlackBot, '_getSlackMetadata').and.callFake(function() {
             return Promise.reject(new Error('Failed to obtain Slack metadata.'));
@@ -95,10 +94,10 @@ describe('SlackBot', function () {
             repositories: repositories
         });
 
-        spyOn(SlackBot, 'postMessage').and.callThrough();
-        expect(function () {
-            SlackBot.postMessage('ID', 'message');
-        }).toThrowError(RuntimeError);
+        SlackBot.postMessage('ID', 'message')
+            .catch(function () {
+                done();
+            });
     });
 
     it('posts early release reminder.', function () {
@@ -293,7 +292,29 @@ describe('SlackBot', function () {
 
     });
 
-    it('_getConfig works.', function () {
+    it('_getConfig disables bot if config file is not in a known repository.', function (done) {
+        spyOn(SlackBot, '_authenticateGitHub');
+        spyOn(SlackBot, '_getSlackMetadata').and.callFake(function() {
+            return Promise.resolve();
+        });
+
+        SlackBot.init({
+            token: 'token',
+            configUrl: configUrl,
+            repositories: {
+                'unknown/unknown' : new RepositorySettings()
+            }
+        });
+
+        SlackBot._getConfig()
+            .then(function (result) {
+                expect(result).toBe('Warning: Could not find config file.');
+                done();
+            })
+            .catch(done.fail);
+    });
+
+    it('_getConfig works.', function (done) {
         spyOn(SlackBot, '_authenticateGitHub');
         spyOn(SlackBot, '_getSlackMetadata').and.callFake(function() {
             return Promise.resolve();
@@ -318,13 +339,34 @@ describe('SlackBot', function () {
             .then(function (slackBotSettings) {
                 var date = moment('2/4/2019', 'MM/DD/YYYY').startOf('day');
                 expect(slackBotSettings.releaseSchedule['oshehata'].format()).toBe(date.format());
+                done();
             })
-            .catch(function(error) {
-                throw Error(error);
-            });
+            .catch(done.fail);
     });
 
-    it('_getSlackMetadata works.', function () {
+    it('_getAllIssuesLastWeek works.', function (done) {
+        var repositoryNames = Object.keys(repositories);
+        spyOn(octokit.issues.listForRepo.endpoint, 'merge').and.callFake(function() {
+            return {};
+        });
+        spyOn(octokit, 'paginate').and.callFake(function() {
+            return Promise.resolve({
+                isIssue: true
+            });
+        });
+
+        var promiseArray = SlackBot._getAllIssuesLastWeek(repositoryNames, octokit);
+
+        Promise.each(promiseArray, function(issue) {
+            expect(issue.isIssue).toBe(true);
+        })
+            .then(function () {
+                done();
+            })
+            .catch(done.fail);
+    });
+
+    it('_getSlackMetadata works.', function (done) {
         var channels = [];
         channels.push({
             name: 'channel1',
@@ -361,10 +403,35 @@ describe('SlackBot', function () {
                 expect(SlackBot._userIDs['member1']).toBe('1');
                 expect(SlackBot._userData['2']).toBe(members[1]);
                 expect(SlackBot._channelIDs['channel2']).toBe('2');
+                done();
             })
-            .catch(function(error) {
-                throw Error(error);
-            });
+            .catch(done.fail);
     });
 
+    it('initializes scheduled jobs.', function () {
+        var jobs = SlackBot.initializeScheduledJobs();
+
+        expect(jobs.releaseReminder).toBeDefined();
+        expect(jobs.weeklyStats).toBeDefined();
+
+        jobs.releaseReminder.cancel();
+        jobs.weeklyStats.cancel();
+    });
+
+    it('does not post message or get config if disabled.', function (done) {
+        SlackBot.init({});
+
+        var slackBotWarning = 'Warning: SlackBot is disabled.';
+
+        SlackBot.postMessage()
+            .then(function (result) {
+                expect(result).toBe(slackBotWarning);
+                return SlackBot._getConfig();
+            })
+            .then(function (result) {
+                expect(result).toBe(slackBotWarning);
+                done();
+            })
+            .catch(done.fail);
+    });
 });
