@@ -357,6 +357,17 @@ describe('SlackBot', function () {
 
         var promiseArray = SlackBot._getAllIssuesLastWeek(repositoryNames, octokit);
 
+        var lastWeek = moment().subtract(7, 'days');
+
+        expect(octokit.issues.listForRepo.endpoint.merge).toHaveBeenCalledWith({
+            owner: 'owner',
+            repo: 'repo',
+            since: lastWeek.format(),
+            state: 'closed'
+        });
+
+        expect(octokit.issues.listForRepo.endpoint.merge.calls.length).toEqual(repositories.length);
+
         Promise.each(promiseArray, function(issue) {
             expect(issue.isIssue).toBe(true);
         })
