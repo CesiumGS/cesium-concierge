@@ -18,7 +18,7 @@ describe('SlackBot', function () {
     var earlyDate = moment().add(14, 'days').startOf('day');
     var mediumDate = moment().add(7, 'days').startOf('day');
     var user = 'omar';
-    var ID = '1';
+    var userID = '1';
     var displayName = 'Omar';
     var configUrl = 'https://api.github.com/repos/owner/repo/contents/.slackbot.yml';
     var mockYAML;
@@ -28,8 +28,8 @@ describe('SlackBot', function () {
         SlackBot._userData = {};
         SlackBot._channelIDs = {};
 
-        SlackBot._userIDs[user] = ID;
-        SlackBot._userData[ID] = {
+        SlackBot._userIDs[user] = userID;
+        SlackBot._userData[userID] = {
             display_name: displayName
         };
         SlackBot._channelIDs['general'] = 1;
@@ -94,7 +94,7 @@ describe('SlackBot', function () {
             repositories: repositories
         });
 
-        SlackBot.postMessage('ID', 'message')
+        SlackBot.postMessage('userID', 'message')
             .catch(function () {
                 done();
             });
@@ -115,7 +115,7 @@ describe('SlackBot', function () {
 
         return SlackBot._sendReleaseReminders()
             .then(function() {
-                expect(SlackBot.postMessage).toHaveBeenCalledWith(ID, getMessage('releaseReminderEarly'));
+                expect(SlackBot.postMessage).toHaveBeenCalledWith(userID, getMessage('releaseReminderEarly'));
             })
             .catch(function(error) {
                 throw Error(error);
@@ -137,7 +137,7 @@ describe('SlackBot', function () {
 
         return SlackBot._sendReleaseReminders()
         .then(function() {
-            expect(SlackBot.postMessage).toHaveBeenCalledWith(ID, getMessage('releaseReminder'));
+            expect(SlackBot.postMessage).toHaveBeenCalledWith(userID, getMessage('releaseReminder'));
         })
         .catch(function(error) {
             throw Error(error);
@@ -159,7 +159,7 @@ describe('SlackBot', function () {
 
         return SlackBot._sendReleaseReminders()
         .then(function() {
-            expect(SlackBot.postMessage).toHaveBeenCalledWith(ID, getMessage('releaseReminderLate'));
+            expect(SlackBot.postMessage).toHaveBeenCalledWith(userID, getMessage('releaseReminderLate'));
         })
         .catch(function(error) {
             throw Error(error);
