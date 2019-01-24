@@ -9,6 +9,8 @@ var checkWebHook = require('./lib/checkWebHook');
 var dateLog = require('./lib/dateLog');
 var postToGitHub = require('./lib/postToGitHub');
 var Settings = require('./lib/Settings');
+var SlackBot = require('./lib/SlackBot');
+
 
 Settings.loadRepositoriesSettings('./config.json')
     .then(function () {
@@ -29,6 +31,14 @@ Settings.loadRepositoriesSettings('./config.json')
                     console.error(err);
                 });
         });
+
+        SlackBot.init({
+            token: Settings.slackToken,
+            configUrl: Settings.slackConfigUrl,
+            repositories: Settings.repositories
+        });
+
+        SlackBot.initializeScheduledJobs();
     })
     .catch(function (err) {
         dateLog('Could not parse environment settings: ' + err);
