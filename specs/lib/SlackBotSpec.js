@@ -446,7 +446,7 @@ describe('SlackBot', function () {
             .catch(done.fail);
     });
 
-    fit('postMessage calls the Slack API.', function () {
+    it('postMessage calls the Slack API.', function () {
         spyOn(SlackBot, '_authenticateGitHub');
         spyOn(SlackBot, '_getSlackMetadata').and.callFake(function() {
             return Promise.resolve();
