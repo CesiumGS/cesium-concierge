@@ -445,4 +445,23 @@ describe('SlackBot', function () {
             })
             .catch(done.fail);
     });
+
+    it('postMessage calls the Slack API.', function () {
+        spyOn(SlackBot, '_authenticateGitHub');
+        spyOn(SlackBot, '_getSlackMetadata').and.callFake(function() {
+            return Promise.resolve();
+        });
+
+        SlackBot.init({
+            token: 'token',
+            configUrl: configUrl,
+            repositories: repositories
+        });
+
+        spyOn(SlackBot._slackClient.chat, 'postMessage');
+        return SlackBot.postMessage()
+            .then(function() {
+                expect(SlackBot._slackClient.chat.postMessage).toHaveBeenCalled();
+            });
+    });
 });
