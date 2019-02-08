@@ -350,9 +350,9 @@ describe('SlackBot', function () {
             return {};
         });
         spyOn(octokit, 'paginate').and.callFake(function() {
-            return Promise.resolve({
+            return Promise.resolve([[{
                 isIssue: true
-            });
+            }]]);
         });
 
         var promiseArray = SlackBot._getAllIssuesLastWeek(repositoryNames, octokit);
@@ -368,8 +368,8 @@ describe('SlackBot', function () {
 
         expect(octokit.issues.listForRepo.endpoint.merge.calls.length).toEqual(repositories.length);
 
-        Promise.each(promiseArray, function(issue) {
-            expect(issue.isIssue).toBe(true);
+        Promise.each(promiseArray, function(listsOfIssues) {
+            expect(listsOfIssues[0][0].isIssue).toBe(true);
         })
             .then(function () {
                 done();
