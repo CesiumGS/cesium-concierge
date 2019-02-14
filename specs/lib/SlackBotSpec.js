@@ -346,13 +346,22 @@ describe('SlackBot', function () {
 
     it('_getAllIssuesLastWeek works.', function (done) {
         var repositoryNames = Object.keys(repositories);
+        var foreverAgo = moment().subtract(701, 'days').startOf('day');
+
         spyOn(octokit.issues.listForRepo.endpoint, 'merge').and.callFake(function() {
             return {};
         });
         spyOn(octokit, 'paginate').and.callFake(function() {
-            return Promise.resolve([[{
-                isIssue: true
-            }]]);
+            return Promise.resolve([
+            {
+                isIssue: true,
+                closed_at: today.format()
+            },
+            {
+                isIssue: true,
+                closed_at: foreverAgo.format()
+            }
+            ]);
         });
 
         var promiseArray = SlackBot._getAllIssuesLastWeek(repositoryNames, octokit);
@@ -368,8 +377,9 @@ describe('SlackBot', function () {
 
         expect(octokit.issues.listForRepo.endpoint.merge.calls.length).toEqual(repositories.length);
 
-        Promise.each(promiseArray, function(listsOfIssues) {
-            expect(listsOfIssues[0][0].isIssue).toBe(true);
+        Promise.each(promiseArray, function(issues) {
+            expect(issues.length).toBe(1);
+            expect(issues[0].isIssue).toBe(true);
         })
             .then(function () {
                 done();
