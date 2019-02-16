@@ -6,7 +6,6 @@ var handlebars = require('handlebars');
 var path = require('path');
 var moment = require('moment');
 var requestPromise = require('request-promise');
-var octokit = require('@octokit/rest')();
 
 var SlackBot = require('../../lib/SlackBot');
 var RepositorySettings = require('../../lib/RepositorySettings');
@@ -192,7 +191,6 @@ describe('SlackBot', function () {
         var yesterday = moment().subtract(1, 'days').startOf('day');
         var lastWeek = moment().subtract(7, 'days').startOf('day');
 
-        var promiseArray = [];
         var issues = [];
         issues.push({
             pull_request: {},
@@ -204,10 +202,9 @@ describe('SlackBot', function () {
             closed_at: yesterday,
             created_at: yesterday
         });
-        promiseArray.push(Promise.resolve(issues));
 
-        spyOn(SlackBot, '_getAllIssuesLastWeek').and.callFake(function() {
-            return promiseArray;
+        spyOn(SlackBot, '_getAllPullRequestsMergedLastWeek').and.callFake(function() {
+            return Promise.resolve(issues);
         });
 
         setupFakeIDs();
@@ -239,7 +236,6 @@ describe('SlackBot', function () {
         var yesterday = moment().subtract(1, 'days').startOf('day');
         var foreverAgo = moment().subtract(701, 'days').startOf('day');
 
-        var promiseArray = [];
         var issues = [];
         var title = 'Old Pull Request';
         var url = 'url';
@@ -258,10 +254,8 @@ describe('SlackBot', function () {
             });
         }
 
-        promiseArray.push(Promise.resolve(issues));
-
-        spyOn(SlackBot, '_getAllIssuesLastWeek').and.callFake(function() {
-            return promiseArray;
+        spyOn(SlackBot, '_getAllPullRequestsMergedLastWeek').and.callFake(function() {
+            return Promise.resolve(issues);
         });
 
         setupFakeIDs();
@@ -344,47 +338,72 @@ describe('SlackBot', function () {
             .catch(done.fail);
     });
 
-    it('_getAllIssuesLastWeek works.', function (done) {
+    it('_getAllPullRequestsMergedLastWeek works.', function () {
         var repositoryNames = Object.keys(repositories);
         var foreverAgo = moment().subtract(701, 'days').startOf('day');
+        var pullRequestNumber = '12';
 
-        spyOn(octokit.issues.listForRepo.endpoint, 'merge').and.callFake(function() {
+        SlackBot._githubClient = jasmine.createSpy('_githubClient');
+        SlackBot._githubClient.issues = {
+            listForRepo : {
+                endpoint : {
+                    merge : {
+
+                    }
+                }
+            }
+        };
+        SlackBot._githubClient.paginate = {};
+        SlackBot._githubClient.pulls = {
+            checkIfMerged : {
+
+            }
+        };
+
+        spyOn(SlackBot._githubClient.issues.listForRepo.endpoint, 'merge').and.callFake(function() {
             return {};
         });
-        spyOn(octokit, 'paginate').and.callFake(function() {
+        spyOn(SlackBot._githubClient.pulls, 'checkIfMerged').and.callFake(function() {
+            return Promise.resolve({
+                status: 204
+            });
+        });
+        spyOn(SlackBot._githubClient, 'paginate').and.callFake(function() {
             return Promise.resolve([
             {
-                isIssue: true,
-                closed_at: today.format()
+                closed_at: today.format(),
+                pull_request : {
+                    url: 'https://api.github.com/repos/owner/repo/pulls/' + pullRequestNumber
+                }
             },
             {
-                isIssue: true,
                 closed_at: foreverAgo.format()
             }
             ]);
         });
 
-        var promiseArray = SlackBot._getAllIssuesLastWeek(repositoryNames, octokit);
+        var pullRequestsPromise = SlackBot._getAllPullRequestsMergedLastWeek(repositoryNames);
 
         var lastWeek = moment().subtract(7, 'days');
 
-        expect(octokit.issues.listForRepo.endpoint.merge).toHaveBeenCalledWith({
+        expect(SlackBot._githubClient.issues.listForRepo.endpoint.merge).toHaveBeenCalledWith({
             owner: 'owner',
             repo: 'repo',
             since: lastWeek.format(),
             state: 'closed'
         });
 
-        expect(octokit.issues.listForRepo.endpoint.merge.calls.length).toEqual(repositories.length);
+        expect(SlackBot._githubClient.issues.listForRepo.endpoint.merge.calls.length).toEqual(repositories.length);
 
-        Promise.each(promiseArray, function(issues) {
-            expect(issues.length).toBe(1);
-            expect(issues[0].isIssue).toBe(true);
-        })
-            .then(function () {
-                done();
-            })
-            .catch(done.fail);
+        return pullRequestsPromise.then(function(pullRequests) {
+            expect(SlackBot._githubClient.pulls.checkIfMerged).toHaveBeenCalledWith({
+                owner: 'owner',
+                repo: 'repo',
+                number: pullRequestNumber
+            });
+            // We expect one from each repo.
+            expect(pullRequests.length).toBe(2);
+        });
     });
 
     it('_getSlackMetadata works.', function (done) {
