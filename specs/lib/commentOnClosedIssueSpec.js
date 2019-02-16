@@ -8,11 +8,15 @@ var RepositorySettings = require('../../lib/RepositorySettings');
 
 describe('commentOnClosedIssue', function () {
     var repositorySettings = new RepositorySettings();
+    repositorySettings.contributorsPath = 'CONTRIBUTORS.md';
 
     var issueEventJson;
     var pullRequestEventJson;
     var issueUrl = 'issueUrl';
     var commentsUrl = 'commentsUrl';
+    var baseBranch = 'master';
+    var baseApiUrl = 'https://api.github.com/repos/AnalyticalGraphicsInc/cesium';
+    var userName = 'Joan';
 
     beforeEach(function () {
         issueEventJson = {
@@ -25,7 +29,16 @@ describe('commentOnClosedIssue', function () {
         pullRequestEventJson = {
             pull_request: {
                 url: issueUrl,
-                comments_url: commentsUrl
+                comments_url: commentsUrl,
+                user: {
+                    login: userName
+                },
+                base: {
+                    ref: 'master',
+                    repo: {
+                        url: baseApiUrl
+                    }
+                }
             }
         };
     });
@@ -38,7 +51,7 @@ describe('commentOnClosedIssue', function () {
 
     it('throws if `repositorySettings` is undefined', function () {
         expect(function () {
-            commentOnClosedIssue(issueEventJson, undefined);
+            commentOnClosedIssue(issueEventJson);
         }).toThrowError();
     });
 
@@ -52,15 +65,32 @@ describe('commentOnClosedIssue', function () {
     });
 
     it('passes expected parameters to implementation for closed issue', function () {
+        var isPullRequest = false;
+
         spyOn(commentOnClosedIssue, '_implementation');
         commentOnClosedIssue(issueEventJson, repositorySettings);
-        expect(commentOnClosedIssue._implementation).toHaveBeenCalledWith(issueUrl, commentsUrl, repositorySettings);
+        expect(commentOnClosedIssue._implementation).toHaveBeenCalledWith({
+            url: issueUrl,
+            commentsUrl: commentsUrl,
+            isPullRequest: isPullRequest,
+            repositorySettings: repositorySettings
+        });
     });
 
     it('passes expected parameters to implementation for closed pull request', function () {
+        var isPullRequest = true;
+
         spyOn(commentOnClosedIssue, '_implementation');
         commentOnClosedIssue(pullRequestEventJson, repositorySettings);
-        expect(commentOnClosedIssue._implementation).toHaveBeenCalledWith(issueUrl, commentsUrl, repositorySettings);
+        expect(commentOnClosedIssue._implementation).toHaveBeenCalledWith({
+            url: issueUrl,
+            commentsUrl: commentsUrl,
+            isPullRequest: isPullRequest,
+            baseBranch: baseBranch,
+            baseApiUrl: baseApiUrl,
+            userName: userName,
+            repositorySettings: repositorySettings
+        });
     });
 
     function runTestWithLinks(forumLinks) {
@@ -89,7 +119,11 @@ describe('commentOnClosedIssue', function () {
         });
         spyOn(requestPromise, 'post');
 
-        return commentOnClosedIssue._implementation('issueUrl', 'commentsUrl', repositorySettings);
+        return commentOnClosedIssue._implementation({
+            url: issueUrl,
+            commentsUrl: commentsUrl,
+            repositorySettings: repositorySettings
+        });
     }
 
     it('commentOnClosedIssue._implementation fetches latest repository settings.', function (done) {
@@ -118,7 +152,8 @@ describe('commentOnClosedIssue', function () {
                     body: {
                         body: repositorySettings.issueClosedTemplate({
                             html_url: 'html_url',
-                            forum_links: forumLinks
+                            forum_links: forumLinks,
+                            foundForumLinks: true
                         })
                     },
                     json: true
@@ -159,7 +194,13 @@ describe('commentOnClosedIssue', function () {
         });
         spyOn(requestPromise, 'post');
 
-        commentOnClosedIssue._implementation('issueUrl', 'commentsUrl', repositorySettings)
+        var options = {
+            url: issueUrl,
+            commentsUrl: commentsUrl,
+            repositorySettings: repositorySettings
+        };
+
+        commentOnClosedIssue._implementation(options)
             .then(done.fail)
             .catch(function (error) {
                 expect(error).toEqual('Bad request');
@@ -190,12 +231,116 @@ describe('commentOnClosedIssue', function () {
         });
         spyOn(requestPromise, 'post');
 
-        commentOnClosedIssue._implementation('issueUrl', 'commentsUrl', repositorySettings)
+        var options = {
+            url: issueUrl,
+            commentsUrl: commentsUrl,
+            repositorySettings: repositorySettings
+        };
+
+        commentOnClosedIssue._implementation(options)
             .then(done.fail)
             .catch(function (error) {
                 expect(error).toEqual('Bad request');
                 expect(requestPromise.post).not.toHaveBeenCalled();
                 done();
             });
+    });
+
+    it('commentOnClosedIssue._implementation posts about first timer\'s contribution.', function (done) {
+        var contributorsUrl = baseApiUrl + '/contents/' + repositorySettings.contributorsPath + '?ref=' + baseBranch;
+
+        spyOn(repositorySettings, 'fetchSettings').and.callFake(function() {
+            return Promise.resolve(repositorySettings);
+        });
+        spyOn(requestPromise, 'get').and.callFake(function (options) {
+            if (options.url === issueUrl) {
+                return Promise.resolve(pullRequestEventJson);
+            }
+
+            if (options.url === contributorsUrl) {
+                var content = Buffer.from('* [Jane Doe](https://github.com/JaneDoe)').toString('base64');
+                return Promise.resolve({
+                    content: content
+                });
+            }
+
+            if (options.url === commentsUrl) {
+                return Promise.resolve([]);
+            }
+
+            return Promise.reject('Unknown url: ' + options.url);
+        });
+        spyOn(requestPromise, 'post');
+
+        var options = {
+            url: issueUrl,
+            commentsUrl: commentsUrl,
+            isPullRequest: true,
+            baseBranch: baseBranch,
+            baseApiUrl: baseApiUrl,
+            userName: userName,
+            repositorySettings: repositorySettings
+        };
+
+        commentOnClosedIssue._implementation(options)
+            .then(function () {
+                expect(requestPromise.post).toHaveBeenCalledWith({
+                    url: commentsUrl,
+                    headers: repositorySettings.headers,
+                    body: {
+                        body: repositorySettings.issueClosedTemplate({
+                            isFirstContribution: true,
+                            userName: userName
+                        })
+                    },
+                    json: true
+                });
+                done();
+            })
+            .catch(done.fail);
+    });
+
+    it('commentOnClosedIssue._implementation does not post first timers message if not first time.', function (done) {
+        var contributorsUrl = baseApiUrl + '/contents/' + repositorySettings.contributorsPath + '?ref=' + baseBranch;
+
+        spyOn(repositorySettings, 'fetchSettings').and.callFake(function() {
+            return Promise.resolve(repositorySettings);
+        });
+        spyOn(requestPromise, 'get').and.callFake(function (options) {
+            if (options.url === issueUrl) {
+                return Promise.resolve(pullRequestEventJson);
+            }
+
+            if (options.url === contributorsUrl) {
+                var content = Buffer.from('* [Jane Doe](https://github.com/JaneDoe)\n* [Boomer Jones](https://github.com/' + userName + ')').toString('base64');
+                return Promise.resolve({
+                    content: content
+                });
+            }
+
+            if (options.url === commentsUrl) {
+                return Promise.resolve([]);
+            }
+
+            return Promise.reject('Unknown url: ' + options.url);
+        });
+        spyOn(requestPromise, 'post');
+
+        var options = {
+            url: issueUrl,
+            commentsUrl: commentsUrl,
+            isPullRequest: true,
+            baseBranch: baseBranch,
+            baseApiUrl: baseApiUrl,
+            userName: userName,
+            repositorySettings: repositorySettings
+        };
+
+        commentOnClosedIssue._implementation(options)
+            .then(function () {
+                expect(requestPromise.post).not.toHaveBeenCalled();
+                done();
+            })
+            .catch(done.fail);
     });
 });

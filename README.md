@@ -42,8 +42,8 @@ The table below describes all the possible configuration variables, as well as t
 | `repositories:{full_name}:contributorsPath` | `string` |  Relative path from the root of the repository to the `CONTRIBUTORS.md` file. | X | _Disabled if not set._
 | `repositories:{full_name}:maxDaysSinceUpdate` | `number` | "Bump" pull requests older than this number of days ago. | X | `30`
 | `repositories:{full_name}:unitTestPath` | `string` |  Relative path to the directory containing unit tests. _Example:`Specs/`_ | X | _Disabled if not set._
-| `port` | `number` | Port on which to listen to incoming requests | X | `5000`
-| `listenPath` | `string` | Path on which to listen for incoming requests | X | `"/"`
+| `port` | `number` | Port on which to listen to incoming requests. | X | `5000`
+| `listenPath` | `string` | Path on which to listen for incoming requests. | X | `"/"`
 | `slackToken` | `string` | Slack API token for posting release reminders and fun stats to the Slack team. | X | _Disabled if not set._
 | `slackConfigUrl` | `string` | The GitHub API URL to a YAML file containing the release schedule and other SlackBot config. | X | `""`
 
