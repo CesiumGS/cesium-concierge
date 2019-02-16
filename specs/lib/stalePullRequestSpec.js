@@ -8,6 +8,8 @@ var RepositorySettings = require('../../lib/RepositorySettings');
 
 describe('stalePullRequest', function () {
     var repositories;
+    var commitsData;
+
     beforeEach(function () {
         repositories = {
             'AnalyticalGraphics/cesium': new RepositorySettings({
@@ -17,6 +19,14 @@ describe('stalePullRequest', function () {
                 gitHubToken: 'token2'
             })
         };
+
+        commitsData = [{
+            commit: {
+                author: {
+                    date: new Date(Date.now())
+                }
+            }
+        }];
     });
 
     it('calls stalePullRequest._processRepository once for each repository', function (done) {
@@ -54,7 +64,7 @@ describe('stalePullRequest', function () {
             } else if (options.url === 'https://url?page=2') {
                 return Promise.resolve(secondResponse);
             }
-            return Promise.reject(new Error('Unexpected Url'));
+            return Promise.reject(new Error('Unexpected Url: ' + options.url));
         });
 
         spyOn(stalePullRequest, '_processPullRequest').and.returnValue(Promise.resolve());
@@ -72,8 +82,10 @@ describe('stalePullRequest', function () {
     it('stalePullRequest._processPullRequest does not post non-stale pull request', function (done) {
         var repositorySettings = new RepositorySettings();
         var commentsUrl = 'https://url';
+        var commitsUrl = 'https://commits';
         var pullRequest = {
-            comments_url: commentsUrl
+            comments_url: commentsUrl,
+            commits_url: commitsUrl
         };
 
         spyOn(requestPromise, 'get').and.callFake(function (options) {
@@ -84,11 +96,13 @@ describe('stalePullRequest', function () {
                 return Promise.resolve([{
                     updated_at: timestamp
                 }]);
+            } else if (options.url === commitsUrl) {
+                return Promise.resolve(commitsData);
             }
-            return Promise.reject(new Error('Unexpected Url'));
+            return Promise.reject(new Error('Unexpected Url: ' + options.url));
         });
         spyOn(requestPromise, 'post');
-        spyOn(stalePullRequest, 'foundStopComment').and.callFake(function () {
+        spyOn(stalePullRequest, '_foundStopComment').and.callFake(function () {
             return false;
         });
 
@@ -103,33 +117,44 @@ describe('stalePullRequest', function () {
     it('stalePullRequest._processPullRequest posts expected message for stale pull request', function (done) {
         var repositorySettings = new RepositorySettings();
         var commentsUrl = 'https://url';
+        var commitsUrl = 'https://commits';
         var pullRequest = {
             comments_url: commentsUrl,
-            user: {login: 'boomerjones'}
+            commits_url: commitsUrl,
+            user: {
+                login: 'boomerjones'
+            }
         };
+
+        var timestamp = new Date(Date.now());
+        timestamp.setDate(timestamp.getDate() - repositorySettings.maxDaysSinceUpdate);
 
         spyOn(requestPromise, 'get').and.callFake(function (options) {
             if (options.resolveWithFullResponse === true) {
                 return Promise.resolve({headers: {link: '<https://url?page=2>; rel="next",<https://url?page=3>; rel="last"'}});
             } else if (options.url === commentsUrl + '?page=3') {
-                var timestamp = new Date(Date.now());
-                timestamp.setDate(timestamp.getDate() - repositorySettings.maxDaysSinceUpdate);
                 return Promise.resolve([{
                     updated_at: timestamp,
-                    user: {login: 'boomerjones'}
+                    user: {
+                        login: 'boomerjones'
+                    }
                 }]);
+            } else if (options.url === commitsUrl) {
+                var commitsDataOld = JSON.parse(JSON.stringify(commitsData));
+                commitsDataOld[0].commit.author.date = timestamp;
+                return Promise.resolve(commitsDataOld);
             }
-            return Promise.reject(new Error('Unexpected Url'));
+            return Promise.reject(new Error('Unexpected Url: ' + options.url));
         });
         spyOn(requestPromise, 'post');
-        spyOn(stalePullRequest, 'foundStopComment').and.callFake(function () {
+        spyOn(stalePullRequest, '_foundStopComment').and.callFake(function () {
             return false;
         });
 
         stalePullRequest._processPullRequest(pullRequest, repositorySettings)
             .then(function () {
                 expect(requestPromise.post).toHaveBeenCalledWith({
-                    url: commentsUrl + '?page=3',
+                    url: commentsUrl,
                     headers: repositorySettings.headers,
                     body: {
                         body: repositorySettings.stalePullRequestTemplate({
@@ -144,11 +169,16 @@ describe('stalePullRequest', function () {
             .catch(done.fail);
     });
 
-    it('stalePullRequest._processPullRequest does not post when asked to stop', function (done) {
+    it('stalePullRequest._processPullRequest does not post if there is a recent commit', function (done) {
         var repositorySettings = new RepositorySettings();
         var commentsUrl = 'https://url';
+        var commitsUrl = 'https://commits';
         var pullRequest = {
-            comments_url: commentsUrl
+            comments_url: commentsUrl,
+            commits_url: commitsUrl,
+            user: {
+                login: 'boomerjones'
+            }
         };
 
         spyOn(requestPromise, 'get').and.callFake(function (options) {
@@ -159,13 +189,56 @@ describe('stalePullRequest', function () {
                 timestamp.setDate(timestamp.getDate() - repositorySettings.maxDaysSinceUpdate);
                 return Promise.resolve([{
                     updated_at: timestamp,
-                    user: {login: 'boomerjones'}
+                    user: {
+                        login: 'boomerjones'
+                    }
                 }]);
+            } else if (options.url === commitsUrl) {
+                return Promise.resolve(commitsData);
             }
-            return Promise.reject(new Error('Unexpected Url'));
+            return Promise.reject(new Error('Unexpected Url: ' + options.url));
         });
         spyOn(requestPromise, 'post');
-        spyOn(stalePullRequest, 'foundStopComment').and.callFake(function () {
+        spyOn(stalePullRequest, '_foundStopComment').and.callFake(function () {
+            return false;
+        });
+
+        stalePullRequest._processPullRequest(pullRequest, repositorySettings)
+            .then(function () {
+                expect(requestPromise.post).not.toHaveBeenCalled();
+                done();
+            })
+            .catch(done.fail);
+    });
+
+    it('stalePullRequest._processPullRequest does not post when asked to stop', function (done) {
+        var repositorySettings = new RepositorySettings();
+        var commentsUrl = 'https://url';
+        var commitsUrl = 'https://commits';
+        var pullRequest = {
+            comments_url: commentsUrl,
+            commits_url: commitsUrl
+        };
+
+        spyOn(requestPromise, 'get').and.callFake(function (options) {
+            if (options.resolveWithFullResponse === true) {
+                return Promise.resolve({headers: {link: '<https://url?page=2>; rel="next",<https://url?page=3>; rel="last"'}});
+            } else if (options.url === commentsUrl + '?page=3') {
+                var timestamp = new Date(Date.now());
+                timestamp.setDate(timestamp.getDate() - repositorySettings.maxDaysSinceUpdate);
+                return Promise.resolve([{
+                    updated_at: timestamp,
+                    user: {
+                        login: 'boomerjones'
+                    }
+                }]);
+            } else if (options.url === commitsUrl) {
+                return Promise.resolve(commitsData);
+            }
+            return Promise.reject(new Error('Unexpected Url: ' + options.url));
+        });
+        spyOn(requestPromise, 'post');
+        spyOn(stalePullRequest, '_foundStopComment').and.callFake(function () {
             return true;
         });
 
@@ -181,12 +254,13 @@ describe('stalePullRequest', function () {
         var conciergeUser = {login: 'cesium-concierge'};
         var otherUser = {login: 'BobDylan'};
 
-        expect(stalePullRequest.foundStopComment([{ body: '', user: otherUser }])).toBe(false);
-        expect(stalePullRequest.foundStopComment([{ body: '', user: conciergeUser }])).toBe(false);
-        expect(stalePullRequest.foundStopComment([{ body: '@cesium-concierge stop', user: conciergeUser }])).toBe(false);
-        expect(stalePullRequest.foundStopComment([{ body: 'This is a profound PR.', user: otherUser }])).toBe(false);
+        expect(stalePullRequest._foundStopComment([{ body: '', user: otherUser }])).toBe(false);
+        expect(stalePullRequest._foundStopComment([{ body: '', user: conciergeUser }])).toBe(false);
+        expect(stalePullRequest._foundStopComment([{ body: '@cesium-concierge stop', user: conciergeUser }])).toBe(false);
+        expect(stalePullRequest._foundStopComment([{ body: 'This is a profound PR.', user: otherUser }])).toBe(false);
 
-        expect(stalePullRequest.foundStopComment([{ body: '@cesium-concierge stop', user: otherUser }])).toBe(true);
-        expect(stalePullRequest.foundStopComment([{ body: '', user: conciergeUser }, { body: '@cesium-concierge stop', user: otherUser }])).toBe(true);
+        expect(stalePullRequest._foundStopComment([{ body: '@cesium-concierge stop', user: otherUser }])).toBe(true);
+        expect(stalePullRequest._foundStopComment([{ body: '', user: conciergeUser }, { body: '@cesium-concierge stop', user: otherUser }])).toBe(true);
     });
+
 });

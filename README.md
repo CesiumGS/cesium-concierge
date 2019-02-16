@@ -1,9 +1,12 @@
-# cesium-concierge
+# Cesium Concierge
 
-__Hello! I'm Cesium Conierge, a GitHub bot for [Cesium](https://github.com/AnalyticalGraphicsInc/cesium). I automate
-common certain GitHub tasks, and can currently:__
-- Post a reminder comment to closed issues that have Google Group links in them
-- Post a suggestion to update `CHANGES.md` on newly-opened pull requests, and/or to update licenses if files in Third-party folders have changed.
+__Hello! I'm Cesium Concierge, a GitHub bot for [Cesium](https://github.com/AnalyticalGraphicsInc/cesium). I automate
+common GitHub tasks such as welcoming first time contributors and reminding you to write tests. (I'm great fun at parties!)__
+
+You'll find repository-specific settings in each repository I watch under a `.concierge` directory. For example, here's CesiumJS's concierge settings:
+
+https://github.com/AnalyticalGraphicsInc/cesium/tree/master/.concierge 
+
 ## Building
 
 Clone this repository:
@@ -36,11 +39,13 @@ The table below describes all the possible configuration variables, as well as t
 | `repositories:{full_name}:gitHubToken` | `string` | Token used to verify __outgoing__ requests to GitHub repository | ✓ | 
 | `repositories:{full_name}:thirdPartyFolders` | `string` | Comma-separated list of folders in which to look for changed files in pull request to remind user to update License. | X | `[]`
 | `repositories:{full_name}:claUrl` | `string` | The GitHub API URL to the CLA file in JSON form. See [here](https://developer.github.com/v3/repos/contents/#get-contents) for what the URL should look like. _Example:_ https://api.github.com/repos/AnalyticalGraphicsInc/cesium-concierge/contents/specs/data/config/CLA.json | X | _Disabled if not set._
-| `repositories:{full_name}:contributorsPath` | `string` |  Relative path to the `CONTRIBUTORS.md` file. | X | _Disabled if not set._
+| `repositories:{full_name}:contributorsPath` | `string` |  Relative path from the root of the repository to the `CONTRIBUTORS.md` file. | X | _Disabled if not set._
 | `repositories:{full_name}:maxDaysSinceUpdate` | `number` | "Bump" pull requests older than this number of days ago. | X | `30`
 | `repositories:{full_name}:unitTestPath` | `string` |  Relative path to the directory containing unit tests. _Example:`Specs/`_ | X | _Disabled if not set._
 | `port` | `number` | Port on which to listen to incoming requests. | X | `5000`
 | `listenPath` | `string` | Path on which to listen for incoming requests. | X | `"/"`
+| `slackToken` | `string` | Slack API token for posting release reminders and fun stats to the Slack team. | X | _Disabled if not set._
+| `slackConfigUrl` | `string` | The GitHub API URL to a YAML file containing the release schedule and other SlackBot config. | X | `""`
 
 > Note: `full_name` is the repository name in the form `{organization}/{repository}`. For example: `AnalyticalGraphicsInc/cesium`
 
@@ -54,6 +59,9 @@ The secret verifies that all incoming requests to your server are from GitHub an
 ### Setting `gitHubToken`
 Next, get a [Personal Access Token](https://help.github.com/articles/creating-a-personal-access-token-for-the-command-line/), which verifies with GitHub that all requests to its API come from an account
 with privileges. Set it locally by using any of the three ways listed above.
+
+### Setting `slackToken`
+See "installing a bot" on Slack's [Enabling interactions with bots](https://api.slack.com/bot-users) guide.
 
 ### CLA Format
 The `repositories:{full_name}:claUrl` should point to a GitHub URL of a JSON file with the following format:
@@ -72,5 +80,5 @@ The `gitHub` value is the only required field, but this format provides for stor
 ---
 
 <p align="center">
-  <a href="http://cesiumjs.org/"><img width="250px" src="https://cesiumjs.org/images/logos/cesium-black.png" /></a>
+  <a href="http://cesium.com/"><img width="250px" src="https://raw.githubusercontent.com/wiki/AnalyticalGraphicsInc/cesium/logos/Cesium_Logo_Color.jpg" /></a>
 </p>
