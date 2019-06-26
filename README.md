@@ -38,10 +38,12 @@ The table below describes all the possible configuration variables, as well as t
 | `repositories:{full_name}` | `object` | Settings specific to the repository `{full_name}`. | ✓ | 
 | `repositories:{full_name}:gitHubToken` | `string` | Token used to verify __outgoing__ requests to GitHub repository | ✓ | 
 | `repositories:{full_name}:thirdPartyFolders` | `string` | Comma-separated list of folders in which to look for changed files in pull request to remind user to update License. | X | `[]`
-| `repositories:{full_name}:claUrl` | `string` | The GitHub API URL to the CLA file in JSON form. See [here](https://developer.github.com/v3/repos/contents/#get-contents) for what the URL should look like. _Example:_ https://api.github.com/repos/AnalyticalGraphicsInc/cesium-concierge/contents/specs/data/config/CLA.json | X | _Disabled if not set._
 | `repositories:{full_name}:contributorsPath` | `string` |  Relative path from the root of the repository to the `CONTRIBUTORS.md` file. | X | _Disabled if not set._
 | `repositories:{full_name}:maxDaysSinceUpdate` | `number` | "Bump" pull requests older than this number of days ago. | X | `30`
 | `repositories:{full_name}:unitTestPath` | `string` |  Relative path to the directory containing unit tests. _Example:`Specs/`_ | X | _Disabled if not set._
+| `googleApiConfig` | `string` | Google API config for reading the list of CLA signers from Google Sheets. See [CLA checking](#cla-checking) for full instructions. | X | _Disabled if not set._
+| `individualClaSheetID` | `string` | The ID of the Google Sheets storing the signed CLA information for individual contributors. See [CLA checking](#cla-checking) for full instructions. | X | _Disabled if not set._
+| `corporateClaSheetID` | `string` | The ID of the Google Sheets storing the signed CLA information for corporate contributors. See [CLA checking](#cla-checking) for full instructions. | X | _Disabled if not set._
 | `port` | `number` | Port on which to listen to incoming requests. | X | `5000`
 | `listenPath` | `string` | Path on which to listen for incoming requests. | X | `"/"`
 | `slackToken` | `string` | Slack API token for posting release reminders and fun stats to the Slack team. | X | _Disabled if not set._
@@ -63,19 +65,9 @@ with privileges. Set it locally by using any of the three ways listed above.
 ### Setting `slackToken`
 See "installing a bot" on Slack's [Enabling interactions with bots](https://api.slack.com/bot-users) guide.
 
-### CLA Format
-The `repositories:{full_name}:claUrl` should point to a GitHub URL of a JSON file with the following format:
-```json
-[
-  {
-    "gitHub": "user1"
-  },
-  {
-    "gitHub": "user2"
-  }
-]
-```
-The `gitHub` value is the only required field, but this format provides for storing more information alongside the GitHub name.
+### CLA Checking
+
+TODO
 
 ---
 
