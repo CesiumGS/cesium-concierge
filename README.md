@@ -67,7 +67,20 @@ See "installing a bot" on Slack's [Enabling interactions with bots](https://api.
 
 ### CLA Checking
 
-TODO
+Concierge can automate the CLA (contribute license agreement) process. Here's how it works:
+
+* New contributor electronically signs agreement using a Google form.
+* This form automatically outputs to a Google spreadsheet.
+* Concierge checks this spreadsheet on every new pull request to see if that contributor's GitHub username is in the sheet.
+
+Assuming you already have a Google form setup, all you need to do is configure:
+
+* `individualClaSheetID` - this is the spreadsheet ID for form responses for the individual CLA agreement. Concierge expects **column D** to be the GitHub username.
+  * You can find the spreadsheet ID from the URL, which is in the form of `https://docs.google.com/spreadsheets/d/<id>/edit`.
+* `corporateClaSheetID` - same as above, but for the corporate CLA agreement. Concierge expects **column H** to be the Schedule A response, which is a list of names of employees along with their GitHub usernames. This is loosely formatted, so Concierge checks if the new PR author's username is a substring of that column.
+* `googleApiConfig` - this is the JSON content of the credentials file from the Google service account, see [Google's authentication guide for getting this configuration](https://cloud.google.com/docs/authentication/getting-started).
+  * When you set up a new Service account, you'll be able to download the key, which includes a project id, a private key, and some other metadata. The contents of this file can be supplied as the value of this environment variable.
+  * Note that you must also allow this Service account to have view access to the two spreadsheets above. You can do this by inviting the Service account email to have access to the Google spreadsheet (you can find this email from the Google Cloud Platform console, which should look something like `account-name@project-name.iam.gserviceaccount.com`).
 
 ---
 
