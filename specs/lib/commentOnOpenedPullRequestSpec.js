@@ -48,7 +48,8 @@ describe('commentOnOpenedPullRequest', function () {
     var googleSheetsIndividualResponse = {
         data : {
             values : [
-                ['boomerJones']
+                ['boomerJones'],
+                []//The spreadsheet may have an empty row
             ]
         }
     };
@@ -56,6 +57,7 @@ describe('commentOnOpenedPullRequest', function () {
     var googleSheetsCorporateResponse = {
         data : {
             values : [
+                [],
                 ['Boomer Jones - boomerJones\nOmar Shehata - OmarShehata']
             ]
         }
@@ -68,14 +70,14 @@ describe('commentOnOpenedPullRequest', function () {
         Settings.googleSheetsApi = {
             spreadsheets : {
                 values : {
-                    get : function(options, callback) {
+                    get : function(options) {
                         if (options.spreadsheetId === 'individual') {
-                            callback(undefined, googleSheetsIndividualResponse);
+                            return Promise.resolve(googleSheetsIndividualResponse);
                         } else if (options.spreadsheetId === 'corporate') {
-                            callback(undefined, googleSheetsCorporateResponse);
-                        } else {
-                            callback('Invalid sheet ID.');
+                            return Promise.resolve(googleSheetsCorporateResponse);
                         }
+
+                        return Promise.reject('Invalid sheet ID.');
                     }
                 }
             }
@@ -215,6 +217,22 @@ describe('commentOnOpenedPullRequest', function () {
                 done();
             })
             .catch(done.fail);
+    });
+
+    it('commentOnOpenedPullRequest._askForCla catches and reports errors with Google Sheets API', function () {
+        var errorText = 'Google Sheets API failed.';
+
+        spyOn(Settings.googleSheetsApi.spreadsheets.values, 'get').and.callFake(function () {
+            return Promise.reject(errorText);
+        });
+
+        return commentOnOpenedPullRequest._askForCla(userName)
+            .then(function() {
+                fail('expected promise to reject.');
+            })
+            .catch(function(error) {
+                expect(error).toBe(errorText);
+            });
     });
 
     it('commentOnOpenedPullRequest._implementation catches and reports errors processing CLA check', function (done) {
@@ -673,4 +691,48 @@ describe('commentOnOpenedPullRequest', function () {
             })
             .catch(done.fail);
     });
+
+    it('works when Google Sheets API is not configured', function () {
+        var pullRequestFilesUrl = 'pullRequestFilesUrl';
+        var pullRequestCommentsUrl = 'pullRequestCommentsUrl';
+
+        Settings.googleSheetsApi = undefined;
+
+        var repositorySettings = new RepositorySettings();
+
+        spyOn(repositorySettings, 'fetchSettings').and.callFake(function() {
+            return Promise.resolve(repositorySettings);
+        });
+
+        spyOn(requestPromise, 'post');
+
+        spyOn(requestPromise, 'get').and.callFake(function (options) {
+            if (options.url === pullRequestFilesUrl) {
+                return Promise.resolve([
+                    {filename: 'CHANGES.md'}
+                ]);
+            }
+            return Promise.reject('Unknown url.');
+        });
+
+        return commentOnOpenedPullRequest._implementation(pullRequestFilesUrl, pullRequestCommentsUrl, repositorySettings, userName, repositoryUrl)
+            .then(function () {
+                expect(requestPromise.post).toHaveBeenCalledWith({
+                    url: pullRequestCommentsUrl,
+                    headers: repositorySettings.headers,
+                    body: {
+                        body: repositorySettings.pullRequestOpenedTemplate({
+                            userName: userName,
+                            repository_url: repositoryUrl,
+                            claEnabled: false,
+                            askAboutChanges: false,
+                            askAboutThirdParty: false,
+                            thirdPartyFolders: thirdPartyFolders.join(', '),
+                            headBranch: headBranch
+                        })
+                    },
+                    json: true
+                });
+            });
+        });
 });
