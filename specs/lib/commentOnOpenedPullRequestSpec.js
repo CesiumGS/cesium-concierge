@@ -7,6 +7,7 @@ var requestPromise = require('request-promise');
 
 var commentOnOpenedPullRequest = require('../../lib/commentOnOpenedPullRequest');
 var RepositorySettings = require('../../lib/RepositorySettings');
+var Settings = require('../../lib/Settings');
 
 describe('commentOnOpenedPullRequest', function () {
     var filesUrl = 'url/files';
@@ -43,6 +44,49 @@ describe('commentOnOpenedPullRequest', function () {
             full_name: repositoryName
         }
     };
+
+    var googleSheetsIndividualResponse = {
+        data : {
+            values : [
+                ['boomerJones'],
+                []//The spreadsheet may have an empty row
+            ]
+        }
+    };
+
+    var googleSheetsCorporateResponse = {
+        data : {
+            values : [
+                [],
+                ['Boomer Jones - boomerJones\nOmar Shehata - OmarShehata']
+            ]
+        }
+    };
+
+    beforeEach(function () {
+        spyOnProperty(Settings, 'individualClaSheetID').and.returnValue('individual');
+        spyOnProperty(Settings, 'corporateClaSheetID').and.returnValue('corporate');
+
+        Settings.googleSheetsApi = {
+            spreadsheets : {
+                values : {
+                    get : function(options) {
+                        if (options.spreadsheetId === 'individual') {
+                            return Promise.resolve(googleSheetsIndividualResponse);
+                        } else if (options.spreadsheetId === 'corporate') {
+                            return Promise.resolve(googleSheetsCorporateResponse);
+                        }
+
+                        return Promise.reject('Invalid sheet ID.');
+                    }
+                }
+            }
+        };
+    });
+
+    afterEach(function () {
+        delete Settings['googleSheetsApi'];
+    });
 
     it('throws if body is undefined', function () {
         expect(function () {
@@ -160,6 +204,7 @@ describe('commentOnOpenedPullRequest', function () {
                         body: repositorySettings.pullRequestOpenedTemplate({
                             userName: userName,
                             repository_url: repositoryUrl,
+                            claEnabled: true,
                             askForCla: false,
                             askAboutChanges: false,
                             askAboutThirdParty: false,
@@ -174,15 +219,27 @@ describe('commentOnOpenedPullRequest', function () {
             .catch(done.fail);
     });
 
-    it('commentOnOpenedPullRequest._implementation catches and reports errors processing CLA.json', function (done) {
+    it('commentOnOpenedPullRequest._askForCla catches and reports errors with Google Sheets API', function () {
+        var errorText = 'Google Sheets API failed.';
+
+        spyOn(Settings.googleSheetsApi.spreadsheets.values, 'get').and.callFake(function () {
+            return Promise.reject(errorText);
+        });
+
+        return commentOnOpenedPullRequest._askForCla(userName)
+            .then(function() {
+                fail('expected promise to reject.');
+            })
+            .catch(function(error) {
+                expect(error).toBe(errorText);
+            });
+    });
+
+    it('commentOnOpenedPullRequest._implementation catches and reports errors processing CLA check', function (done) {
         var pullRequestFilesUrl = 'pullRequestFilesUrl';
         var pullRequestCommentsUrl = 'pullRequestCommentsUrl';
-        var claUrl = 'cla.json';
-        var errorCla = new SyntaxError('Unexpected token a in JSON at position 15045');
-
-        var repositorySettings = new RepositorySettings({
-            claUrl: claUrl
-        });
+        var errorCla = new Error('Error checking CLA.');
+        var repositorySettings = new RepositorySettings();
 
         spyOn(repositorySettings, 'fetchSettings').and.callFake(function() {
             return Promise.resolve(repositorySettings);
@@ -197,10 +254,11 @@ describe('commentOnOpenedPullRequest', function () {
                 ]);
             }
 
-            if (options.url === claUrl) {
-                return Promise.reject(errorCla);
-            }
             return Promise.reject('Unknown url.');
+        });
+
+        spyOn(commentOnOpenedPullRequest, '_askForCla').and.callFake(function () {
+            return Promise.reject(errorCla);
         });
 
         commentOnOpenedPullRequest._implementation(pullRequestFilesUrl, pullRequestCommentsUrl, repositorySettings, userName, repositoryUrl)
@@ -260,6 +318,7 @@ describe('commentOnOpenedPullRequest', function () {
                         body: repositorySettings.pullRequestOpenedTemplate({
                             userName: userName,
                             repository_url: repositoryUrl,
+                            claEnabled: true,
                             askForCla: false,
                             askAboutChanges: true,
                             askAboutThirdParty: false,
@@ -306,6 +365,7 @@ describe('commentOnOpenedPullRequest', function () {
                         body: repositorySettings.pullRequestOpenedTemplate({
                             userName: userName,
                             repository_url: repositoryUrl,
+                            claEnabled: true,
                             askForCla: false,
                             askAboutChanges: false,
                             askAboutThirdParty: false,
@@ -353,6 +413,7 @@ describe('commentOnOpenedPullRequest', function () {
                         body: repositorySettings.pullRequestOpenedTemplate({
                             userName: userName,
                             repository_url: repositoryUrl,
+                            claEnabled: true,
                             askForCla: false,
                             askAboutChanges: false,
                             askAboutThirdParty: true,
@@ -399,6 +460,7 @@ describe('commentOnOpenedPullRequest', function () {
                         body: repositorySettings.pullRequestOpenedTemplate({
                             userName: userName,
                             repository_url: repositoryUrl,
+                            claEnabled: true,
                             askForCla: false,
                             askAboutChanges: true,
                             askAboutThirdParty: true,
@@ -471,11 +533,10 @@ describe('commentOnOpenedPullRequest', function () {
     it('commentOnOpenedPullRequest._implementation posts if CHANGES.md was not updated and there are modified ThirdParty folders, and CLA check failed.', function (done) {
         var pullRequestFilesUrl = 'pullRequestFilesUrl';
         var pullRequestCommentsUrl = 'pullRequestCommentsUrl';
-        var claUrl = 'cla.json';
+        var newContributor = 'newContributor';
 
         var repositorySettings = new RepositorySettings({
-            thirdPartyFolders: thirdPartyFolders.join(','),
-            claUrl: claUrl
+            thirdPartyFolders: thirdPartyFolders.join(',')
         });
 
         spyOn(repositorySettings, 'fetchSettings').and.callFake(function() {
@@ -490,23 +551,18 @@ describe('commentOnOpenedPullRequest', function () {
                     {filename: 'ThirdParty/stuff.js'}
                 ]);
             }
-            if (options.url === claUrl) {
-                var content = Buffer.from(JSON.stringify([{gitHub: 'bjones'}])).toString('base64');
-                return Promise.resolve({
-                    content: content
-                });
-            }
+
             return Promise.reject('Unknown url.');
         });
 
-        commentOnOpenedPullRequest._implementation(pullRequestFilesUrl, pullRequestCommentsUrl, repositorySettings, userName, repositoryUrl, baseBranch, headBranch)
+        commentOnOpenedPullRequest._implementation(pullRequestFilesUrl, pullRequestCommentsUrl, repositorySettings, newContributor, repositoryUrl, baseBranch, headBranch)
             .then(function () {
                 expect(requestPromise.post).toHaveBeenCalledWith({
                     url: pullRequestCommentsUrl,
                     headers: repositorySettings.headers,
                     body: {
                         body: repositorySettings.pullRequestOpenedTemplate({
-                            userName: userName,
+                            userName: newContributor,
                             repository_url: repositoryUrl,
                             claEnabled: true,
                             askForCla: true,
@@ -529,6 +585,7 @@ describe('commentOnOpenedPullRequest', function () {
         var contributorsPath = 'CONTRIBUTORS.md';
         var apiUrl = headApiUrl + '/contents/' + contributorsPath + '?ref=' + headBranch;
         var htmlUrl =  headHtmlUrl + '/blob/' + headBranch + '/' + contributorsPath;
+        var newContributor = 'newContributor';
 
         var repositorySettings = new RepositorySettings({
             contributorsPath: contributorsPath,
@@ -546,25 +603,28 @@ describe('commentOnOpenedPullRequest', function () {
                     {filename: 'file.txt'}
                 ]);
             }
+
             if (options.url === apiUrl) {
                 var content = Buffer.from('* [Jane Doe](https://github.com/JaneDoe)\n* [Boomer Jones](https://github.com/' + userName + ')').toString('base64');
                 return Promise.resolve({
                     content: content
                 });
             }
+
             return Promise.reject('Unknown url: ' + options.url);
         });
 
-        var newContributorUsername = 'NewBob';
-        commentOnOpenedPullRequest._implementation(pullRequestFilesUrl, pullRequestCommentsUrl, repositorySettings, newContributorUsername, repositoryUrl, baseBranch, headBranch, headHtmlUrl, headApiUrl)
+        commentOnOpenedPullRequest._implementation(pullRequestFilesUrl, pullRequestCommentsUrl, repositorySettings, newContributor, repositoryUrl, baseBranch, headBranch, headHtmlUrl, headApiUrl)
             .then(function () {
                 expect(requestPromise.post).toHaveBeenCalledWith({
                     url: pullRequestCommentsUrl,
                     headers: repositorySettings.headers,
                     body: {
                         body: repositorySettings.pullRequestOpenedTemplate({
-                            userName: newContributorUsername,
+                            userName: newContributor,
                             repository_url: repositoryUrl,
+                            claEnabled: true,
+                            askForCla: true,
                             askAboutContributors: true,
                             contributorsUrl: htmlUrl,
                             askAboutChanges: true,
@@ -619,6 +679,7 @@ describe('commentOnOpenedPullRequest', function () {
                         body: repositorySettings.pullRequestOpenedTemplate({
                             userName: userName,
                             repository_url: repositoryUrl,
+                            claEnabled: true,
                             askAboutContributors: false,
                             askAboutChanges: true,
                             headBranch: headBranch
@@ -630,4 +691,48 @@ describe('commentOnOpenedPullRequest', function () {
             })
             .catch(done.fail);
     });
+
+    it('works when Google Sheets API is not configured', function () {
+        var pullRequestFilesUrl = 'pullRequestFilesUrl';
+        var pullRequestCommentsUrl = 'pullRequestCommentsUrl';
+
+        Settings.googleSheetsApi = undefined;
+
+        var repositorySettings = new RepositorySettings();
+
+        spyOn(repositorySettings, 'fetchSettings').and.callFake(function() {
+            return Promise.resolve(repositorySettings);
+        });
+
+        spyOn(requestPromise, 'post');
+
+        spyOn(requestPromise, 'get').and.callFake(function (options) {
+            if (options.url === pullRequestFilesUrl) {
+                return Promise.resolve([
+                    {filename: 'CHANGES.md'}
+                ]);
+            }
+            return Promise.reject('Unknown url.');
+        });
+
+        return commentOnOpenedPullRequest._implementation(pullRequestFilesUrl, pullRequestCommentsUrl, repositorySettings, userName, repositoryUrl)
+            .then(function () {
+                expect(requestPromise.post).toHaveBeenCalledWith({
+                    url: pullRequestCommentsUrl,
+                    headers: repositorySettings.headers,
+                    body: {
+                        body: repositorySettings.pullRequestOpenedTemplate({
+                            userName: userName,
+                            repository_url: repositoryUrl,
+                            claEnabled: false,
+                            askAboutChanges: false,
+                            askAboutThirdParty: false,
+                            thirdPartyFolders: thirdPartyFolders.join(', '),
+                            headBranch: headBranch
+                        })
+                    },
+                    json: true
+                });
+            });
+        });
 });
