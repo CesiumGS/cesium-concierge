@@ -182,7 +182,6 @@ describe('commentOnClosedIssue', function () {
                             html_url: 'html_url',
                             forum_links: forumLinks,
                             foundForumLinks: true,
-                            isFirstContribution: true,
                             userName: userName
                         })
                     },
@@ -200,19 +199,7 @@ describe('commentOnClosedIssue', function () {
         ];
         runTestWithLinks(forumLinks)
             .then(function () {
-                expect(requestPromise.post).toHaveBeenCalledWith({
-                    url: 'commentsUrl',
-                    headers: repositorySettings.headers,
-                    body: {
-                        body: repositorySettings.issueClosedTemplate({
-                            html_url: 'html_url',
-                            foundForumLinks: false,
-                            isFirstContribution: true,
-                            userName: userName
-                        })
-                    },
-                    json: true
-                });
+                expect(requestPromise.post).not.toHaveBeenCalled();
                 done();
             })
             .catch(done.fail);
@@ -285,117 +272,6 @@ describe('commentOnClosedIssue', function () {
                 expect(requestPromise.post).not.toHaveBeenCalled();
                 done();
             });
-    });
-
-    it('commentOnClosedIssue._implementation posts about first timer\'s contribution.', function (done) {
-        spyOn(repositorySettings, 'fetchSettings').and.callFake(function() {
-            return Promise.resolve(repositorySettings);
-        });
-        spyOn(requestPromise, 'get').and.callFake(function (options) {
-            if (options.url === issueUrl) {
-                return Promise.resolve(pullRequestEventJson);
-            }
-            if (options.url === isMergedUrl) {
-                return Promise.resolve();
-            }
-
-            if (options.url === contributorsUrl) {
-                return Promise.resolve(contributorsResponse);
-            }
-
-            if (options.url === commentsUrl) {
-                return Promise.resolve([]);
-            }
-
-            return Promise.reject('Unknown url: ' + options.url);
-        });
-        spyOn(requestPromise, 'post');
-
-        commentOnClosedIssue._implementation(commonOptions)
-            .then(function () {
-                expect(requestPromise.post).toHaveBeenCalledWith({
-                    url: commentsUrl,
-                    headers: repositorySettings.headers,
-                    body: {
-                        body: repositorySettings.issueClosedTemplate({
-                            isFirstContribution: true,
-                            userName: userName
-                        })
-                    },
-                    json: true
-                });
-                done();
-            })
-            .catch(done.fail);
-    });
-
-    it('commentOnClosedIssue._implementation does not post first timers message if not first time.', function (done) {
-        spyOn(repositorySettings, 'fetchSettings').and.callFake(function() {
-            return Promise.resolve(repositorySettings);
-        });
-        spyOn(requestPromise, 'get').and.callFake(function (options) {
-            if (options.url === issueUrl) {
-                return Promise.resolve(pullRequestEventJson);
-            }
-            if (options.url === isMergedUrl) {
-                return Promise.resolve();
-            }
-
-            if (options.url === contributorsUrl) {
-                var content = Buffer.from('* [Jane Doe](https://github.com/JaneDoe)\n* [Boomer Jones](https://github.com/' + userName + ')').toString('base64');
-                return Promise.resolve({
-                    content: content
-                });
-            }
-
-            if (options.url === commentsUrl) {
-                return Promise.resolve([]);
-            }
-
-            return Promise.reject('Unknown url: ' + options.url);
-        });
-        spyOn(requestPromise, 'post');
-
-        commentOnClosedIssue._implementation(commonOptions)
-            .then(function () {
-                expect(requestPromise.post).not.toHaveBeenCalled();
-                done();
-            })
-            .catch(done.fail);
-    });
-
-    it('commentOnClosedIssue._implementation does not post anything for closed PRs.', function (done) {
-        spyOn(repositorySettings, 'fetchSettings').and.callFake(function() {
-            return Promise.resolve(repositorySettings);
-        });
-        spyOn(requestPromise, 'get').and.callFake(function (options) {
-            if (options.url === issueUrl) {
-                return Promise.resolve(pullRequestEventJson);
-            }
-            if (options.url === isMergedUrl) {
-                return Promise.reject({
-                    name: 'StatusCodeError',
-                    statusCode: 404
-                });
-            }
-            if (options.url === contributorsUrl) {
-                return Promise.resolve(contributorsResponse);
-            }
-
-            if (options.url === commentsUrl) {
-                return Promise.resolve([]);
-            }
-
-            return Promise.reject('Unknown url: ' + options.url);
-        });
-        spyOn(requestPromise, 'post');
-
-        commentOnClosedIssue._implementation(commonOptions)
-            .then(function () {
-                expect(requestPromise.post).not.toHaveBeenCalled();
-                done();
-            })
-            .catch(done.fail);
     });
 
     it('commentOnClosedIssue._implementation propagates unexpected errors.', function (done) {
