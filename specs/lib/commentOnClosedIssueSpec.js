@@ -13,13 +13,9 @@ describe('commentOnClosedIssue', function () {
 
     var issueEventJson;
     var pullRequestEventJson;
-    var contributorsResponse;
     var issueUrl = 'issueUrl';
     var commentsUrl = 'commentsUrl';
     var isMergedUrl = issueUrl + '/merge';
-    var baseBranch = 'master';
-    var baseApiUrl = 'https://api.github.com/repos/AnalyticalGraphicsInc/cesium';
-    var contributorsUrl = baseApiUrl + '/contents/' + repositorySettings.contributorsPath + '?ref=' + baseBranch;
     var userName = 'Joan';
 
     beforeEach(function () {
@@ -28,8 +24,6 @@ describe('commentOnClosedIssue', function () {
             commentsUrl: commentsUrl,
             repositorySettings: repositorySettings,
             isPullRequest: true,
-            baseBranch: baseBranch,
-            baseApiUrl: baseApiUrl,
             userName: userName
         };
 
@@ -50,14 +44,9 @@ describe('commentOnClosedIssue', function () {
                 base: {
                     ref: 'master',
                     repo: {
-                        url: baseApiUrl
                     }
                 }
             }
-        };
-
-        contributorsResponse = {
-            content: Buffer.from('* [Jane Doe](https://github.com/JaneDoe)').toString('base64')
         };
     });
 
@@ -104,8 +93,6 @@ describe('commentOnClosedIssue', function () {
             url: issueUrl,
             commentsUrl: commentsUrl,
             isPullRequest: isPullRequest,
-            baseBranch: baseBranch,
-            baseApiUrl: baseApiUrl,
             userName: userName,
             repositorySettings: repositorySettings
         });
@@ -135,10 +122,6 @@ describe('commentOnClosedIssue', function () {
             if (options.url === commentsUrl) {
                 return Promise.resolve(commentsJson);
             }
-            if (options.url === contributorsUrl) {
-                return Promise.resolve(contributorsResponse);
-            }
-
             return Promise.reject('Unknown url: ' + options.url);
         });
         spyOn(requestPromise, 'post');
@@ -148,8 +131,6 @@ describe('commentOnClosedIssue', function () {
             commentsUrl: commentsUrl,
             repositorySettings: repositorySettings,
             isPullRequest: true,
-            baseBranch: baseBranch,
-            baseApiUrl: baseApiUrl,
             userName: userName
         });
     }
@@ -254,9 +235,6 @@ describe('commentOnClosedIssue', function () {
             if (options.url === isMergedUrl) {
                 return Promise.resolve();
             }
-            if (options.url === contributorsUrl) {
-                return Promise.resolve(contributorsResponse);
-            }
             if (options.url === commentsUrl) {
                 return Promise.reject('Bad request');
             }
@@ -284,9 +262,6 @@ describe('commentOnClosedIssue', function () {
             }
             if (options.url === isMergedUrl) {
                 return Promise.reject('Unexpected Error');
-            }
-            if (options.url === contributorsUrl) {
-                return Promise.resolve(contributorsResponse);
             }
 
             if (options.url === commentsUrl) {
