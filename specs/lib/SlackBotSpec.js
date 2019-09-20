@@ -399,7 +399,7 @@ describe('SlackBot', function () {
             expect(SlackBot._githubClient.pulls.checkIfMerged).toHaveBeenCalledWith({
                 owner: 'owner',
                 repo: 'repo',
-                number: pullRequestNumber
+                pull_number: pullRequestNumber
             });
             // We expect one from each repo.
             expect(pullRequests.length).toBe(2);

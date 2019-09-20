@@ -9,16 +9,30 @@ var RepositorySettings = require('../../lib/RepositorySettings');
 describe('commentOnClosedIssue', function () {
     var repositorySettings = new RepositorySettings();
     repositorySettings.contributorsPath = 'CONTRIBUTORS.md';
+    var commonOptions;
 
     var issueEventJson;
     var pullRequestEventJson;
+    var contributorsResponse;
     var issueUrl = 'issueUrl';
     var commentsUrl = 'commentsUrl';
+    var isMergedUrl = issueUrl + '/merge';
     var baseBranch = 'master';
     var baseApiUrl = 'https://api.github.com/repos/AnalyticalGraphicsInc/cesium';
+    var contributorsUrl = baseApiUrl + '/contents/' + repositorySettings.contributorsPath + '?ref=' + baseBranch;
     var userName = 'Joan';
 
     beforeEach(function () {
+        commonOptions = {
+            url: issueUrl,
+            commentsUrl: commentsUrl,
+            repositorySettings: repositorySettings,
+            isPullRequest: true,
+            baseBranch: baseBranch,
+            baseApiUrl: baseApiUrl,
+            userName: userName
+        };
+
         issueEventJson = {
             issue: {
                 url: issueUrl,
@@ -40,6 +54,10 @@ describe('commentOnClosedIssue', function () {
                     }
                 }
             }
+        };
+
+        contributorsResponse = {
+            content: Buffer.from('* [Jane Doe](https://github.com/JaneDoe)').toString('base64')
         };
     });
 
@@ -111,18 +129,28 @@ describe('commentOnClosedIssue', function () {
             if (options.url === issueUrl) {
                 return Promise.resolve(issueResponseJson);
             }
+            if (options.url === isMergedUrl) {
+                return Promise.resolve();
+            }
             if (options.url === commentsUrl) {
                 return Promise.resolve(commentsJson);
             }
+            if (options.url === contributorsUrl) {
+                return Promise.resolve(contributorsResponse);
+            }
 
-            return Promise.reject('Unknown url.');
+            return Promise.reject('Unknown url: ' + options.url);
         });
         spyOn(requestPromise, 'post');
 
         return commentOnClosedIssue._implementation({
             url: issueUrl,
             commentsUrl: commentsUrl,
-            repositorySettings: repositorySettings
+            repositorySettings: repositorySettings,
+            isPullRequest: true,
+            baseBranch: baseBranch,
+            baseApiUrl: baseApiUrl,
+            userName: userName
         });
     }
 
@@ -153,7 +181,9 @@ describe('commentOnClosedIssue', function () {
                         body: repositorySettings.issueClosedTemplate({
                             html_url: 'html_url',
                             forum_links: forumLinks,
-                            foundForumLinks: true
+                            foundForumLinks: true,
+                            isFirstContribution: true,
+                            userName: userName
                         })
                     },
                     json: true
@@ -170,7 +200,19 @@ describe('commentOnClosedIssue', function () {
         ];
         runTestWithLinks(forumLinks)
             .then(function () {
-                expect(requestPromise.post).not.toHaveBeenCalled();
+                expect(requestPromise.post).toHaveBeenCalledWith({
+                    url: 'commentsUrl',
+                    headers: repositorySettings.headers,
+                    body: {
+                        body: repositorySettings.issueClosedTemplate({
+                            html_url: 'html_url',
+                            foundForumLinks: false,
+                            isFirstContribution: true,
+                            userName: userName
+                        })
+                    },
+                    json: true
+                });
                 done();
             })
             .catch(done.fail);
@@ -222,22 +264,21 @@ describe('commentOnClosedIssue', function () {
             if (options.url === issueUrl) {
                 return Promise.resolve(issueResponseJson);
             }
-
+            if (options.url === isMergedUrl) {
+                return Promise.resolve();
+            }
+            if (options.url === contributorsUrl) {
+                return Promise.resolve(contributorsResponse);
+            }
             if (options.url === commentsUrl) {
                 return Promise.reject('Bad request');
             }
 
-            return Promise.reject('Unknown url.');
+            return Promise.reject('Unknown url: ' + options.url);
         });
         spyOn(requestPromise, 'post');
 
-        var options = {
-            url: issueUrl,
-            commentsUrl: commentsUrl,
-            repositorySettings: repositorySettings
-        };
-
-        commentOnClosedIssue._implementation(options)
+        commentOnClosedIssue._implementation(commonOptions)
             .then(done.fail)
             .catch(function (error) {
                 expect(error).toEqual('Bad request');
@@ -247,8 +288,6 @@ describe('commentOnClosedIssue', function () {
     });
 
     it('commentOnClosedIssue._implementation posts about first timer\'s contribution.', function (done) {
-        var contributorsUrl = baseApiUrl + '/contents/' + repositorySettings.contributorsPath + '?ref=' + baseBranch;
-
         spyOn(repositorySettings, 'fetchSettings').and.callFake(function() {
             return Promise.resolve(repositorySettings);
         });
@@ -256,12 +295,12 @@ describe('commentOnClosedIssue', function () {
             if (options.url === issueUrl) {
                 return Promise.resolve(pullRequestEventJson);
             }
+            if (options.url === isMergedUrl) {
+                return Promise.resolve();
+            }
 
             if (options.url === contributorsUrl) {
-                var content = Buffer.from('* [Jane Doe](https://github.com/JaneDoe)').toString('base64');
-                return Promise.resolve({
-                    content: content
-                });
+                return Promise.resolve(contributorsResponse);
             }
 
             if (options.url === commentsUrl) {
@@ -272,17 +311,7 @@ describe('commentOnClosedIssue', function () {
         });
         spyOn(requestPromise, 'post');
 
-        var options = {
-            url: issueUrl,
-            commentsUrl: commentsUrl,
-            isPullRequest: true,
-            baseBranch: baseBranch,
-            baseApiUrl: baseApiUrl,
-            userName: userName,
-            repositorySettings: repositorySettings
-        };
-
-        commentOnClosedIssue._implementation(options)
+        commentOnClosedIssue._implementation(commonOptions)
             .then(function () {
                 expect(requestPromise.post).toHaveBeenCalledWith({
                     url: commentsUrl,
@@ -301,14 +330,15 @@ describe('commentOnClosedIssue', function () {
     });
 
     it('commentOnClosedIssue._implementation does not post first timers message if not first time.', function (done) {
-        var contributorsUrl = baseApiUrl + '/contents/' + repositorySettings.contributorsPath + '?ref=' + baseBranch;
-
         spyOn(repositorySettings, 'fetchSettings').and.callFake(function() {
             return Promise.resolve(repositorySettings);
         });
         spyOn(requestPromise, 'get').and.callFake(function (options) {
             if (options.url === issueUrl) {
                 return Promise.resolve(pullRequestEventJson);
+            }
+            if (options.url === isMergedUrl) {
+                return Promise.resolve();
             }
 
             if (options.url === contributorsUrl) {
@@ -326,21 +356,75 @@ describe('commentOnClosedIssue', function () {
         });
         spyOn(requestPromise, 'post');
 
-        var options = {
-            url: issueUrl,
-            commentsUrl: commentsUrl,
-            isPullRequest: true,
-            baseBranch: baseBranch,
-            baseApiUrl: baseApiUrl,
-            userName: userName,
-            repositorySettings: repositorySettings
-        };
-
-        commentOnClosedIssue._implementation(options)
+        commentOnClosedIssue._implementation(commonOptions)
             .then(function () {
                 expect(requestPromise.post).not.toHaveBeenCalled();
                 done();
             })
             .catch(done.fail);
+    });
+
+    it('commentOnClosedIssue._implementation does not post anything for closed PRs.', function (done) {
+        spyOn(repositorySettings, 'fetchSettings').and.callFake(function() {
+            return Promise.resolve(repositorySettings);
+        });
+        spyOn(requestPromise, 'get').and.callFake(function (options) {
+            if (options.url === issueUrl) {
+                return Promise.resolve(pullRequestEventJson);
+            }
+            if (options.url === isMergedUrl) {
+                return Promise.reject({
+                    name: 'StatusCodeError',
+                    statusCode: 404
+                });
+            }
+            if (options.url === contributorsUrl) {
+                return Promise.resolve(contributorsResponse);
+            }
+
+            if (options.url === commentsUrl) {
+                return Promise.resolve([]);
+            }
+
+            return Promise.reject('Unknown url: ' + options.url);
+        });
+        spyOn(requestPromise, 'post');
+
+        commentOnClosedIssue._implementation(commonOptions)
+            .then(function () {
+                expect(requestPromise.post).not.toHaveBeenCalled();
+                done();
+            })
+            .catch(done.fail);
+    });
+
+    it('commentOnClosedIssue._implementation propagates unexpected errors.', function (done) {
+        spyOn(repositorySettings, 'fetchSettings').and.callFake(function() {
+            return Promise.resolve(repositorySettings);
+        });
+        spyOn(requestPromise, 'get').and.callFake(function (options) {
+            if (options.url === issueUrl) {
+                return Promise.resolve(pullRequestEventJson);
+            }
+            if (options.url === isMergedUrl) {
+                return Promise.reject('Unexpected Error');
+            }
+            if (options.url === contributorsUrl) {
+                return Promise.resolve(contributorsResponse);
+            }
+
+            if (options.url === commentsUrl) {
+                return Promise.resolve([]);
+            }
+
+            return Promise.reject('Unknown url: ' + options.url);
+        });
+        spyOn(requestPromise, 'post');
+
+        commentOnClosedIssue._implementation(commonOptions)
+            .then(done.fail)
+            .catch(function() {
+                done();
+            });
     });
 });
