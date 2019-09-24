@@ -63,17 +63,15 @@ gulp.task('create-zip', function () {
             'bin/**',
             'lib/**',
             'Dockerfile',
+            'package-lock.json',
             'index.js'],
         {
             base: '.'
         });
 
-    child_process.execSync('npm shrinkwrap');
-
     var packageJson = gulp.src('./package.json');
-    var shrinkWrapFile = gulp.src('npm-shrinkwrap.json');
 
-    return eventStream.merge(serverFiles, packageJson, shrinkWrapFile)
+    return eventStream.merge(serverFiles, packageJson)
         .pipe(gulpTap(function (file) {
             // Work around an issue with gulp-zip where archives generated on Windows do
             // not properly have their directory executable mode set.
