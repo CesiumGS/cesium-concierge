@@ -102,7 +102,7 @@ describe('SlackBot', function () {
     it('posts early release reminder.', function () {
         spyOn(SlackBot, '_getConfig').and.callFake(function() {
             var releaseSchedule = {};
-            releaseSchedule[user] = earlyDate;
+            releaseSchedule[user] = [earlyDate];
             return Promise.resolve({
                 releaseSchedule: releaseSchedule
             });
@@ -124,7 +124,7 @@ describe('SlackBot', function () {
     it('posts release reminder.', function () {
         spyOn(SlackBot, '_getConfig').and.callFake(function() {
             var releaseSchedule = {};
-            releaseSchedule[user] = mediumDate;
+            releaseSchedule[user] = [mediumDate];
             return Promise.resolve({
                 releaseSchedule: releaseSchedule
             });
@@ -146,7 +146,7 @@ describe('SlackBot', function () {
     it('posts late release reminder.', function () {
         spyOn(SlackBot, '_getConfig').and.callFake(function() {
             var releaseSchedule = {};
-            releaseSchedule[user] = today;
+            releaseSchedule[user] = [today];
             return Promise.resolve({
                 releaseSchedule: releaseSchedule
             });
@@ -185,105 +185,6 @@ describe('SlackBot', function () {
         .catch(function(error) {
             throw Error(error);
         });
-    });
-
-    it('posts weekly statistics message.', function () {
-        var yesterday = moment().subtract(1, 'days').startOf('day');
-        var lastWeek = moment().subtract(7, 'days').startOf('day');
-
-        var issues = [];
-        issues.push({
-            pull_request: {},
-            closed_at: yesterday,
-            created_at: lastWeek
-        });
-        issues.push({
-            pull_request: {},
-            closed_at: yesterday,
-            created_at: yesterday
-        });
-
-        spyOn(SlackBot, '_getAllPullRequestsMergedLastWeek').and.callFake(function() {
-            return Promise.resolve(issues);
-        });
-
-        setupFakeIDs();
-
-        spyOn(SlackBot, 'postMessage');
-
-        spyOn(SlackBot, '_getConfig').and.callFake(function() {
-            return Promise.resolve({});
-        });
-
-        SlackBot._sendWeeklyStats()
-        .then(function() {
-            var templateName = 'weeklyStats';
-            var template = fs.readFileSync(path.join(__dirname, '../../lib/templates', templateName + '.hbs')).toString();
-            var messageText = handlebars.compile(template)({
-                greeting : 'Happy Friday everyone!',
-                averageMergeTime : '3.0',
-                numberOfPullRequests : issues.length
-            });
-            expect(SlackBot.postMessage).toHaveBeenCalledWith(SlackBot._channelIDs['general'], messageText);
-        })
-        .catch(function(error) {
-            throw Error(error);
-        });
-
-    });
-
-    it('posts about unusually long PR times.', function () {
-        var yesterday = moment().subtract(1, 'days').startOf('day');
-        var foreverAgo = moment().subtract(701, 'days').startOf('day');
-
-        var issues = [];
-        var title = 'Old Pull Request';
-        var url = 'url';
-        issues.push({
-            pull_request: {},
-            title: title,
-            html_url: url,
-            closed_at: yesterday,
-            created_at: foreverAgo
-        });
-        for(var i = 0; i < 10; ++i) {
-            issues.push({
-                pull_request: {},
-                closed_at: yesterday,
-                created_at: yesterday
-            });
-        }
-
-        spyOn(SlackBot, '_getAllPullRequestsMergedLastWeek').and.callFake(function() {
-            return Promise.resolve(issues);
-        });
-
-        setupFakeIDs();
-
-        spyOn(SlackBot, 'postMessage');
-
-        spyOn(SlackBot, '_getConfig').and.callFake(function() {
-            return Promise.resolve({});
-        });
-
-        SlackBot._sendWeeklyStats()
-        .then(function() {
-            var templateName = 'weeklyStats';
-            var template = fs.readFileSync(path.join(__dirname, '../../lib/templates', templateName + '.hbs')).toString();
-            var messageText = handlebars.compile(template)({
-                greeting : 'Happy Friday everyone!',
-                averageMergeTime : '63.6',
-                numberOfPullRequests : issues.length,
-                longMergeTitle : title,
-                longMergeURL : url,
-                longMergeTime : '700.0'
-            });
-            expect(SlackBot.postMessage).toHaveBeenCalledWith(SlackBot._channelIDs['general'], messageText);
-        })
-        .catch(function(error) {
-            throw Error(error);
-        });
-
     });
 
     it('_getConfig disables bot if config file is not in a known repository.', function (done) {
@@ -332,7 +233,7 @@ describe('SlackBot', function () {
         SlackBot._getConfig()
             .then(function (slackBotSettings) {
                 var date = moment('2/4/2019', 'MM/DD/YYYY').startOf('day');
-                expect(slackBotSettings.releaseSchedule['oshehata'].format()).toBe(date.format());
+                expect(slackBotSettings.releaseSchedule['oshehata'][0].format()).toBe(date.format());
                 done();
             })
             .catch(done.fail);
@@ -452,10 +353,8 @@ describe('SlackBot', function () {
         var jobs = SlackBot.initializeScheduledJobs();
 
         expect(jobs.releaseReminder).toBeDefined();
-        expect(jobs.weeklyStats).toBeDefined();
 
         jobs.releaseReminder.cancel();
-        jobs.weeklyStats.cancel();
     });
 
     it('does not post message or get config if disabled.', function (done) {
