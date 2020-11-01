@@ -42,7 +42,7 @@ describe('SlackBot', function () {
         var template = fs.readFileSync(path.join(__dirname, '../../lib/templates', templateName + '.hbs')).toString();
 
         return handlebars.compile(template)({
-            userId : `<@${userID}>`
+            userId : '<@' + userID + '>'
         });
     }
 
