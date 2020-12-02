@@ -19,17 +19,21 @@ describe('SlackBot', function () {
     var user = 'omar';
     var userID = '1';
     var displayName = 'Omar';
+    var devChannelId = '123';
     var configUrl = 'https://api.github.com/repos/owner/repo/contents/.slackbot.yml';
     var mockYAML;
 
     function setupFakeIDs() {
         SlackBot._userIDs = {};
         SlackBot._userData = {};
-        SlackBot._channelIDs = {};
+        SlackBot._channelIDs = {
+            'dev': devChannelId
+        };
 
         SlackBot._userIDs[user] = userID;
         SlackBot._userData[userID] = {
-            display_name: displayName
+            display_name: displayName,
+            id: userID
         };
         SlackBot._channelIDs['general'] = 1;
     }
@@ -38,7 +42,7 @@ describe('SlackBot', function () {
         var template = fs.readFileSync(path.join(__dirname, '../../lib/templates', templateName + '.hbs')).toString();
 
         return handlebars.compile(template)({
-            name : displayName
+            userId : '<@' + userID + '>'
         });
     }
 
@@ -99,7 +103,7 @@ describe('SlackBot', function () {
             });
     });
 
-    it('posts early release reminder.', function () {
+    it('posts early release reminder to #dev channel.', function () {
         spyOn(SlackBot, '_getConfig').and.callFake(function() {
             var releaseSchedule = {};
             releaseSchedule[user] = [earlyDate];
@@ -114,14 +118,14 @@ describe('SlackBot', function () {
 
         return SlackBot._sendReleaseReminders()
             .then(function() {
-                expect(SlackBot.postMessage).toHaveBeenCalledWith(userID, getMessage('releaseReminderEarly'));
+                expect(SlackBot.postMessage).toHaveBeenCalledWith(devChannelId, getMessage('releaseReminderEarly'));
             })
             .catch(function(error) {
                 throw Error(error);
             });
     });
 
-    it('posts release reminder.', function () {
+    it('posts release reminder to #dev channel.', function () {
         spyOn(SlackBot, '_getConfig').and.callFake(function() {
             var releaseSchedule = {};
             releaseSchedule[user] = [mediumDate];
@@ -136,14 +140,14 @@ describe('SlackBot', function () {
 
         return SlackBot._sendReleaseReminders()
         .then(function() {
-            expect(SlackBot.postMessage).toHaveBeenCalledWith(userID, getMessage('releaseReminder'));
+            expect(SlackBot.postMessage).toHaveBeenCalledWith(devChannelId, getMessage('releaseReminder'));
         })
         .catch(function(error) {
             throw Error(error);
         });
     });
 
-    it('posts late release reminder.', function () {
+    it('posts late release reminder to #dev channel.', function () {
         spyOn(SlackBot, '_getConfig').and.callFake(function() {
             var releaseSchedule = {};
             releaseSchedule[user] = [today];
@@ -158,7 +162,7 @@ describe('SlackBot', function () {
 
         return SlackBot._sendReleaseReminders()
         .then(function() {
-            expect(SlackBot.postMessage).toHaveBeenCalledWith(userID, getMessage('releaseReminderLate'));
+            expect(SlackBot.postMessage).toHaveBeenCalledWith(devChannelId, getMessage('releaseReminderLate'));
         })
         .catch(function(error) {
             throw Error(error);
