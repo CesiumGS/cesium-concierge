@@ -131,39 +131,6 @@ describe('commentOnClosedIssue', function () {
             });
     });
 
-    it('commentOnClosedIssue._implementation rejects if commentsUrl cannot be retrieved.', function (done) {
-        var issueResponseJson = {
-            html_url: 'html_url',
-            body: ''
-        };
-
-        spyOn(repositorySettings, 'fetchSettings').and.callFake(function() {
-            return Promise.resolve(repositorySettings);
-        });
-        spyOn(requestPromise, 'get').and.callFake(function (options) {
-            if (options.url === issueUrl) {
-                return Promise.resolve(issueResponseJson);
-            }
-            if (options.url === isMergedUrl) {
-                return Promise.resolve();
-            }
-            if (options.url === commentsUrl) {
-                return Promise.reject('Bad request');
-            }
-
-            return Promise.reject('Unknown url: ' + options.url);
-        });
-        spyOn(requestPromise, 'post');
-
-        commentOnClosedIssue._implementation(commonOptions)
-            .then(done.fail)
-            .catch(function (error) {
-                expect(error).toEqual('Bad request');
-                expect(requestPromise.post).not.toHaveBeenCalled();
-                done();
-            });
-    });
-
     it('commentOnClosedIssue._implementation propagates unexpected errors.', function (done) {
         spyOn(repositorySettings, 'fetchSettings').and.callFake(function() {
             return Promise.resolve(repositorySettings);

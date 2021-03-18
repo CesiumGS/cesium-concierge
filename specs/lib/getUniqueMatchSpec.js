@@ -1,6 +1,5 @@
 'use strict';
 
-var commentOnClosedIssue = require('../../lib/commentOnClosedIssue');
 var getUniqueMatch = require('../../lib/getUniqueMatch');
 
 describe('getUniqueMatch', function () {
