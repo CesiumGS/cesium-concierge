@@ -98,39 +98,6 @@ describe('commentOnClosedIssue', function () {
         });
     });
 
-    it('commentOnClosedIssue._implementation rejects if issueUrl cannot be retrieved.', function (done) {
-        var commentsJson = [];
-
-        spyOn(repositorySettings, 'fetchSettings').and.callFake(function() {
-            return Promise.resolve(repositorySettings);
-        });
-        spyOn(requestPromise, 'get').and.callFake(function (options) {
-            if (options.url === issueUrl) {
-                return Promise.reject('Bad request');
-            }
-            if (options.url === commentsUrl) {
-                return Promise.resolve(commentsJson);
-            }
-
-            return Promise.reject('Unknown url.');
-        });
-        spyOn(requestPromise, 'post');
-
-        var options = {
-            url: issueUrl,
-            commentsUrl: commentsUrl,
-            repositorySettings: repositorySettings
-        };
-
-        commentOnClosedIssue._implementation(options)
-            .then(done.fail)
-            .catch(function (error) {
-                expect(error).toEqual('Bad request');
-                expect(requestPromise.post).not.toHaveBeenCalled();
-                done();
-            });
-    });
-
     it('commentOnClosedIssue._implementation propagates unexpected errors.', function (done) {
         spyOn(repositorySettings, 'fetchSettings').and.callFake(function() {
             return Promise.resolve(repositorySettings);
