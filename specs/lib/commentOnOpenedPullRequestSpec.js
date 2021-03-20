@@ -15,6 +15,7 @@ describe('commentOnOpenedPullRequest', function () {
     var userName = 'boomerJones';
     var repositoryName = 'AnalyticalGraphics/cesium';
     var repositoryUrl = 'https://github.com/AnalyticalGraphicsInc/cesium';
+    var repositoryContributorsUrl = 'https://api.github.com/repos/AnalyticalGraphicsInc/cesium/contributors';
     var thirdPartyFolders = ['ThirdParty/', 'Source/ThirdParty/'];
     var baseBranch = 'master';
     var headBranch = 'feature';
@@ -41,6 +42,7 @@ describe('commentOnOpenedPullRequest', function () {
         },
         repository: {
             html_url: repositoryUrl,
+            contributors_url: repositoryContributorsUrl,
             full_name: repositoryName
         }
     };
@@ -114,7 +116,7 @@ describe('commentOnOpenedPullRequest', function () {
 
         commentOnOpenedPullRequest(pullRequestJson, repositorySettings);
 
-        expect(commentOnOpenedPullRequest._implementation).toHaveBeenCalledWith(filesUrl, commentsUrl, repositorySettings, userName, repositoryUrl, baseBranch, headBranch, headHtmlUrl, headApiUrl);
+        expect(commentOnOpenedPullRequest._implementation).toHaveBeenCalledWith(filesUrl, commentsUrl, repositorySettings, userName, repositoryUrl, baseBranch, headBranch, headHtmlUrl, headApiUrl, repositoryContributorsUrl);
     });
 
     it('commentOnOpenedPullRequest._askAboutChanges works', function () {
@@ -614,7 +616,7 @@ describe('commentOnOpenedPullRequest', function () {
             return Promise.reject('Unknown url: ' + options.url);
         });
 
-        commentOnOpenedPullRequest._implementation(pullRequestFilesUrl, pullRequestCommentsUrl, repositorySettings, newContributor, repositoryUrl, baseBranch, headBranch, headHtmlUrl, headApiUrl)
+        commentOnOpenedPullRequest._implementation(pullRequestFilesUrl, pullRequestCommentsUrl, repositorySettings, newContributor, repositoryUrl, baseBranch, headBranch, headHtmlUrl, headApiUrl, repositoryContributorsUrl)
             .then(function () {
                 expect(requestPromise.post).toHaveBeenCalledWith({
                     url: pullRequestCommentsUrl,
@@ -670,7 +672,7 @@ describe('commentOnOpenedPullRequest', function () {
             return Promise.reject('Unknown url: ' + options.url);
         });
 
-        commentOnOpenedPullRequest._implementation(pullRequestFilesUrl, pullRequestCommentsUrl, repositorySettings, userName, repositoryUrl, baseBranch, headBranch, headHtmlUrl, headApiUrl)
+        commentOnOpenedPullRequest._implementation(pullRequestFilesUrl, pullRequestCommentsUrl, repositorySettings, userName, repositoryUrl, baseBranch, headBranch, headHtmlUrl, headApiUrl, repositoryContributorsUrl)
             .then(function () {
                 expect(requestPromise.post).toHaveBeenCalledWith({
                     url: pullRequestCommentsUrl,
