@@ -640,6 +640,58 @@ describe('commentOnOpenedPullRequest', function () {
             .catch(done.fail);
     });
 
+    it('commentOnOpenedPullRequest._implementation reminds informs about first time user using GitHub Contributors', function (done) {
+        var pullRequestFilesUrl = 'pullRequestFilesUrl';
+        var pullRequestCommentsUrl = 'pullRequestCommentsUrl';
+        var newContributor = 'newContributor';
+
+        var repositorySettings = new RepositorySettings({
+            contributorsFromGitHub: true
+        });
+
+        spyOn(repositorySettings, 'fetchSettings').and.callFake(function() {
+            return Promise.resolve(repositorySettings);
+        });
+
+        spyOn(requestPromise, 'post');
+
+        spyOn(requestPromise, 'get').and.callFake(function (options) {
+            if (options.url === pullRequestFilesUrl) {
+                return Promise.resolve([
+                    {filename: 'file.txt'}
+                ]);
+            }
+
+            if (options.url === repositoryContributorsUrl) {
+                return Promise.resolve([]);
+            }
+
+            return Promise.reject('Unknown url: ' + options.url);
+        });
+
+        commentOnOpenedPullRequest._implementation(pullRequestFilesUrl, pullRequestCommentsUrl, repositorySettings, newContributor, repositoryUrl, baseBranch, headBranch, headHtmlUrl, headApiUrl, repositoryContributorsUrl)
+            .then(function () {
+                expect(requestPromise.post).toHaveBeenCalledWith({
+                    url: pullRequestCommentsUrl,
+                    headers: repositorySettings.headers,
+                    body: {
+                        body: repositorySettings.pullRequestOpenedTemplate({
+                            userName: newContributor,
+                            repository_url: repositoryUrl,
+                            claEnabled: true,
+                            askForCla: true,
+                            askAboutContributors: true,
+                            askAboutChanges: true,
+                            headBranch: headBranch
+                        })
+                    },
+                    json: true
+                });
+                done();
+            })
+            .catch(done.fail);
+    });
+
     it('commentOnOpenedPullRequest._implementation does not post reminder about CONTRIBUTORS.md if user is already in there.', function (done) {
         var pullRequestFilesUrl = 'pullRequestFilesUrl';
         var pullRequestCommentsUrl = 'pullRequestCommentsUrl';
@@ -669,6 +721,58 @@ describe('commentOnOpenedPullRequest', function () {
                     content: content
                 });
             }
+            return Promise.reject('Unknown url: ' + options.url);
+        });
+
+        commentOnOpenedPullRequest._implementation(pullRequestFilesUrl, pullRequestCommentsUrl, repositorySettings, userName, repositoryUrl, baseBranch, headBranch, headHtmlUrl, headApiUrl, repositoryContributorsUrl)
+            .then(function () {
+                expect(requestPromise.post).toHaveBeenCalledWith({
+                    url: pullRequestCommentsUrl,
+                    headers: repositorySettings.headers,
+                    body: {
+                        body: repositorySettings.pullRequestOpenedTemplate({
+                            userName: userName,
+                            repository_url: repositoryUrl,
+                            claEnabled: true,
+                            askAboutContributors: false,
+                            askAboutChanges: true,
+                            headBranch: headBranch
+                        })
+                    },
+                    json: true
+                });
+                done();
+            })
+            .catch(done.fail);
+    });
+
+    it('commentOnOpenedPullRequest._implementation does not remind existing contributor using GitHub Contributors', function (done) {
+        var pullRequestFilesUrl = 'pullRequestFilesUrl';
+        var pullRequestCommentsUrl = 'pullRequestCommentsUrl';
+
+        var repositorySettings = new RepositorySettings({
+            contributorsFromGitHub: true
+        });
+
+        spyOn(repositorySettings, 'fetchSettings').and.callFake(function() {
+            return Promise.resolve(repositorySettings);
+        });
+
+        spyOn(requestPromise, 'post');
+
+        spyOn(requestPromise, 'get').and.callFake(function (options) {
+            if (options.url === pullRequestFilesUrl) {
+                return Promise.resolve([
+                    {filename: 'file.txt'}
+                ]);
+            }
+
+            if (options.url === repositoryContributorsUrl) {
+                return Promise.resolve([{
+                    login: userName
+                }]);
+            }
+
             return Promise.reject('Unknown url: ' + options.url);
         });
 
