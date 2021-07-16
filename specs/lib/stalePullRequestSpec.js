@@ -59,7 +59,7 @@ describe('stalePullRequest', function () {
         };
 
         spyOn(requestPromise, 'get').and.callFake(function (options) {
-            if (options.url === 'https://api.github.com/repos/AnalyticalGraphics/cesium/pulls?state=open&base=master') {
+            if (options.url === 'https://api.github.com/repos/AnalyticalGraphics/cesium/pulls?state=open&base=main') {
                 return Promise.resolve(firstResponse);
             } else if (options.url === 'https://url?page=2') {
                 return Promise.resolve(secondResponse);

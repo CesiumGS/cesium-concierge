@@ -15,10 +15,10 @@
   "homepage": "https://cesiumjs.org",
   "repository": {
     "type": "git",
-    "url": "https://github.com/AnalyticalGraphicsInc/cesium-concierge/"
+    "url": "https://github.com/CesiumGS/cesium-concierge"
   },
   "bugs": {
-    "url": "https://github.com/AnalyticalGraphicsInc/cesium-concierge/issues"
+    "url": "https://github.com/CesiumGS/cesium-concierge/issues"
   },
   "main": "index.js",
   "engines": {

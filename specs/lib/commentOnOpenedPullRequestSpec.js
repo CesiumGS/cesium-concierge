@@ -11,15 +11,15 @@ var Settings = require('../../lib/Settings');
 
 describe('commentOnOpenedPullRequest', function () {
     var filesUrl = 'url/files';
-    var commentsUrl = 'https://api.github.com/repos/AnalyticalGraphicsInc/cesium/issues/1/comments';
+    var commentsUrl = 'https://api.github.com/repos/CesiumGS/cesium/issues/1/comments';
     var userName = 'boomerJones';
     var repositoryName = 'AnalyticalGraphics/cesium';
-    var repositoryUrl = 'https://github.com/AnalyticalGraphicsInc/cesium';
+    var repositoryUrl = 'https://github.com/CesiumGS/cesium';
     var thirdPartyFolders = ['ThirdParty/', 'Source/ThirdParty/'];
-    var baseBranch = 'master';
+    var baseBranch = 'main';
     var headBranch = 'feature';
     var headHtmlUrl = repositoryUrl;
-    var headApiUrl = 'https://api.github.com/repos/AnalyticalGraphicsInc/cesium';
+    var headApiUrl = 'https://api.github.com/repos/CesiumGS/cesium';
 
     var pullRequestJson = {
         pull_request: {
@@ -36,7 +36,7 @@ describe('commentOnOpenedPullRequest', function () {
                 }
             },
             base: {
-                ref: 'master'
+                ref: 'main'
             }
         },
         repository: {
@@ -118,14 +118,14 @@ describe('commentOnOpenedPullRequest', function () {
     });
 
     it('commentOnOpenedPullRequest._askAboutChanges works', function () {
-        expect(commentOnOpenedPullRequest._askAboutChanges(['CHANGES.md'],'master')).toBe(false);
+        expect(commentOnOpenedPullRequest._askAboutChanges(['CHANGES.md'],'main')).toBe(false);
         expect(commentOnOpenedPullRequest._askAboutChanges(['file.txt'],'feature-branch')).toBe(false);
 
-        expect(commentOnOpenedPullRequest._askAboutChanges([],'master')).toBe(true);
-        expect(commentOnOpenedPullRequest._askAboutChanges(['file.txt'],'master')).toBe(true);
-        expect(commentOnOpenedPullRequest._askAboutChanges(['CHANGES.MD'],'master')).toBe(true);
-        expect(commentOnOpenedPullRequest._askAboutChanges(['leadingCHANGES.md'],'master')).toBe(true);
-        expect(commentOnOpenedPullRequest._askAboutChanges(['CHANGES.mdtrailing'],'master')).toBe(true);
+        expect(commentOnOpenedPullRequest._askAboutChanges([],'main')).toBe(true);
+        expect(commentOnOpenedPullRequest._askAboutChanges(['file.txt'],'main')).toBe(true);
+        expect(commentOnOpenedPullRequest._askAboutChanges(['CHANGES.MD'],'main')).toBe(true);
+        expect(commentOnOpenedPullRequest._askAboutChanges(['leadingCHANGES.md'],'main')).toBe(true);
+        expect(commentOnOpenedPullRequest._askAboutChanges(['CHANGES.mdtrailing'],'main')).toBe(true);
     });
 
     it('commentOnOpenedPullRequest._askAboutTests works', function () {
@@ -333,7 +333,7 @@ describe('commentOnOpenedPullRequest', function () {
             .catch(done.fail);
     });
 
-    it('commentOnOpenedPullRequest._implementation does not post when the target branch is not master', function (done) {
+    it('commentOnOpenedPullRequest._implementation does not post when the target branch is not main', function (done) {
         var pullRequestFilesUrl = 'pullRequestFilesUrl';
         var pullRequestCommentsUrl = 'pullRequestCommentsUrl';
 

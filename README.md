@@ -1,17 +1,17 @@
 # Cesium Concierge
 
-__Hello! I'm Cesium Concierge, a GitHub bot for [Cesium](https://github.com/AnalyticalGraphicsInc/cesium). I automate
+__Hello! I'm Cesium Concierge, a GitHub bot for [Cesium](https://github.com/CesiumGS/cesium). I automate
 common GitHub tasks such as welcoming first time contributors and reminding you to write tests. (I'm great fun at parties!)__
 
 You'll find repository-specific settings in each repository I watch under a `.concierge` directory. For example, here's CesiumJS's concierge settings:
 
-https://github.com/AnalyticalGraphicsInc/cesium/tree/master/.concierge 
+https://github.com/CesiumGS/cesium/tree/main/.concierge 
 
 ## Building
 
 Clone this repository:
 ```bash
-$ git clone https://github.com/AnalyticalGraphicsInc/cesium-concierge
+$ git clone https://github.com/CesiumGS/cesium-concierge
 ```
 Install the dependencies:
 ```bash
@@ -49,7 +49,7 @@ The table below describes all the possible configuration variables, as well as t
 | `slackToken` | `string` | Slack API token for posting release reminders and fun stats to the Slack team. | X | _Disabled if not set._
 | `slackConfigUrl` | `string` | The GitHub API URL to a YAML file containing the release schedule and other SlackBot config. | X | `""`
 
-> Note: `full_name` is the repository name in the form `{organization}/{repository}`. For example: `AnalyticalGraphicsInc/cesium`
+> Note: `full_name` is the repository name in the form `{organization}/{repository}`. For example: `CesiumGS/cesium`
 
 `secret` and `repositories:{full_name}:gitHubToken` are the important settings; they verify that the communication between your server and
 GitHub is safe.
@@ -85,5 +85,5 @@ Assuming you already have a Google form setup, all you need to do is configure:
 ---
 
 <p align="center">
-  <a href="http://cesium.com/"><img width="250px" src="https://raw.githubusercontent.com/wiki/AnalyticalGraphicsInc/cesium/logos/Cesium_Logo_Color.jpg" /></a>
+  <a href="http://cesium.com/"><img width="250px" src="https://raw.githubusercontent.com/wiki/CesiumGS/cesium/logos/Cesium_Logo_Color.jpg" /></a>
 </p>

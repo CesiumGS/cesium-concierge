@@ -42,7 +42,7 @@ describe('commentOnClosedIssue', function () {
                     login: userName
                 },
                 base: {
-                    ref: 'master',
+                    ref: 'main',
                     repo: {
                     }
                 }
