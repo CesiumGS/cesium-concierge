@@ -27,7 +27,7 @@ describe('SlackBot', function () {
         SlackBot._userIDs = {};
         SlackBot._userData = {};
         SlackBot._channelIDs = {
-            'dev': devChannelId
+            'engineering': devChannelId
         };
 
         SlackBot._userIDs[user] = userID;
@@ -103,7 +103,7 @@ describe('SlackBot', function () {
             });
     });
 
-    it('posts early release reminder to #dev channel.', function () {
+    it('posts early release reminder to #engineering channel.', function () {
         spyOn(SlackBot, '_getConfig').and.callFake(function() {
             var releaseSchedule = {};
             releaseSchedule[user] = [earlyDate];
@@ -125,7 +125,7 @@ describe('SlackBot', function () {
             });
     });
 
-    it('posts release reminder to #dev channel.', function () {
+    it('posts release reminder to #engineering channel.', function () {
         spyOn(SlackBot, '_getConfig').and.callFake(function() {
             var releaseSchedule = {};
             releaseSchedule[user] = [mediumDate];
@@ -147,7 +147,7 @@ describe('SlackBot', function () {
         });
     });
 
-    it('posts late release reminder to #dev channel.', function () {
+    it('posts late release reminder to #engineering channel.', function () {
         spyOn(SlackBot, '_getConfig').and.callFake(function() {
             var releaseSchedule = {};
             releaseSchedule[user] = [today];
