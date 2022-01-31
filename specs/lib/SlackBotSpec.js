@@ -19,7 +19,7 @@ describe('SlackBot', function () {
     var user = 'omar';
     var userID = '1';
     var displayName = 'Omar';
-    var devChannelId = '123';
+    var cesiumjsChannelId = '123';
     var configUrl = 'https://api.github.com/repos/owner/repo/contents/.slackbot.yml';
     var mockYAML;
 
@@ -27,7 +27,7 @@ describe('SlackBot', function () {
         SlackBot._userIDs = {};
         SlackBot._userData = {};
         SlackBot._channelIDs = {
-            'dev': devChannelId
+            'cesiumjs': cesiumjsChannelId
         };
 
         SlackBot._userIDs[user] = userID;
@@ -103,7 +103,7 @@ describe('SlackBot', function () {
             });
     });
 
-    it('posts early release reminder to #dev channel.', function () {
+    it('posts early release reminder to #cesiumjs channel.', function () {
         spyOn(SlackBot, '_getConfig').and.callFake(function() {
             var releaseSchedule = {};
             releaseSchedule[user] = [earlyDate];
@@ -118,14 +118,14 @@ describe('SlackBot', function () {
 
         return SlackBot._sendReleaseReminders()
             .then(function() {
-                expect(SlackBot.postMessage).toHaveBeenCalledWith(devChannelId, getMessage('releaseReminderEarly'));
+                expect(SlackBot.postMessage).toHaveBeenCalledWith(cesiumjsChannelId, getMessage('releaseReminderEarly'));
             })
             .catch(function(error) {
                 throw Error(error);
             });
     });
 
-    it('posts release reminder to #dev channel.', function () {
+    it('posts release reminder to #cesiumjs channel.', function () {
         spyOn(SlackBot, '_getConfig').and.callFake(function() {
             var releaseSchedule = {};
             releaseSchedule[user] = [mediumDate];
@@ -140,14 +140,14 @@ describe('SlackBot', function () {
 
         return SlackBot._sendReleaseReminders()
         .then(function() {
-            expect(SlackBot.postMessage).toHaveBeenCalledWith(devChannelId, getMessage('releaseReminder'));
+            expect(SlackBot.postMessage).toHaveBeenCalledWith(cesiumjsChannelId, getMessage('releaseReminder'));
         })
         .catch(function(error) {
             throw Error(error);
         });
     });
 
-    it('posts late release reminder to #dev channel.', function () {
+    it('posts late release reminder to #cesiumjs channel.', function () {
         spyOn(SlackBot, '_getConfig').and.callFake(function() {
             var releaseSchedule = {};
             releaseSchedule[user] = [today];
@@ -162,7 +162,7 @@ describe('SlackBot', function () {
 
         return SlackBot._sendReleaseReminders()
         .then(function() {
-            expect(SlackBot.postMessage).toHaveBeenCalledWith(devChannelId, getMessage('releaseReminderLate'));
+            expect(SlackBot.postMessage).toHaveBeenCalledWith(cesiumjsChannelId, getMessage('releaseReminderLate'));
         })
         .catch(function(error) {
             throw Error(error);
