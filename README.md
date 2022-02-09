@@ -39,6 +39,7 @@ The table below describes all the possible configuration variables, as well as t
 | `repositories:{full_name}:gitHubToken` | `string` | Token used to verify __outgoing__ requests to GitHub repository | ✓ | 
 | `repositories:{full_name}:thirdPartyFolders` | `string` | Comma-separated list of folders in which to look for changed files in pull request to remind user to update License. | X | `[]`
 | `repositories:{full_name}:contributorsPath` | `string` |  Relative path from the root of the repository to the `CONTRIBUTORS.md` file. | X | _Disabled if not set._
+| `repositories:{full_name}:contributorsFromGitHub` | `string` |  Use the GitHub Contributors API to check for previous contributors to the repository. | X | _Disabled if not set._
 | `repositories:{full_name}:maxDaysSinceUpdate` | `number` | "Bump" pull requests older than this number of days ago. | X | `30`
 | `repositories:{full_name}:unitTestPath` | `string` |  Relative path to the directory containing unit tests. _Example:`Specs/`_ | X | _Disabled if not set._
 | `googleApiConfig` | `string` | Google API config for reading the list of CLA signers from Google Sheets. See [CLA checking](#cla-checking) for full instructions. | X | _Disabled if not set._
