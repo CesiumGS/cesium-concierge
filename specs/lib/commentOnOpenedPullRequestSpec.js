@@ -640,7 +640,7 @@ describe('commentOnOpenedPullRequest', function () {
             .catch(done.fail);
     });
 
-    it('commentOnOpenedPullRequest._implementation reminds informs about first time user using GitHub Contributors', function (done) {
+    it('commentOnOpenedPullRequest._implementation informs about first time user using GitHub Contributors', function (done) {
         var pullRequestFilesUrl = 'pullRequestFilesUrl';
         var pullRequestCommentsUrl = 'pullRequestCommentsUrl';
         var newContributor = 'newContributor';
@@ -663,7 +663,76 @@ describe('commentOnOpenedPullRequest', function () {
             }
 
             if (options.url === repositoryContributorsUrl) {
-                return Promise.resolve([]);
+                return Promise.resolve({
+                    headers: {},
+                    body: []
+                });
+            }
+
+            return Promise.reject('Unknown url: ' + options.url);
+        });
+
+        commentOnOpenedPullRequest._implementation(pullRequestFilesUrl, pullRequestCommentsUrl, repositorySettings, newContributor, repositoryUrl, baseBranch, headBranch, headHtmlUrl, headApiUrl, repositoryContributorsUrl)
+            .then(function () {
+                expect(requestPromise.post).toHaveBeenCalledWith({
+                    url: pullRequestCommentsUrl,
+                    headers: repositorySettings.headers,
+                    body: {
+                        body: repositorySettings.pullRequestOpenedTemplate({
+                            userName: newContributor,
+                            repository_url: repositoryUrl,
+                            claEnabled: true,
+                            askForCla: true,
+                            askAboutContributors: true,
+                            askAboutChanges: true,
+                            headBranch: headBranch
+                        })
+                    },
+                    json: true
+                });
+                done();
+            })
+            .catch(done.fail);
+    });
+
+    it('commentOnOpenedPullRequest._implementation informs about first time user using GitHub Contributors from different page', function (done) {
+        var pullRequestFilesUrl = 'pullRequestFilesUrl';
+        var pullRequestCommentsUrl = 'pullRequestCommentsUrl';
+        var newContributor = 'newContributor';
+        var nextContributorsPageUrl = 'https://api.github.com/repositories/3606738/contributors?page=2';
+
+        var repositorySettings = new RepositorySettings({
+            contributorsFromGitHub: true
+        });
+
+        spyOn(repositorySettings, 'fetchSettings').and.callFake(function() {
+            return Promise.resolve(repositorySettings);
+        });
+
+        spyOn(requestPromise, 'post');
+
+        spyOn(requestPromise, 'get').and.callFake(function (options) {
+            if (options.url === pullRequestFilesUrl) {
+                return Promise.resolve([
+                    {filename: 'file.txt'}
+                ]);
+            }
+
+
+            if (options.url === repositoryContributorsUrl) {
+                return Promise.resolve({
+                    headers: {
+                        link: '<https://api.github.com/repositories/3606738/contributors?page=2>; rel="next", <https://api.github.com/repositories/3606738/contributors?page=9>; rel="last"',
+                    },
+                    body: []
+                });
+            }
+
+            if (options.url === nextContributorsPageUrl) {
+                return Promise.resolve({
+                    headers: {},
+                    body: []
+                });
             }
 
             return Promise.reject('Unknown url: ' + options.url);
@@ -768,9 +837,12 @@ describe('commentOnOpenedPullRequest', function () {
             }
 
             if (options.url === repositoryContributorsUrl) {
-                return Promise.resolve([{
-                    login: userName
-                }]);
+                return Promise.resolve({
+                    headers: {},
+                    body: [{
+                        login: userName
+                    }]
+                });
             }
 
             return Promise.reject('Unknown url: ' + options.url);
