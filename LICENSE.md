@@ -1,4 +1,4 @@
-Copyright 2011-2017 Cesium Contributors
+Copyright 2011-2021 Cesium Contributors
 
                                  Apache License
                            Version 2.0, January 2004
