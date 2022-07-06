@@ -1,28 +1,28 @@
 'use strict';
 
-var fsExtra = require('fs-extra');
+const fsExtra = require('fs-extra');
 
-var Promise = require('bluebird');
-var requestPromise = require('request-promise');
+const Promise = require('bluebird');
+const requestPromise = require('request-promise');
 
-var commentOnOpenedPullRequest = require('../../lib/commentOnOpenedPullRequest');
-var RepositorySettings = require('../../lib/RepositorySettings');
-var Settings = require('../../lib/Settings');
+const commentOnOpenedPullRequest = require('../../lib/commentOnOpenedPullRequest');
+const RepositorySettings = require('../../lib/RepositorySettings');
+const Settings = require('../../lib/Settings');
 
 describe('commentOnOpenedPullRequest', function () {
-    var filesUrl = 'url/files';
-    var commentsUrl = 'https://api.github.com/repos/CesiumGS/cesium/issues/1/comments';
-    var userName = 'boomerJones';
-    var repositoryName = 'CesiumGS/cesium';
-    var repositoryUrl = 'https://github.com/CesiumGS/cesium';
-    var repositoryContributorsUrl = 'https://api.github.com/repos/CesiumGS/cesium/contributors';
-    var thirdPartyFolders = ['ThirdParty/', 'Source/ThirdParty/'];
-    var baseBranch = 'main';
-    var headBranch = 'feature';
-    var headHtmlUrl = repositoryUrl;
-    var headApiUrl = 'https://api.github.com/repos/CesiumGS/cesium';
+    const filesUrl = 'url/files';
+    const commentsUrl = 'https://api.github.com/repos/CesiumGS/cesium/issues/1/comments';
+    const userName = 'boomerJones';
+    const repositoryName = 'CesiumGS/cesium';
+    const repositoryUrl = 'https://github.com/CesiumGS/cesium';
+    const repositoryContributorsUrl = 'https://api.github.com/repos/CesiumGS/cesium/contributors';
+    const thirdPartyFolders = ['ThirdParty/', 'Source/ThirdParty/'];
+    const baseBranch = 'main';
+    const headBranch = 'feature';
+    const headHtmlUrl = repositoryUrl;
+    const headApiUrl = 'https://api.github.com/repos/CesiumGS/cesium';
 
-    var pullRequestJson = {
+    const pullRequestJson = {
         pull_request: {
             url: 'url',
             comments_url: commentsUrl,
@@ -47,7 +47,7 @@ describe('commentOnOpenedPullRequest', function () {
         }
     };
 
-    var googleSheetsIndividualResponse = {
+    const googleSheetsIndividualResponse = {
         data : {
             values : [
                 ['boomerJones'],
@@ -56,7 +56,7 @@ describe('commentOnOpenedPullRequest', function () {
         }
     };
 
-    var googleSheetsCorporateResponse = {
+    const googleSheetsCorporateResponse = {
         data : {
             values : [
                 [],
@@ -103,7 +103,7 @@ describe('commentOnOpenedPullRequest', function () {
     });
 
     it('throws if json is not a pull request event', function () {
-        var issueJson = fsExtra.readJsonSync('./specs/data/events/issue.json');
+        const issueJson = fsExtra.readJsonSync('./specs/data/events/issue.json');
         expect(function () {
             commentOnOpenedPullRequest(issueJson, {});
         }).toThrowError();
@@ -112,7 +112,7 @@ describe('commentOnOpenedPullRequest', function () {
     it('passes expected parameters to implementation', function () {
         spyOn(commentOnOpenedPullRequest, '_implementation');
 
-        var repositorySettings = new RepositorySettings();
+        const repositorySettings = new RepositorySettings();
 
         commentOnOpenedPullRequest(pullRequestJson, repositorySettings);
 
@@ -148,10 +148,10 @@ describe('commentOnOpenedPullRequest', function () {
     });
 
     it('commentOnOpenedPullRequest._implementation fetches latest repository settings.', function (done) {
-        var pullRequestFilesUrl = 'pullRequestFilesUrl';
-        var pullRequestCommentsUrl = 'pullRequestCommentsUrl';
+        const pullRequestFilesUrl = 'pullRequestFilesUrl';
+        const pullRequestCommentsUrl = 'pullRequestCommentsUrl';
 
-        var repositorySettings = new RepositorySettings();
+        const repositorySettings = new RepositorySettings();
 
         spyOn(repositorySettings, 'fetchSettings').and.callFake(function() {
             return Promise.resolve(repositorySettings);
@@ -177,10 +177,10 @@ describe('commentOnOpenedPullRequest', function () {
     });
 
     it('commentOnOpenedPullRequest._implementation posts CLA confirmation if CHANGES.md was updated and there are no modified ThirdParty folders or CLA', function (done) {
-        var pullRequestFilesUrl = 'pullRequestFilesUrl';
-        var pullRequestCommentsUrl = 'pullRequestCommentsUrl';
+        const pullRequestFilesUrl = 'pullRequestFilesUrl';
+        const pullRequestCommentsUrl = 'pullRequestCommentsUrl';
 
-        var repositorySettings = new RepositorySettings();
+        const repositorySettings = new RepositorySettings();
 
         spyOn(repositorySettings, 'fetchSettings').and.callFake(function() {
             return Promise.resolve(repositorySettings);
@@ -222,7 +222,7 @@ describe('commentOnOpenedPullRequest', function () {
     });
 
     it('commentOnOpenedPullRequest._askForCla catches and reports errors with Google Sheets API', function () {
-        var errorText = 'Google Sheets API failed.';
+        const errorText = 'Google Sheets API failed.';
 
         spyOn(Settings.googleSheetsApi.spreadsheets.values, 'get').and.callFake(function () {
             return Promise.reject(errorText);
@@ -238,10 +238,10 @@ describe('commentOnOpenedPullRequest', function () {
     });
 
     it('commentOnOpenedPullRequest._implementation catches and reports errors processing CLA check', function (done) {
-        var pullRequestFilesUrl = 'pullRequestFilesUrl';
-        var pullRequestCommentsUrl = 'pullRequestCommentsUrl';
-        var errorCla = new Error('Error checking CLA.');
-        var repositorySettings = new RepositorySettings();
+        const pullRequestFilesUrl = 'pullRequestFilesUrl';
+        const pullRequestCommentsUrl = 'pullRequestCommentsUrl';
+        const errorCla = new Error('Error checking CLA.');
+        const repositorySettings = new RepositorySettings();
 
         spyOn(repositorySettings, 'fetchSettings').and.callFake(function() {
             return Promise.resolve(repositorySettings);
@@ -289,10 +289,10 @@ describe('commentOnOpenedPullRequest', function () {
     });
 
     it('commentOnOpenedPullRequest._implementation posts if CHANGES.md was not updated and there are no modified ThirdParty folders or CLA', function (done) {
-        var pullRequestFilesUrl = 'pullRequestFilesUrl';
-        var pullRequestCommentsUrl = 'pullRequestCommentsUrl';
+        const pullRequestFilesUrl = 'pullRequestFilesUrl';
+        const pullRequestCommentsUrl = 'pullRequestCommentsUrl';
 
-        var repositorySettings = new RepositorySettings({
+        const repositorySettings = new RepositorySettings({
             thirdPartyFolders: thirdPartyFolders.join(',')
         });
 
@@ -336,10 +336,10 @@ describe('commentOnOpenedPullRequest', function () {
     });
 
     it('commentOnOpenedPullRequest._implementation does not post when the target branch is not main', function (done) {
-        var pullRequestFilesUrl = 'pullRequestFilesUrl';
-        var pullRequestCommentsUrl = 'pullRequestCommentsUrl';
+        const pullRequestFilesUrl = 'pullRequestFilesUrl';
+        const pullRequestCommentsUrl = 'pullRequestCommentsUrl';
 
-        var repositorySettings = new RepositorySettings({
+        const repositorySettings = new RepositorySettings({
             thirdPartyFolders: thirdPartyFolders.join(',')
         });
 
@@ -383,10 +383,10 @@ describe('commentOnOpenedPullRequest', function () {
     });
 
     it('commentOnOpenedPullRequest._implementation posts if CHANGES.md was updated but there are modified ThirdParty folders', function (done) {
-        var pullRequestFilesUrl = 'pullRequestFilesUrl';
-        var pullRequestCommentsUrl = 'pullRequestCommentsUrl';
+        const pullRequestFilesUrl = 'pullRequestFilesUrl';
+        const pullRequestCommentsUrl = 'pullRequestCommentsUrl';
 
-        var repositorySettings = new RepositorySettings({
+        const repositorySettings = new RepositorySettings({
             thirdPartyFolders: thirdPartyFolders.join(',')
         });
 
@@ -431,10 +431,10 @@ describe('commentOnOpenedPullRequest', function () {
     });
 
     it('commentOnOpenedPullRequest._implementation posts if CHANGES.md was not updated and there are modified ThirdParty folders', function (done) {
-        var pullRequestFilesUrl = 'pullRequestFilesUrl';
-        var pullRequestCommentsUrl = 'pullRequestCommentsUrl';
+        const pullRequestFilesUrl = 'pullRequestFilesUrl';
+        const pullRequestCommentsUrl = 'pullRequestCommentsUrl';
 
-        var repositorySettings = new RepositorySettings({
+        const repositorySettings = new RepositorySettings({
             thirdPartyFolders: thirdPartyFolders.join(',')
         });
 
@@ -478,11 +478,11 @@ describe('commentOnOpenedPullRequest', function () {
     });
 
     it('commentOnOpenedPullRequest._implementation posts if CHANGES.md was not updated and there are modified ThirdParty folders, and CLA check succeeded.', function (done) {
-        var pullRequestFilesUrl = 'pullRequestFilesUrl';
-        var pullRequestCommentsUrl = 'pullRequestCommentsUrl';
-        var claUrl = 'cla.json';
+        const pullRequestFilesUrl = 'pullRequestFilesUrl';
+        const pullRequestCommentsUrl = 'pullRequestCommentsUrl';
+        const claUrl = 'cla.json';
 
-        var repositorySettings = new RepositorySettings({
+        const repositorySettings = new RepositorySettings({
             thirdPartyFolders: thirdPartyFolders.join(','),
             claUrl: claUrl
         });
@@ -500,7 +500,7 @@ describe('commentOnOpenedPullRequest', function () {
                 ]);
             }
             if (options.url === claUrl) {
-                var content = Buffer.from(JSON.stringify([{gitHub: userName}])).toString('base64');
+                const content = Buffer.from(JSON.stringify([{gitHub: userName}])).toString('base64');
                 return Promise.resolve({
                     content: content
                 });
@@ -533,11 +533,11 @@ describe('commentOnOpenedPullRequest', function () {
     });
 
     it('commentOnOpenedPullRequest._implementation posts if CHANGES.md was not updated and there are modified ThirdParty folders, and CLA check failed.', function (done) {
-        var pullRequestFilesUrl = 'pullRequestFilesUrl';
-        var pullRequestCommentsUrl = 'pullRequestCommentsUrl';
-        var newContributor = 'newContributor';
+        const pullRequestFilesUrl = 'pullRequestFilesUrl';
+        const pullRequestCommentsUrl = 'pullRequestCommentsUrl';
+        const newContributor = 'newContributor';
 
-        var repositorySettings = new RepositorySettings({
+        const repositorySettings = new RepositorySettings({
             thirdPartyFolders: thirdPartyFolders.join(',')
         });
 
@@ -582,14 +582,14 @@ describe('commentOnOpenedPullRequest', function () {
     });
 
     it('commentOnOpenedPullRequest._implementation reminds user to add to CONTRIBUTORS.md.', function (done) {
-        var pullRequestFilesUrl = 'pullRequestFilesUrl';
-        var pullRequestCommentsUrl = 'pullRequestCommentsUrl';
-        var contributorsPath = 'CONTRIBUTORS.md';
-        var apiUrl = headApiUrl + '/contents/' + contributorsPath + '?ref=' + headBranch;
-        var htmlUrl =  headHtmlUrl + '/blob/' + headBranch + '/' + contributorsPath;
-        var newContributor = 'newContributor';
+        const pullRequestFilesUrl = 'pullRequestFilesUrl';
+        const pullRequestCommentsUrl = 'pullRequestCommentsUrl';
+        const contributorsPath = 'CONTRIBUTORS.md';
+        const apiUrl = `${headApiUrl  }/contents/${  contributorsPath  }?ref=${  headBranch}`;
+        const htmlUrl =  `${headHtmlUrl  }/blob/${  headBranch  }/${  contributorsPath}`;
+        const newContributor = 'newContributor';
 
-        var repositorySettings = new RepositorySettings({
+        const repositorySettings = new RepositorySettings({
             contributorsPath: contributorsPath,
         });
 
@@ -607,13 +607,13 @@ describe('commentOnOpenedPullRequest', function () {
             }
 
             if (options.url === apiUrl) {
-                var content = Buffer.from('* [Jane Doe](https://github.com/JaneDoe)\n* [Boomer Jones](https://github.com/' + userName + ')').toString('base64');
+                const content = Buffer.from(`* [Jane Doe](https://github.com/JaneDoe)\n* [Boomer Jones](https://github.com/${  userName  })`).toString('base64');
                 return Promise.resolve({
                     content: content
                 });
             }
 
-            return Promise.reject('Unknown url: ' + options.url);
+            return Promise.reject(`Unknown url: ${  options.url}`);
         });
 
         commentOnOpenedPullRequest._implementation(pullRequestFilesUrl, pullRequestCommentsUrl, repositorySettings, newContributor, repositoryUrl, baseBranch, headBranch, headHtmlUrl, headApiUrl, repositoryContributorsUrl)
@@ -641,11 +641,11 @@ describe('commentOnOpenedPullRequest', function () {
     });
 
     it('commentOnOpenedPullRequest._implementation informs about first time user using GitHub Contributors', function (done) {
-        var pullRequestFilesUrl = 'pullRequestFilesUrl';
-        var pullRequestCommentsUrl = 'pullRequestCommentsUrl';
-        var newContributor = 'newContributor';
+        const pullRequestFilesUrl = 'pullRequestFilesUrl';
+        const pullRequestCommentsUrl = 'pullRequestCommentsUrl';
+        const newContributor = 'newContributor';
 
-        var repositorySettings = new RepositorySettings({
+        const repositorySettings = new RepositorySettings({
             contributorsFromGitHub: true
         });
 
@@ -669,7 +669,7 @@ describe('commentOnOpenedPullRequest', function () {
                 });
             }
 
-            return Promise.reject('Unknown url: ' + options.url);
+            return Promise.reject(`Unknown url: ${  options.url}`);
         });
 
         commentOnOpenedPullRequest._implementation(pullRequestFilesUrl, pullRequestCommentsUrl, repositorySettings, newContributor, repositoryUrl, baseBranch, headBranch, headHtmlUrl, headApiUrl, repositoryContributorsUrl)
@@ -696,12 +696,12 @@ describe('commentOnOpenedPullRequest', function () {
     });
 
     it('commentOnOpenedPullRequest._implementation informs about first time user using GitHub Contributors from different page', function (done) {
-        var pullRequestFilesUrl = 'pullRequestFilesUrl';
-        var pullRequestCommentsUrl = 'pullRequestCommentsUrl';
-        var newContributor = 'newContributor';
-        var nextContributorsPageUrl = 'https://api.github.com/repositories/3606738/contributors?page=2';
+        const pullRequestFilesUrl = 'pullRequestFilesUrl';
+        const pullRequestCommentsUrl = 'pullRequestCommentsUrl';
+        const newContributor = 'newContributor';
+        const nextContributorsPageUrl = 'https://api.github.com/repositories/3606738/contributors?page=2';
 
-        var repositorySettings = new RepositorySettings({
+        const repositorySettings = new RepositorySettings({
             contributorsFromGitHub: true
         });
 
@@ -735,7 +735,7 @@ describe('commentOnOpenedPullRequest', function () {
                 });
             }
 
-            return Promise.reject('Unknown url: ' + options.url);
+            return Promise.reject(`Unknown url: ${  options.url}`);
         });
 
         commentOnOpenedPullRequest._implementation(pullRequestFilesUrl, pullRequestCommentsUrl, repositorySettings, newContributor, repositoryUrl, baseBranch, headBranch, headHtmlUrl, headApiUrl, repositoryContributorsUrl)
@@ -762,12 +762,12 @@ describe('commentOnOpenedPullRequest', function () {
     });
 
     it('commentOnOpenedPullRequest._implementation does not post reminder about CONTRIBUTORS.md if user is already in there.', function (done) {
-        var pullRequestFilesUrl = 'pullRequestFilesUrl';
-        var pullRequestCommentsUrl = 'pullRequestCommentsUrl';
-        var contributorsPath = 'CONTRIBUTORS.md';
-        var apiUrl = headApiUrl + '/contents/' + contributorsPath + '?ref=' + headBranch;
+        const pullRequestFilesUrl = 'pullRequestFilesUrl';
+        const pullRequestCommentsUrl = 'pullRequestCommentsUrl';
+        const contributorsPath = 'CONTRIBUTORS.md';
+        const apiUrl = `${headApiUrl  }/contents/${  contributorsPath  }?ref=${  headBranch}`;
 
-        var repositorySettings = new RepositorySettings({
+        const repositorySettings = new RepositorySettings({
             contributorsPath: contributorsPath
         });
 
@@ -785,12 +785,12 @@ describe('commentOnOpenedPullRequest', function () {
             }
 
             if (options.url === apiUrl) {
-                var content = Buffer.from('* [Jane Doe](https://github.com/JaneDoe)\n* [Boomer Jones](https://github.com/' + userName + ')').toString('base64');
+                const content = Buffer.from(`* [Jane Doe](https://github.com/JaneDoe)\n* [Boomer Jones](https://github.com/${  userName  })`).toString('base64');
                 return Promise.resolve({
                     content: content
                 });
             }
-            return Promise.reject('Unknown url: ' + options.url);
+            return Promise.reject(`Unknown url: ${  options.url}`);
         });
 
         commentOnOpenedPullRequest._implementation(pullRequestFilesUrl, pullRequestCommentsUrl, repositorySettings, userName, repositoryUrl, baseBranch, headBranch, headHtmlUrl, headApiUrl, repositoryContributorsUrl)
@@ -816,10 +816,10 @@ describe('commentOnOpenedPullRequest', function () {
     });
 
     it('commentOnOpenedPullRequest._implementation does not remind existing contributor using GitHub Contributors', function (done) {
-        var pullRequestFilesUrl = 'pullRequestFilesUrl';
-        var pullRequestCommentsUrl = 'pullRequestCommentsUrl';
+        const pullRequestFilesUrl = 'pullRequestFilesUrl';
+        const pullRequestCommentsUrl = 'pullRequestCommentsUrl';
 
-        var repositorySettings = new RepositorySettings({
+        const repositorySettings = new RepositorySettings({
             contributorsFromGitHub: true
         });
 
@@ -845,7 +845,7 @@ describe('commentOnOpenedPullRequest', function () {
                 });
             }
 
-            return Promise.reject('Unknown url: ' + options.url);
+            return Promise.reject(`Unknown url: ${  options.url}`);
         });
 
         commentOnOpenedPullRequest._implementation(pullRequestFilesUrl, pullRequestCommentsUrl, repositorySettings, userName, repositoryUrl, baseBranch, headBranch, headHtmlUrl, headApiUrl, repositoryContributorsUrl)
@@ -871,12 +871,12 @@ describe('commentOnOpenedPullRequest', function () {
     });
 
     it('works when Google Sheets API is not configured', function () {
-        var pullRequestFilesUrl = 'pullRequestFilesUrl';
-        var pullRequestCommentsUrl = 'pullRequestCommentsUrl';
+        const pullRequestFilesUrl = 'pullRequestFilesUrl';
+        const pullRequestCommentsUrl = 'pullRequestCommentsUrl';
 
         Settings.googleSheetsApi = undefined;
 
-        var repositorySettings = new RepositorySettings();
+        const repositorySettings = new RepositorySettings();
 
         spyOn(repositorySettings, 'fetchSettings').and.callFake(function() {
             return Promise.resolve(repositorySettings);

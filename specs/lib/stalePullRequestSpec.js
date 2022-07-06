@@ -1,14 +1,14 @@
 'use strict';
 
-var Promise = require('bluebird');
-var requestPromise = require('request-promise');
+const Promise = require('bluebird');
+const requestPromise = require('request-promise');
 
-var stalePullRequest = require('../../lib/stalePullRequest');
-var RepositorySettings = require('../../lib/RepositorySettings');
+const stalePullRequest = require('../../lib/stalePullRequest');
+const RepositorySettings = require('../../lib/RepositorySettings');
 
 describe('stalePullRequest', function () {
-    var repositories;
-    var commitsData;
+    let repositories;
+    let commitsData;
 
     beforeEach(function () {
         repositories = {
@@ -33,7 +33,7 @@ describe('stalePullRequest', function () {
         spyOn(stalePullRequest, '_processRepository').and.returnValue(Promise.resolve());
         stalePullRequest(repositories)
             .then(function () {
-                var keys = Object.keys(repositories);
+                const keys = Object.keys(repositories);
                 expect(stalePullRequest._processRepository).toHaveBeenCalledTimes(2);
                 expect(stalePullRequest._processRepository.calls.argsFor(0)).toEqual([keys[0], repositories[keys[0]]]);
                 expect(stalePullRequest._processRepository.calls.argsFor(1)).toEqual([keys[1], repositories[keys[1]]]);
@@ -43,15 +43,15 @@ describe('stalePullRequest', function () {
     });
 
     it('calls stalePullRequest._processPullRequest once for each returned pull request', function (done) {
-        var mockPullRequest = {};
-        var mockPullRequest2 = {};
-        var firstResponse = {
+        const mockPullRequest = {};
+        const mockPullRequest2 = {};
+        const firstResponse = {
             headers : {
                 link : '<https://url?page=2>; rel="next",<https://url?page=2>; rel="last"'
             },
             body: [mockPullRequest]
         };
-        var secondResponse = {
+        const secondResponse = {
             headers : {
                 link : '<https://url?page=1>; rel="first",<https://url?page=2>; rel="prev"'
             },
@@ -64,7 +64,7 @@ describe('stalePullRequest', function () {
             } else if (options.url === 'https://url?page=2') {
                 return Promise.resolve(secondResponse);
             }
-            return Promise.reject(new Error('Unexpected Url: ' + options.url));
+            return Promise.reject(new Error(`Unexpected Url: ${  options.url}`));
         });
 
         spyOn(stalePullRequest, '_processPullRequest').and.returnValue(Promise.resolve());
@@ -80,10 +80,10 @@ describe('stalePullRequest', function () {
     });
 
     it('stalePullRequest._processPullRequest does not post non-stale pull request', function (done) {
-        var repositorySettings = new RepositorySettings();
-        var commentsUrl = 'https://url';
-        var commitsUrl = 'https://commits';
-        var pullRequest = {
+        const repositorySettings = new RepositorySettings();
+        const commentsUrl = 'https://url';
+        const commitsUrl = 'https://commits';
+        const pullRequest = {
             comments_url: commentsUrl,
             commits_url: commitsUrl
         };
@@ -91,15 +91,15 @@ describe('stalePullRequest', function () {
         spyOn(requestPromise, 'get').and.callFake(function (options) {
             if (options.resolveWithFullResponse === true) {
                 return Promise.resolve({headers: {link: '<https://url?page=2>; rel="next",<https://url?page=3>; rel="last"'}});
-            } else if (options.url === commentsUrl + '?page=3') {
-                var timestamp = new Date(Date.now());
+            } else if (options.url === `${commentsUrl  }?page=3`) {
+                const timestamp = new Date(Date.now());
                 return Promise.resolve([{
                     updated_at: timestamp
                 }]);
             } else if (options.url === commitsUrl) {
                 return Promise.resolve(commitsData);
             }
-            return Promise.reject(new Error('Unexpected Url: ' + options.url));
+            return Promise.reject(new Error(`Unexpected Url: ${  options.url}`));
         });
         spyOn(requestPromise, 'post');
         spyOn(stalePullRequest, '_foundStopComment').and.callFake(function () {
@@ -115,10 +115,10 @@ describe('stalePullRequest', function () {
     });
 
     it('stalePullRequest._processPullRequest posts expected message for stale pull request', function (done) {
-        var repositorySettings = new RepositorySettings();
-        var commentsUrl = 'https://url';
-        var commitsUrl = 'https://commits';
-        var pullRequest = {
+        const repositorySettings = new RepositorySettings();
+        const commentsUrl = 'https://url';
+        const commitsUrl = 'https://commits';
+        const pullRequest = {
             comments_url: commentsUrl,
             commits_url: commitsUrl,
             user: {
@@ -126,13 +126,13 @@ describe('stalePullRequest', function () {
             }
         };
 
-        var timestamp = new Date(Date.now());
+        const timestamp = new Date(Date.now());
         timestamp.setDate(timestamp.getDate() - repositorySettings.maxDaysSinceUpdate);
 
         spyOn(requestPromise, 'get').and.callFake(function (options) {
             if (options.resolveWithFullResponse === true) {
                 return Promise.resolve({headers: {link: '<https://url?page=2>; rel="next",<https://url?page=3>; rel="last"'}});
-            } else if (options.url === commentsUrl + '?page=3') {
+            } else if (options.url === `${commentsUrl  }?page=3`) {
                 return Promise.resolve([{
                     updated_at: timestamp,
                     user: {
@@ -140,11 +140,11 @@ describe('stalePullRequest', function () {
                     }
                 }]);
             } else if (options.url === commitsUrl) {
-                var commitsDataOld = JSON.parse(JSON.stringify(commitsData));
+                const commitsDataOld = JSON.parse(JSON.stringify(commitsData));
                 commitsDataOld[0].commit.author.date = timestamp;
                 return Promise.resolve(commitsDataOld);
             }
-            return Promise.reject(new Error('Unexpected Url: ' + options.url));
+            return Promise.reject(new Error(`Unexpected Url: ${  options.url}`));
         });
         spyOn(requestPromise, 'post');
         spyOn(stalePullRequest, '_foundStopComment').and.callFake(function () {
@@ -170,10 +170,10 @@ describe('stalePullRequest', function () {
     });
 
     it('stalePullRequest._processPullRequest does not post if there is a recent commit', function (done) {
-        var repositorySettings = new RepositorySettings();
-        var commentsUrl = 'https://url';
-        var commitsUrl = 'https://commits';
-        var pullRequest = {
+        const repositorySettings = new RepositorySettings();
+        const commentsUrl = 'https://url';
+        const commitsUrl = 'https://commits';
+        const pullRequest = {
             comments_url: commentsUrl,
             commits_url: commitsUrl,
             user: {
@@ -184,8 +184,8 @@ describe('stalePullRequest', function () {
         spyOn(requestPromise, 'get').and.callFake(function (options) {
             if (options.resolveWithFullResponse === true) {
                 return Promise.resolve({headers: {link: '<https://url?page=2>; rel="next",<https://url?page=3>; rel="last"'}});
-            } else if (options.url === commentsUrl + '?page=3') {
-                var timestamp = new Date(Date.now());
+            } else if (options.url === `${commentsUrl  }?page=3`) {
+                const timestamp = new Date(Date.now());
                 timestamp.setDate(timestamp.getDate() - repositorySettings.maxDaysSinceUpdate);
                 return Promise.resolve([{
                     updated_at: timestamp,
@@ -196,7 +196,7 @@ describe('stalePullRequest', function () {
             } else if (options.url === commitsUrl) {
                 return Promise.resolve(commitsData);
             }
-            return Promise.reject(new Error('Unexpected Url: ' + options.url));
+            return Promise.reject(new Error(`Unexpected Url: ${  options.url}`));
         });
         spyOn(requestPromise, 'post');
         spyOn(stalePullRequest, '_foundStopComment').and.callFake(function () {
@@ -212,10 +212,10 @@ describe('stalePullRequest', function () {
     });
 
     it('stalePullRequest._processPullRequest does not post when asked to stop', function (done) {
-        var repositorySettings = new RepositorySettings();
-        var commentsUrl = 'https://url';
-        var commitsUrl = 'https://commits';
-        var pullRequest = {
+        const repositorySettings = new RepositorySettings();
+        const commentsUrl = 'https://url';
+        const commitsUrl = 'https://commits';
+        const pullRequest = {
             comments_url: commentsUrl,
             commits_url: commitsUrl
         };
@@ -223,8 +223,8 @@ describe('stalePullRequest', function () {
         spyOn(requestPromise, 'get').and.callFake(function (options) {
             if (options.resolveWithFullResponse === true) {
                 return Promise.resolve({headers: {link: '<https://url?page=2>; rel="next",<https://url?page=3>; rel="last"'}});
-            } else if (options.url === commentsUrl + '?page=3') {
-                var timestamp = new Date(Date.now());
+            } else if (options.url === `${commentsUrl  }?page=3`) {
+                const timestamp = new Date(Date.now());
                 timestamp.setDate(timestamp.getDate() - repositorySettings.maxDaysSinceUpdate);
                 return Promise.resolve([{
                     updated_at: timestamp,
@@ -235,7 +235,7 @@ describe('stalePullRequest', function () {
             } else if (options.url === commitsUrl) {
                 return Promise.resolve(commitsData);
             }
-            return Promise.reject(new Error('Unexpected Url: ' + options.url));
+            return Promise.reject(new Error(`Unexpected Url: ${  options.url}`));
         });
         spyOn(requestPromise, 'post');
         spyOn(stalePullRequest, '_foundStopComment').and.callFake(function () {
@@ -251,8 +251,8 @@ describe('stalePullRequest', function () {
     });
 
     it('stalePullRequest.foundStopComment works', function () {
-        var conciergeUser = {login: 'cesium-concierge'};
-        var otherUser = {login: 'BobDylan'};
+        const conciergeUser = {login: 'cesium-concierge'};
+        const otherUser = {login: 'BobDylan'};
 
         expect(stalePullRequest._foundStopComment([{ body: '', user: otherUser }])).toBe(false);
         expect(stalePullRequest._foundStopComment([{ body: '', user: conciergeUser }])).toBe(false);

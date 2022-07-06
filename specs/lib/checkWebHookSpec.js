@@ -1,21 +1,21 @@
 'use strict';
 
-var bodyParser = require('body-parser');
-var checkWebHook = require('../../lib/checkWebHook');
-var crypto = require('crypto');
-var express = require('express');
-var nconf = require('nconf');
-var request = require('supertest');
+const bodyParser = require('body-parser');
+const checkWebHook = require('../../lib/checkWebHook');
+const crypto = require('crypto');
+const express = require('express');
+const nconf = require('nconf');
+const request = require('supertest');
 
 function signData(secret, data) {
-    return 'sha1=' + crypto.createHmac('sha1', secret).update(data).digest('hex');
+    return `sha1=${  crypto.createHmac('sha1', secret).update(data).digest('hex')}`;
 }
 
 describe('Invalid request meta', function () {
     /**
      * Create mock express app
      */
-    var app;
+    let app;
     beforeEach(function () {
         spyOn(nconf, 'get').and.returnValue('secret');
         app = express();
@@ -76,7 +76,7 @@ describe('Invalid signature', function () {
     /**
      * Create mock express app
      */
-    var app;
+    let app;
     beforeEach(function () {
         spyOn(nconf, 'get').and.returnValue('secret');
         app = express();
@@ -87,7 +87,7 @@ describe('Invalid signature', function () {
         });
     });
 
-    var invalidSignature = 'signature';
+    const invalidSignature = 'signature';
 
     it('signature does not match', function (done) {
         request(app)
@@ -111,7 +111,7 @@ describe('No body-parser is used', function () {
     /**
      * Create mock express app
      */
-    var app;
+    let app;
     beforeEach(function () {
         spyOn(nconf, 'get').and.returnValue('secret');
         app = express();
@@ -121,7 +121,7 @@ describe('No body-parser is used', function () {
         });
     });
 
-    var invalidSignature = 'signature';
+    const invalidSignature = 'signature';
 
     it('Verify use of body-parser', function (done) {
         request(app)
@@ -145,7 +145,7 @@ describe('Accept a valid request with json data', function () {
     /**
      * Create mock express app
      */
-    var app;
+    let app;
     beforeEach(function () {
         spyOn(nconf, 'get').and.returnValue('secret');
         app = express();
@@ -159,14 +159,14 @@ describe('Accept a valid request with json data', function () {
     /**
      * Mock request data
      */
-    var data = {
+    const data = {
         ref: 'ref',
         foo: 'bar',
         repository: {
             full_name: 'my/repo'
         }
     };
-    var json = JSON.stringify(data);
+    const json = JSON.stringify(data);
 
     it('accepts valid json request', function (done) {
         request(app)

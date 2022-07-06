@@ -1,14 +1,14 @@
 'use strict';
 
-var Promise = require('bluebird');
+const Promise = require('bluebird');
 
-var postToGitHub = require('../../lib/postToGitHub');
-var RepositorySettings = require('../../lib/RepositorySettings');
-var Settings = require('../../lib/Settings');
+const postToGitHub = require('../../lib/postToGitHub');
+const RepositorySettings = require('../../lib/RepositorySettings');
+const Settings = require('../../lib/Settings');
 
 describe('postToGitHub', function () {
-    var res;
-    var repositorySettings;
+    let res;
+    let repositorySettings;
 
     beforeEach(function () {
         res = {
@@ -27,7 +27,7 @@ describe('postToGitHub', function () {
     });
 
     it('errors if the specified repository is not configured', function () {
-        var req = {
+        const req = {
             body: {
                 repository: {
                     full_name: 'ThisDoesNotExist'
@@ -35,13 +35,13 @@ describe('postToGitHub', function () {
             }
         };
 
-        var next = jasmine.createSpy('next');
+        const next = jasmine.createSpy('next');
         postToGitHub(req, {}, next);
         expect(next).toHaveBeenCalledWith(new Error('ThisDoesNotExist is not a configured repository.'));
     });
 
     it('calls commentOnClosedIssue for a closed pull request', function (done) {
-        var req = {
+        const req = {
             headers: {
                 'x-github-event': 'pull_request'
             },
@@ -54,7 +54,7 @@ describe('postToGitHub', function () {
         };
 
         spyOn(postToGitHub, '_commentOnClosedIssue').and.returnValue(Promise.resolve());
-        var next = jasmine.createSpy('next');
+        const next = jasmine.createSpy('next');
 
         postToGitHub(req, res, next)
             .then(function () {
@@ -68,7 +68,7 @@ describe('postToGitHub', function () {
     });
 
     it('calls commentOnClosedIssue for a closed issue', function (done) {
-        var req = {
+        const req = {
             headers: {
                 'x-github-event': 'issues'
             },
@@ -81,7 +81,7 @@ describe('postToGitHub', function () {
         };
 
         spyOn(postToGitHub, '_commentOnClosedIssue').and.returnValue(Promise.resolve());
-        var next = jasmine.createSpy('next');
+        const next = jasmine.createSpy('next');
 
         postToGitHub(req, res, next)
             .then(function () {
@@ -95,7 +95,7 @@ describe('postToGitHub', function () {
     });
 
     it('calls commentOnOpenedPullRequest for a opened pull request', function (done) {
-        var req = {
+        const req = {
             headers: {
                 'x-github-event': 'pull_request'
             },
@@ -108,7 +108,7 @@ describe('postToGitHub', function () {
         };
 
         spyOn(postToGitHub, '_commentOnOpenedPullRequest').and.returnValue(Promise.resolve());
-        var next = jasmine.createSpy('next');
+        const next = jasmine.createSpy('next');
 
         postToGitHub(req, res, next)
             .then(function () {
@@ -122,7 +122,7 @@ describe('postToGitHub', function () {
     });
 
     it('no-op on an unknown event', function (done) {
-        var req = {
+        const req = {
             headers: {
                 'x-github-event': 'na-da'
             },
@@ -134,7 +134,7 @@ describe('postToGitHub', function () {
             }
         };
 
-        var next = jasmine.createSpy('next');
+        const next = jasmine.createSpy('next');
 
         postToGitHub(req, res, next)
             .then(function () {
@@ -147,7 +147,7 @@ describe('postToGitHub', function () {
     });
 
     it('calls next with rejected promise error', function (done) {
-        var req = {
+        const req = {
             headers: {
                 'x-github-event': 'pull_request'
             },
@@ -159,9 +159,9 @@ describe('postToGitHub', function () {
             }
         };
 
-        var error = new Error('Something bad happened');
+        const error = new Error('Something bad happened');
         spyOn(postToGitHub, '_commentOnOpenedPullRequest').and.returnValue(Promise.reject(error));
-        var next = jasmine.createSpy('next');
+        const next = jasmine.createSpy('next');
 
         postToGitHub(req, res, next)
             .then(done.fail)
