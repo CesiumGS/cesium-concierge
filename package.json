@@ -22,7 +22,7 @@
   },
   "main": "index.js",
   "engines": {
-    "node": ">=6.0.0"
+    "node": ">=7.6.0"
   },
   "dependencies": {
     "@octokit/rest": "^16.16.0",
@@ -44,7 +44,8 @@
   },
   "devDependencies": {
     "eslint": "^8.0.0",
-    "eslint-config-cesium": "^2.0.0",
+    "eslint-config-cesium": "^9.0.0",
+    "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-node": "^11.1.0",
     "event-stream": "^3.3.4",
     "gulp": "^3.9.1",
