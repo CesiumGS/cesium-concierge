@@ -22,7 +22,7 @@
   },
   "main": "index.js",
   "engines": {
-    "node": ">=7.6.0"
+    "node": ">=16.0.0"
   },
   "dependencies": {
     "@octokit/rest": "^16.16.0",
