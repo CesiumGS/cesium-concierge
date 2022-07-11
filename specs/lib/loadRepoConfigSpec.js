@@ -21,7 +21,7 @@ describe("loadRepoConfig", function () {
     statusCode: 201,
   };
 
-  const configFileUrl = url.URL(configUrl, loadRepoConfig._configFile);
+  const configFileUrl = new URL(loadRepoConfig._configFile, configUrl).href;
   const sampleConfig = {
     option: "myValue",
     optionList: [1, 2, 3],
@@ -31,7 +31,7 @@ describe("loadRepoConfig", function () {
     content: Buffer.from(JSON.stringify(sampleConfig)).toString("base64"),
   };
 
-  const templatesUrl = url.URL(configUrl, loadRepoConfig._templateDirectory);
+  const templatesUrl = new URL(loadRepoConfig._templateDirectory, configUrl).href;
   const templatesResponseJson = [
     {
       name: "signature.hbs",
@@ -64,10 +64,10 @@ describe("loadRepoConfig", function () {
     });
 
     loadRepoConfig("Org/repo-name", {}, {}).then(function () {
-      const expectedUrl = url.URL(
-        "https://api.github.com/repos/Org/repo-name/contents/",
-        loadRepoConfig._configDirectory
-      );
+      const expectedUrl = new URL(
+        loadRepoConfig._configDirectory,
+        "https://api.github.com/repos/Org/repo-name/contents/"
+      ).href;
 
       expect(loadRepoConfig._getConfig).toHaveBeenCalledWith(
         expectedUrl,
