@@ -1,5 +1,4 @@
 "use strict";
-const url = require("url");
 
 const Promise = require("bluebird");
 const requestPromise = require("request-promise");
