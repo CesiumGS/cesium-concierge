@@ -1,6 +1,6 @@
 'use strict';
 
-var parseBoolean = require('../../lib/parseBoolean');
+const parseBoolean = require('../../lib/parseBoolean');
 
 describe('parseBoolean', function () {
     it('returns existing boolean value', function () {

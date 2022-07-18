@@ -1,22 +1,22 @@
 'use strict';
 
-var Promise = require('bluebird');
-var requestPromise = require('request-promise');
+const Promise = require('bluebird');
+const requestPromise = require('request-promise');
 
-var commentOnClosedIssue = require('../../lib/commentOnClosedIssue');
-var RepositorySettings = require('../../lib/RepositorySettings');
+const commentOnClosedIssue = require('../../lib/commentOnClosedIssue');
+const RepositorySettings = require('../../lib/RepositorySettings');
 
 describe('commentOnClosedIssue', function () {
-    var repositorySettings = new RepositorySettings();
+    const repositorySettings = new RepositorySettings();
     repositorySettings.contributorsPath = 'CONTRIBUTORS.md';
-    var commonOptions;
+    let commonOptions;
 
-    var issueEventJson;
-    var pullRequestEventJson;
-    var issueUrl = 'issueUrl';
-    var commentsUrl = 'commentsUrl';
-    var isMergedUrl = issueUrl + '/merge';
-    var userName = 'Joan';
+    let issueEventJson;
+    let pullRequestEventJson;
+    const issueUrl = 'issueUrl';
+    const commentsUrl = 'commentsUrl';
+    const isMergedUrl = `${issueUrl  }/merge`;
+    const userName = 'Joan';
 
     beforeEach(function () {
         commonOptions = {
@@ -72,7 +72,7 @@ describe('commentOnClosedIssue', function () {
     });
 
     it('passes expected parameters to implementation for closed issue', function () {
-        var isPullRequest = false;
+        const isPullRequest = false;
 
         spyOn(commentOnClosedIssue, '_implementation');
         commentOnClosedIssue(issueEventJson, repositorySettings);
@@ -85,7 +85,7 @@ describe('commentOnClosedIssue', function () {
     });
 
     it('passes expected parameters to implementation for closed pull request', function () {
-        var isPullRequest = true;
+        const isPullRequest = true;
 
         spyOn(commentOnClosedIssue, '_implementation');
         commentOnClosedIssue(pullRequestEventJson, repositorySettings);
@@ -114,7 +114,7 @@ describe('commentOnClosedIssue', function () {
                 return Promise.resolve([]);
             }
 
-            return Promise.reject('Unknown url: ' + options.url);
+            return Promise.reject(`Unknown url: ${  options.url}`);
         });
         spyOn(requestPromise, 'post');
 

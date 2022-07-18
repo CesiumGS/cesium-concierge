@@ -1,10 +1,10 @@
 'use strict';
 
-var getUniqueMatch = require('../../lib/getUniqueMatch');
+const getUniqueMatch = require('../../lib/getUniqueMatch');
 
 describe('getUniqueMatch', function () {
-    var t1 = ['a', 'b', 'c', 'd'];
-    var t2 = ['a', 'a', 'b', 'bb', 'c', 'aaa', 'cab', 'c'];
+    const t1 = ['a', 'b', 'c', 'd'];
+    const t2 = ['a', 'a', 'b', 'bb', 'c', 'aaa', 'cab', 'c'];
 
     it('returns [] when parameters are undefined', function () {
         expect(getUniqueMatch()).toEqual([]);

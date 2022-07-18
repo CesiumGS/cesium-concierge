@@ -1,27 +1,27 @@
 'use strict';
 
-var Promise = require('bluebird');
-var fs = require('fs');
-var handlebars = require('handlebars');
-var path = require('path');
-var moment = require('moment');
-var requestPromise = require('request-promise');
+const Promise = require('bluebird');
+const fs = require('fs');
+const handlebars = require('handlebars');
+const path = require('path');
+const moment = require('moment');
+const requestPromise = require('request-promise');
 
-var SlackBot = require('../../lib/SlackBot');
-var RepositorySettings = require('../../lib/RepositorySettings');
+const SlackBot = require('../../lib/SlackBot');
+const RepositorySettings = require('../../lib/RepositorySettings');
 
 describe('SlackBot', function () {
-    var repositories;
-    var today = moment();
-    var tomorrow = moment().add(1, 'days').startOf('day');
-    var earlyDate = moment().add(14, 'days').startOf('day');
-    var mediumDate = moment().add(7, 'days').startOf('day');
-    var user = 'omar';
-    var userID = '1';
-    var displayName = 'Omar';
-    var cesiumjsChannelId = '123';
-    var configUrl = 'https://api.github.com/repos/owner/repo/contents/.slackbot.yml';
-    var mockYAML;
+    let repositories;
+    const today = moment();
+    const tomorrow = moment().add(1, 'days').startOf('day');
+    const earlyDate = moment().add(14, 'days').startOf('day');
+    const mediumDate = moment().add(7, 'days').startOf('day');
+    const user = 'omar';
+    const userID = '1';
+    const displayName = 'Omar';
+    const cesiumjsChannelId = '123';
+    const configUrl = 'https://api.github.com/repos/owner/repo/contents/.slackbot.yml';
+    let mockYAML;
 
     function setupFakeIDs() {
         SlackBot._userIDs = {};
@@ -39,10 +39,10 @@ describe('SlackBot', function () {
     }
 
     function getMessage(templateName) {
-        var template = fs.readFileSync(path.join(__dirname, '../../lib/templates', templateName + '.hbs')).toString();
+        const template = fs.readFileSync(path.join(__dirname, '../../lib/templates', `${templateName  }.hbs`)).toString();
 
         return handlebars.compile(template)({
-            userId : '<@' + userID + '>'
+            userId : `<@${  userID  }>`
         });
     }
 
@@ -105,7 +105,7 @@ describe('SlackBot', function () {
 
     it('posts early release reminder to #cesiumjs channel.', function () {
         spyOn(SlackBot, '_getConfig').and.callFake(function() {
-            var releaseSchedule = {};
+            const releaseSchedule = {};
             releaseSchedule[user] = [earlyDate];
             return Promise.resolve({
                 releaseSchedule: releaseSchedule
@@ -127,7 +127,7 @@ describe('SlackBot', function () {
 
     it('posts release reminder to #cesiumjs channel.', function () {
         spyOn(SlackBot, '_getConfig').and.callFake(function() {
-            var releaseSchedule = {};
+            const releaseSchedule = {};
             releaseSchedule[user] = [mediumDate];
             return Promise.resolve({
                 releaseSchedule: releaseSchedule
@@ -149,7 +149,7 @@ describe('SlackBot', function () {
 
     it('posts late release reminder to #cesiumjs channel.', function () {
         spyOn(SlackBot, '_getConfig').and.callFake(function() {
-            var releaseSchedule = {};
+            const releaseSchedule = {};
             releaseSchedule[user] = [today];
             return Promise.resolve({
                 releaseSchedule: releaseSchedule
@@ -171,7 +171,7 @@ describe('SlackBot', function () {
 
     it('does not post release reminder on other days.', function () {
         spyOn(SlackBot, '_getConfig').and.callFake(function() {
-            var releaseSchedule = {};
+            const releaseSchedule = {};
             releaseSchedule[user] = tomorrow;
             return Promise.resolve({
                 releaseSchedule: releaseSchedule
@@ -231,12 +231,12 @@ describe('SlackBot', function () {
                     content: Buffer.from(mockYAML).toString('base64')
                 });
             }
-            return Promise.reject(new Error('Unexpected Url: ' + options.url));
+            return Promise.reject(new Error(`Unexpected Url: ${  options.url}`));
         });
 
         SlackBot._getConfig()
             .then(function (slackBotSettings) {
-                var date = moment('2/4/2019', 'MM/DD/YYYY').startOf('day');
+                const date = moment('2/4/2019', 'MM/DD/YYYY').startOf('day');
                 expect(slackBotSettings.releaseSchedule['oshehata'][0].format()).toBe(date.format());
                 done();
             })
@@ -244,9 +244,9 @@ describe('SlackBot', function () {
     });
 
     it('_getAllPullRequestsMergedLastWeek works.', function () {
-        var repositoryNames = Object.keys(repositories);
-        var foreverAgo = moment().subtract(701, 'days').startOf('day');
-        var pullRequestNumber = '12';
+        const repositoryNames = Object.keys(repositories);
+        const foreverAgo = moment().subtract(701, 'days').startOf('day');
+        const pullRequestNumber = '12';
 
         SlackBot._githubClient = jasmine.createSpy('_githubClient');
         SlackBot._githubClient.issues = {
@@ -278,7 +278,7 @@ describe('SlackBot', function () {
             {
                 closed_at: today.format(),
                 pull_request : {
-                    url: 'https://api.github.com/repos/owner/repo/pulls/' + pullRequestNumber
+                    url: `https://api.github.com/repos/owner/repo/pulls/${  pullRequestNumber}`
                 }
             },
             {
@@ -287,9 +287,9 @@ describe('SlackBot', function () {
             ]);
         });
 
-        var pullRequestsPromise = SlackBot._getAllPullRequestsMergedLastWeek(repositoryNames);
+        const pullRequestsPromise = SlackBot._getAllPullRequestsMergedLastWeek(repositoryNames);
 
-        var lastWeek = moment().subtract(7, 'days');
+        const lastWeek = moment().subtract(7, 'days');
 
         expect(SlackBot._githubClient.issues.listForRepo.endpoint.merge).toHaveBeenCalledWith({
             owner: 'owner',
@@ -312,7 +312,7 @@ describe('SlackBot', function () {
     });
 
     it('_getSlackMetadata works.', function (done) {
-        var channels = [];
+        const channels = [];
         channels.push({
             name: 'channel1',
             id: '1'
@@ -322,7 +322,7 @@ describe('SlackBot', function () {
             id: '2'
         });
 
-        var members = [];
+        const members = [];
         members.push({
             name: 'member1',
             id: '1'
@@ -354,7 +354,7 @@ describe('SlackBot', function () {
     });
 
     it('initializes scheduled jobs.', function () {
-        var jobs = SlackBot.initializeScheduledJobs();
+        const jobs = SlackBot.initializeScheduledJobs();
 
         expect(jobs.releaseReminder).toBeDefined();
 
@@ -364,7 +364,7 @@ describe('SlackBot', function () {
     it('does not post message or get config if disabled.', function (done) {
         SlackBot.init({});
 
-        var slackBotWarning = 'Warning: SlackBot is disabled.';
+        const slackBotWarning = 'Warning: SlackBot is disabled.';
 
         SlackBot.postMessage()
             .then(function (result) {

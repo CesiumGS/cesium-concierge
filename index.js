@@ -1,27 +1,27 @@
 'use strict';
 
-var bodyParser = require('body-parser');
-var express = require('express');
-var schedule = require('node-schedule');
+const bodyParser = require('body-parser');
+const express = require('express');
+const schedule = require('node-schedule');
 
-var stalePullRequest = require('./lib/stalePullRequest');
-var checkWebHook = require('./lib/checkWebHook');
-var dateLog = require('./lib/dateLog');
-var postToGitHub = require('./lib/postToGitHub');
-var Settings = require('./lib/Settings');
-var SlackBot = require('./lib/SlackBot');
+const stalePullRequest = require('./lib/stalePullRequest');
+const checkWebHook = require('./lib/checkWebHook');
+const dateLog = require('./lib/dateLog');
+const postToGitHub = require('./lib/postToGitHub');
+const Settings = require('./lib/Settings');
+const SlackBot = require('./lib/SlackBot');
 
 
 Settings.loadRepositoriesSettings('./config.json')
     .then(function () {
         dateLog('Loaded settings successfully');
 
-        var app = express();
+        const app = express();
         app.post(Settings.listenPath, bodyParser.json(), checkWebHook, postToGitHub);
 
         // Start server on port specified by env.PORT
         app.listen(Settings.port, function () {
-            dateLog('cesium-concierge listening on port ' + Settings.port);
+            dateLog(`cesium-concierge listening on port ${  Settings.port}`);
         });
 
         // Run every night.
@@ -41,6 +41,6 @@ Settings.loadRepositoriesSettings('./config.json')
         SlackBot.initializeScheduledJobs();
     })
     .catch(function (err) {
-        dateLog('Could not parse environment settings: ' + err);
+        dateLog(`Could not parse environment settings: ${  err}`);
         process.exit(1);
     });

@@ -1,22 +1,22 @@
 'use strict';
 
-var Cesium = require('cesium');
-var child_process = require('child_process');
-var eventStream = require('event-stream');
-var fsExtra = require('fs-extra');
-var gulp = require('gulp');
-var gulpTap = require('gulp-tap');
-var gulpZip = require('gulp-zip');
-var Jasmine = require('jasmine');
-var JasmineSpecReporter = require('jasmine-spec-reporter');
-var open = require('open');
-var yargs = require('yargs');
+const Cesium = require('cesium');
+const child_process = require('child_process');
+const eventStream = require('event-stream');
+const fsExtra = require('fs-extra');
+const gulp = require('gulp');
+const gulpTap = require('gulp-tap');
+const gulpZip = require('gulp-zip');
+const Jasmine = require('jasmine');
+const JasmineSpecReporter = require('jasmine-spec-reporter');
+const open = require('open');
+const yargs = require('yargs');
 
-var defined = Cesium.defined;
-var argv = yargs.argv;
+const defined = Cesium.defined;
+const argv = yargs.argv;
 
 gulp.task('test', function (done) {
-    var jasmine = new Jasmine();
+    const jasmine = new Jasmine();
     jasmine.loadConfigFile('specs/jasmine.json');
     jasmine.addReporter(new JasmineSpecReporter.SpecReporter({
         displaySuccessfulSpec: !defined(argv.suppressPassed) || !argv.suppressPassed
@@ -45,8 +45,8 @@ gulp.task('coverage', function () {
 });
 
 gulp.task('create-zip', function () {
-    var hash;
-    var status = child_process.execSync('git status -uno -s').toString().trim();
+    let hash;
+    const status = child_process.execSync('git status -uno -s').toString().trim();
     if (!/^\s*$/.test(status)) {
         if (!argv.force) {
             console.log('Refusing to create a release for a modified branch. Pass the --force flag if you know what you\'re doing.');
@@ -57,9 +57,9 @@ gulp.task('create-zip', function () {
         hash = child_process.execSync('git rev-parse HEAD').toString().trim();
     }
 
-    var zipName = 'cesium-concierge-' + hash + '.zip';
+    const zipName = `cesium-concierge-${  hash  }.zip`;
 
-    var serverFiles = gulp.src([
+    const serverFiles = gulp.src([
             'bin/**',
             'lib/**',
             'Dockerfile',
@@ -69,7 +69,7 @@ gulp.task('create-zip', function () {
             base: '.'
         });
 
-    var packageJson = gulp.src('./package.json');
+    const packageJson = gulp.src('./package.json');
 
     return eventStream.merge(serverFiles, packageJson)
         .pipe(gulpTap(function (file) {

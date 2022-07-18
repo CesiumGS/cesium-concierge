@@ -1,11 +1,11 @@
 'use strict';
-var Promise = require('bluebird');
+const Promise = require('bluebird');
 
-var RepositorySettings = require('../../lib/RepositorySettings');
+const RepositorySettings = require('../../lib/RepositorySettings');
 
 describe('RepositorySettings', function () {
     it('fetchSettings requests repository settings from repo', function (done) {
-        var settings = new RepositorySettings({
+        const settings = new RepositorySettings({
             name: 'Org/repo'
         });
 
